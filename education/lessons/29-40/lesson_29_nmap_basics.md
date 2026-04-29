@@ -110,6 +110,28 @@ nmap -oA scan_all 192.168.1.1
 - Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
 - Для Python используйте `pip3 install` вместо `pip install`
 
+### TryHackMe AttackBox — облачная альтернатива для 8GB RAM
+
+Если ресурсы MacBook Air M2 (8GB) не позволяют комфортно работать с локальными VM:
+
+- **TryHackMe AttackBox** — браузерный доступ к полноценной Kali Linux
+- Не требует ресурсов вашей машины (всё работает в облаке)
+- Доступно на сайте [tryhackme.com](https://tryhackme.com) (раздел AttackBox)
+- Преимущества:
+  - Полноценная Kali Linux с предустановленным Nmap
+  - Не потребляет RAM вашего хоста
+  - Быстрый старт (не нужно настраивать UTM/Parallels)
+  - Встроенный доступ к лабораториям TryHackMe
+
+**Пример использования Nmap в AttackBox:**
+```bash
+# В AttackBox всё работает как в обычной Kali:
+sudo apt update && sudo apt install nmap
+nmap -sV -p- 10.10.10.10
+```
+
+> **Рекомендация для M2 8GB:** Используйте AttackBox как основной инструмент для практики Nmap, если локальные VM тормозят.
+
 
 ## Задачи для самостоятельного выполнения
 

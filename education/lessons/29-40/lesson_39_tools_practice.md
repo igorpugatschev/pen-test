@@ -47,7 +47,7 @@ sudo nmap -A -p- -oA nmap_full $TARGET
 ### Шаг 3: Поиск веб-директорий
 ```bash
 # Поиск на порту 80
-ffuf -u http://$TARGET/FUZZ -w /usr/share/wordlists/dirb/common.txt -e .txt,.php,.bak
+ffuf -u http://$TARGET/FUZZ -w /opt/homebrew/share/seclists/Discovery/Web-Content/common.txt -e .txt,.php,.bak
 # Пример вывода:
 # [Status: 200] [Size: 1234] /index.php
 # [Status: 302] [Size: 0] /dvwa
@@ -97,7 +97,7 @@ echo "[1] Nmap full scan..."
 nmap -A -p- -oN nmap_$TARGET.txt $TARGET
 
 echo "[2] Directory bruteforce (port 80)..."
-ffuf -u http://$TARGET/FUZZ -w /usr/share/wordlists/dirb/common.txt -o dirs_$TARGET.json -of json
+ffuf -u http://$TARGET/FUZZ -w /opt/homebrew/share/seclists/Discovery/Web-Content/common.txt -o dirs_$TARGET.json -of json
 
 echo "[3] Nuclei vulnerability scan..."
 nuclei -u http://$TARGET -o nuclei_$TARGET.txt
@@ -159,30 +159,3 @@ echo "[*] Scan complete!"
 4. Как автоматизировать весь процесс пентеста одним скриптом?
 
 
-## Примеры вывода
-
-Пример вывода команд будет добавлен индивидуально для каждого урока.
-
-
-
-## Адаптация под macOS (M2, 8GB)
-
-- Для установки инструментов используйте Homebrew: `brew install <tool>`
-- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
-- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
-- Docker работает нативно на M2: `docker pull <image>`
-- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
-- Для Python используйте `pip3 install` вместо `pip install`
-
-
-## Задачи для самостоятельного выполнения
-
-1. Разверните Metasploitable2. Выполните полный пентест по шагам выше. Составьте список найденных уязвимостей.
-
-2. Напишите скрипт на Python, который связывает Subfinder → httpx → Nuclei. Скрипт должен принимать домен и выдавать найденные уязвимости.
-
-3. Используя Shodan, найдите 5 интересных хостов (с уязвимыми сервисами). Попробуйте подключиться к ним (только те, которые вам принадлежат или имеют разрешение!).
-
-4. Настройте связку: Amass → Subfinder → ffuf → Nuclei. Результат сохраните в Markdown-отчет.
-
-5. Изучите логи Metasploitable во время вашего сканирования. Какие инструменты вызвали подозрение? Как можно скрыть сканирование (stealth)?

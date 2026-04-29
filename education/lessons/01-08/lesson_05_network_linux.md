@@ -137,8 +137,10 @@ ping -c 3 -s 1024 8.8.8.8
 traceroute google.com
 
 # Если нет traceroute, установить:
+# Для Kali Linux:
 sudo apt install -y traceroute
-# Для macOS: brew install traceroute
+# Для macOS (M2):
+brew install traceroute
 ```
 
 ### Шаг 4: Просмотр портов и соединений (ss / netstat)

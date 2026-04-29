@@ -17,10 +17,12 @@
 - `re` — для парсинга ответов (регулярные выражения)
 - `time` — для time-based проверок
 
-**Установка:**
+**Установка (macOS M2 - pip3):**
 ```bash
-pip install requests
+pip3 install requests
 ```
+
+> **Примечание:** На macOS с Apple Silicon используйте `pip3` вместо `pip`, так как `pip` часто указывает на системный Python 2.7.
 
 ## Практическое занятие
 

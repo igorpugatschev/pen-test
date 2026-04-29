@@ -117,8 +117,6 @@ sqlmap -u "http://target.com/page.php?id=1" --tamper=space2comment,charencode --
 2. **Ошибка 2**: Еще одна распространенная проблема.
 3. **Ошибка 3**: Важный момент, который часто упускают.
 
-
-
 ## Вопросы на понимание
 
 1. Вопрос 1 на понимание материала?
@@ -127,8 +125,6 @@ sqlmap -u "http://target.com/page.php?id=1" --tamper=space2comment,charencode --
    <details><summary>Ответ</summary>Ответ на вопрос 2</details>
 3. Вопрос 3 на понимание материала?
    <details><summary>Ответ</summary>Ответ на вопрос 3</details>
-
-
 
 ## Форматы флагов
 

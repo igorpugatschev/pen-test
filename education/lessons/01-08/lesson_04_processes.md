@@ -97,8 +97,10 @@ top
 # Клавиши: q — выход, k — kill процесса, r — renice, 1 — показать все CPU
 
 # Установить и запустить htop (если нет)
+# Для Kali Linux:
 sudo apt install -y htop
-# Для macOS: brew install htop
+# Для macOS (M2):
+brew install htop
 htop
 # Клавиши: F9 — kill, F6 — сортировка, q — выход
 ```
