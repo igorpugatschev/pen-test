@@ -157,7 +157,9 @@ testssl.sh example.com
 
 1. Установите mitmproxy:
 ```bash
-sudo apt install mitmproxy
+# macOS: brew install mitmproxy
+# Linux: sudo apt install mitmproxy
+brew install mitmproxy
 ```
 
 2. Запустите прокси:
@@ -167,6 +169,87 @@ mitmproxy
 
 3. Настройте браузер на использование прокси 127.0.0.1:8080
 4. Зайдите на сайт через HTTP (не HTTPS) и посмотрите запросы в mitmproxy
+
+## Примеры вывода
+
+### curl -i http://example.com
+```
+HTTP/1.1 200 OK
+Accept-Ranges: bytes
+Cache-Control: max-age=604800
+Content-Type: text/html; charset=UTF-8
+Date: Mon, 29 Apr 2024 12:00:00 GMT
+Etag: "3147526947+ident"
+Expires: Mon, 06 May 2024 12:00:00 GMT
+Server: ECS (sac/2547)
+X-Cache: HIT
+Content-Length: 1256
+
+<!doctype html>
+<html>
+<head>
+    <title>Example Domain</title>
+...
+```
+
+### curl -X POST -d "username=admin&password=test" http://example.com/login
+```
+HTTP/1.1 401 Unauthorized
+Content-Type: text/html
+Content-Length: 123
+
+<h1>Unauthorized</h1>
+<p>Invalid credentials</p>
+```
+
+### openssl s_client -connect example.com:443 -showcerts
+```
+CONNECTED(00000003)
+depth=2 C = US, O = DigiCert Inc, OU = www.digicert.com, CN = DigiCert Global Root CA
+verify return:1
+depth=1 C = US, O = DigiCert Inc, CN = DigiCert TLS RSA SHA256 2020 CA1
+verify return:1
+depth=0 C = US, ST = California, L = Los Angeles, O = Internet Corporation for Assigned Names and Numbers, CN = www.example.org
+verify return:1
+---
+Certificate chain
+ 0 s:CN = www.example.org
+   i:C = US, O = DigiCert Inc, CN = DigiCert TLS RSA SHA256 2020 CA1
+...
+```
+
+### nmap --script ssl-enum-ciphers -p 443 example.com
+```
+PORT    STATE SERVICE
+443/tcp open  https
+| ssl-enum-ciphers:
+|   TLSv1.2:
+|     ciphers:
+|       TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 (secp256r1) - A
+|       TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 (secp256r1) - A
+|     compressors:
+|       NULL
+|     cipher preference: server
+|_  least strength: A
+```
+
+## Частые ошибки
+
+1. **Путаница кодов ответов**: 301 — постоянное перенаправление, 302 — временное. 401 — нужна аутентификация, 403 — доступ запрещен (даже с аутентификацией).
+2. **HTTP vs HTTPS**: Данные HTTP передаются в открытом виде. Используйте HTTPS для чувствительной информации.
+3. **Забывание двойного Enter**: При ручном HTTP-запросе через netcat нужно нажать Enter дважды после заголовков, иначе сервер не поймет конец запроса.
+4. **HttpOnly и Secure flags**: Если у куки нет флага HttpOnly, её можно украсть через XSS. Если нет Secure — она передается по HTTP.
+
+## Вопросы на понимание
+
+1. В чем разница между методами GET и POST?
+    <details><summary>Ответ</summary>GET передает параметры в URL, POST — в теле запроса. POST безопаснее для чувствительных данных, но оба метода видны при перехвате без HTTPS</details>
+2. Что означает код ответа 403 Forbidden?
+    <details><summary>Ответ</summary>Сервер понял запрос, но отказывается его выполнять (нет прав доступа к ресурсу)</details>
+3. Зачем нужен заголовок Strict-Transport-Security?
+    <details><summary>Ответ</summary>Принуждает браузер использовать только HTTPS для подключения к сайту, защищает от SSL-stripping</details>
+4. Как TLS защищает данные?
+    <details><summary>Ответ</summary>Обеспечивает конфиденциальность (шифрование), целостность (проверка изменений) и аутентификацию (сертификат сервера)</details>
 
 ## Задачи для самостоятельного выполнения
 
@@ -179,3 +262,41 @@ mitmproxy
 4. **Исследование TLS**: С помощью `sslyze` или `testssl.sh` просканируйте свой локальный сервер (или публичный сайт) на поддержку устаревших протоколов (SSLv2, SSLv3, TLS 1.0, TLS 1.1). Найдите рекомендации по их отключению.
 
 5. **HTTP-smuggling теория**: Изучите концепцию HTTP Request Smuggling (CL.TE, TE.CL). Опишите суть уязвимости и приведите пример того, как разница в обработке заголовков Content-Length и Transfer-Encoding может привести к атаке.
+
+## Адаптация под macOS (M2, 8GB)
+
+Для пользователей macOS (особенно на чипах M1/M2 и с 8GB RAM):
+
+- **Установка инструментов**: Используйте `brew install` вместо `apt install`:
+  ```bash
+  brew install curl
+  brew install openssl
+  brew install nmap
+  brew install mitmproxy
+  ```
+
+- **testssl.sh на macOS**: Не устанавливается через brew. Скачайте с GitHub:
+  ```bash
+  git clone https://github.com/drwetter/testssl.sh.git
+  cd testssl.sh
+  ./testssl.sh example.com
+  ```
+
+- **sslyze на macOS**: Установка через pip:
+  ```bash
+  pip3 install sslyze
+  ```
+
+- **Виртуализация**: Вместо VirtualBox (который может быть нестабилен на M2) рекомендуется использовать:
+  - **UTM** — нативный для Apple Silicon, бесплатный
+  - **Parallels** — платный, но быстрый на M-чипах
+  
+  На 8GB RAM запускайте VM с 3-4GB памяти.
+
+- **Устаревшие команды**: Везде, где в уроке упоминаются `ifconfig`, `netstat`, `arp` — эти команды считаются устаревшими. Используйте современные аналоги:
+  - `ifconfig` → `ip addr` / `ip link`
+  - `netstat -tunap` → `ss -tunap`
+  - `arp -n` → `ip neigh`
+  - `route -n` → `ip route`
+
+- **Ограничения 8GB RAM**: Не запускайте одновременно много тяжелых VM. Оптимально: 1 Kali (3GB) + 1 Metasploitable (512MB) = 3.5GB + хост ~4GB.

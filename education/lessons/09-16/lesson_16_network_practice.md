@@ -89,9 +89,7 @@ ip addr show eth0
 3. Запустите VM2 (Metasploitable) и настройте сеть:
 ```bash
 # В Metasploitable (логин/пароль: msfadmin/msfadmin)
-sudo ifconfig eth0 192.168.100.20 netmask 255.255.255.0 up
-
-# Или через ip
+# Примечание: ifconfig считается устаревшим, используйте ip
 sudo ip addr add 192.168.100.20/24 dev eth0
 sudo ip link set eth0 up
 ```
@@ -110,10 +108,9 @@ ping -c 4 192.168.100.10
 
 3. Проверьте ARP-таблицы на обеих машинах:
 ```bash
-arp -n
-# или
 ip neigh show
 ```
+Примечание: команда `arp -n` считается устаревшей, используйте `ip neigh`.
 
 ### Задача 4: Сканирование сети
 
@@ -149,6 +146,76 @@ sudo tcpdump -i eth0 -w capture.pcap
 wireshark capture.pcap
 ```
 
+## Примеры вывода
+
+### ping -c 4 192.168.100.20
+```
+PING 192.168.100.20 (192.168.100.20) 56(84) bytes of data.
+64 bytes from 192.168.100.20: icmp_seq=1 ttl=64 time=0.512 ms
+64 bytes from 192.168.100.20: icmp_seq=2 ttl=64 time=0.487 ms
+64 bytes from 192.168.100.20: icmp_seq=3 ttl=64 time=0.501 ms
+64 bytes from 192.168.100.20: icmp_seq=4 ttl=64 time=0.495 ms
+
+--- 192.168.100.20 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3000ms
+rtt min/avg/max/mdev = 0.487/0.498/0.512/0.020 ms
+```
+
+### nmap -sn 192.168.100.0/24
+```
+Starting Nmap 7.94 ( https://nmap.org )
+Nmap scan report for 192.168.100.1
+Host is up (0.00045s latency).
+Nmap scan report for 192.168.100.10
+Host is up (0.00030s latency).
+Nmap scan report for 192.168.100.20
+Host is up (0.00028s latency).
+Nmap done: 256 IP addresses (3 hosts up) scanned in 2.34 seconds
+```
+
+### nmap -sV -p- 192.168.100.20
+```
+Starting Nmap 7.94 ( https://nmap.org )
+Nmap scan report for 192.168.100.20
+Host is up (0.00050s latency).
+Not shown: 65518 closed tcp ports (reset)
+PORT     STATE SERVICE     VERSION
+21/tcp   open  ftp         vsftpd 2.3.4
+22/tcp   open  ssh         OpenSSH 4.7p1 Debian 8ubuntu1
+23/tcp   open  telnet      Linux telnetd
+25/tcp   open  smtp        Postfix smtpd
+53/tcp   open  domain      ISC BIND 9.4.2
+80/tcp   open  http        Apache httpd 2.2.8
+111/tcp  open  rpcbind     2 (rpc #100000)
+139/tcp  open  netbios-ssn Samba smbd 3.X - 4.X
+445/tcp  open  netbios-ssn Samba smbd 3.X - 4.X
+...
+```
+
+### ip neigh show
+```
+192.168.100.10 dev eth0 lladdr 08:00:27:ab:cd:ef REACHABLE
+192.168.100.1 dev eth0 lladdr 52:54:00:12:34:56 REACHABLE
+```
+
+## Частые ошибки
+
+1. **Проблема с VirtualBox и 8GB RAM**: На хосте с 8GB RAM запускайте VM с 3-4GB памяти. Kali требует минимум 2GB, Metasploitable может работать на 512MB.
+2. **ifconfig vs ip**: Команда `ifconfig` устарела, используйте `ip addr` и `ip link`. В Metasploitable можете использовать обе, но старайтесь привыкать к `ip`.
+3. **Сетевые адаптеры VirtualBox**: Internal Network изолирует VM от внешнего мира. Если нужен интернет на VM — используйте NAT или Bridged.
+4. **Не забудте про SSH**: В Metasploitable SSH часто запущен на порту 22, логин/пароль по умолчанию: msfadmin/msfadmin.
+
+## Вопросы на понимание
+
+1. В чем разница между Internal Network и Host-only в VirtualBox?
+    <details><summary>Ответ</summary>Internal Network — только между VM, Host-only — между VM и хостом (хост видит VM)</details>
+2. Зачем пентестеру изолированная лаборатория?
+    <details><summary>Ответ</summary>Для безопасного тестирования уязвимостей без риска атаки на реальные системы или выхода трафика во внешнюю сеть</details>
+3. Почему используется Metasploitable2?
+    <details><summary>Ответ</summary>Это специально созданная уязвимая ОС для обучения пентестингу, содержит множество известных уязвимостей</details>
+4. Какую роль выполняет Kali Linux в этой лаборатории?
+    <details><summary>Ответ</summary>Kali используется как атакующая машина со встроенными инструментами для пентестинга (nmap, metasploit, wireshark и др.)</details>
+
 ## Задачи для самостоятельного выполнения
 
 1. **Настройка статической IP через конфигурационные файлы**: Настройте статические IP-адреса так, чтобы они сохранялись после перезагрузки. Для Kali (если использует NetworkManager) создайте файл `/etc/NetworkManager/system-connections/pentest.nmconnection` или отредактируйте `/etc/network/interfaces`. Для Metasploitable отредактируйте `/etc/network/interfaces`. Перезагрузите VM и проверьте, что адреса применились.
@@ -166,3 +233,44 @@ nmap --script vuln 192.168.100.20
 5. **Настройка Host-only сети с доступом хоста**: Переключите VM на Host-only Adapter. Настройте сеть так, чтобы хост (ваша основная ОС) мог пинговать VM, а VM могли пинговать друг друга. Исследуйте, какой IP получает хост в этой сети (обычно .1).
 
 6. **Траблшутинг сети**: Намеренно создайте проблему (например, заблокируйте ICMP с помощью iptables на Metasploitable, или уберите маршрут по умолчанию). Используйте инструменты диагностики (ping, traceroute, tcpdump, ss, ip route) для поиска и устранения проблемы. Опишите шаги диагностики.
+
+## Адаптация под macOS (M2, 8GB)
+
+Для пользователей macOS (особенно на чипах M1/M2 и с 8GB RAM):
+
+- **Установка инструментов**: Используйте `brew install` вместо `apt install`:
+  ```bash
+  brew install nmap
+  brew install wireshark
+  brew install tcpdump  # обычно уже установлен
+  ```
+
+- **Виртуализация на M2**: VirtualBox может быть нестабилен на Apple Silicon. Рекомендуется использовать:
+  - **UTM** — нативный для Apple Silicon, бесплатный
+  - **Parallels** — платный, но быстрый на M-чипах
+  
+  На 8GB RAM запускайте VM с 3-4GB памяти. Kali требует минимум 2GB, Metasploitable может работать на 512MB.
+
+- **Скачивание образов**:
+  - Kali Linux: https://www.kali.org/get-kali/
+  - Metasploitable2: https://sourceforge.net/projects/metasploitable/
+  - Внимание: Metasploitable2 может не запуститься на Apple Silicon (x86_64). Используйте Metasploitable3 или VulnHub образы для ARM.
+
+- **Устаревшие команды**: Везде, где в уроке упоминаются `ifconfig`, `netstat`, `arp` — эти команды считаются устаревшими. Используйте современные аналоги:
+  - `ifconfig` → `ip addr` / `ip link`
+  - `netstat -tunap` → `ss -tunap`
+  - `arp -n` → `ip neigh`
+  - `route -n` → `ip route`
+
+- **Настройка сети в UTM/Parallels**:
+  - Internal Network: в UTM называется "Network Isolation", в Parallels — "Host-Only"
+  - Для доступа хоста к VM используйте "Shared Network" (UTM) или "Host-Only" (Parallels)
+
+- **Ограничения 8GB RAM**: Не запускайте одновременно много тяжелых VM. Оптимально: 1 Kali (3GB) + 1 Metasploitable (512MB) = 3.5GB + хост ~4GB.
+
+- **testssl.sh**: Не устанавливается через brew. Скачайте с GitHub:
+  ```bash
+  git clone https://github.com/drwetter/testssl.sh.git
+  cd testssl.sh
+  ./testssl.sh example.com
+  ```

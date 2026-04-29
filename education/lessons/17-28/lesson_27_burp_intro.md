@@ -66,11 +66,43 @@
 
 **Или используйте FoxyProxy** (расширение для быстрого переключения).
 
+### Установка CA-сертификата Burp (критично для HTTPS)
+
+Для перехвата HTTPS-трафика необходимо установить CA-сертификат Burp в браузер.
+
+**Шаг 1: Скачивание сертификата**
+1. В Burp Suite убедитесь, что Proxy запущен
+2. В браузере (через прокси Burp) откройте: `http://burp`
+3. Нажмите **CA Certificate** — файл `cacert.der` скачается
+
+**Шаг 2: Установка в Firefox**
+1. Откройте Firefox → Settings → Privacy & Security → Certificates → View Certificates
+2. Нажмите **Import**, выберите скачанный `cacert.der`
+3. Поставьте галочку **Trust this CA to identify websites**
+4. Нажмите OK
+
+**Шаг 3: Проверка**
+1. В Burp включите **Intercept on**
+2. В браузере откройте `https://www.google.com`
+3. В Burp должен появиться перехваченный HTTPS-запрос
+
+**Для macOS (M2):**
+```bash
+# Установка Burp Suite через Homebrew
+brew install --cask burp-suite
+```
+
+После установки сертификата, экспортируйте его:
+1. В Burp: Proxy → Proxy settings → Import / Export CA certificate
+2. Export → Certificate in DER format → Save as `burp_ca.der`
+3. В macOS дважды кликните файл → добавится в Keychain Access
+4. В Keychain найдите "PortSwigger CA" → ПКМ → Get Info → Trust → Always Trust
+
 ### Практика: Proxy и перехват
 
 **Шаг 1: Перехват запроса**
 1. В Burp включите **Intercept on** (Proxy → Intercept)
-2. В браузере откройте http://localhost (DVWA)
+2. В браузере откройте http://192.168.0.x (DVWA)
 3. В Burp появится запрос — нажмите **Forward** чтобы пропустить
 4. Попробуйте войти в DVWA, запрос появится в Proxy
 
@@ -124,7 +156,88 @@
 2. **Скриншот 2**: Burp Repeater — запрос с модифицированным параметром, ответ содержит данные
 3. **Скриншот 3**: Burp Intruder — результат атаки, найден правильный пароль
 
+### Примеры вывода
+
+**Burp Proxy — перехваченный запрос:**
+```
+GET /vulnerabilities/sqli/?id=1 HTTP/1.1
+Host: localhost
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+Cookie: PHPSESSID=abc123; security=low
+Connection: close
+
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=UTF-8
+Content-Length: 1234
+
+<html>...<pre>First name: admin<br>Surname: admin</pre>...</html>
+```
+
+**Burp Repeater — измененный запрос и ответ:**
+```
+Request:
+GET /vulnerabilities/sqli/?id=1' OR '1'='1 HTTP/1.1
+Host: localhost
+Cookie: PHPSESSID=abc123; security=low
+
+Response:
+HTTP/1.1 200 OK
+<pre>First name: admin<br>Surname: admin</pre>
+<pre>First name: Gordon<br>Surname: Brown</pre>
+... (все пользователи)
+```
+
+**Burp Intruder — результаты атаки:**
+```
+Payload     | Status | Length | Result
+test        | 302    | 0       |
+password    | 302    | 0       | ← SUCCESS (редирект на главную)
+123456      | 302    | 0       |
+```
+
+### Частые ошибки
+
+1. **Забыть включить Intercept** — трафик не перехватывается
+2. **Неправильный прокси в браузере** — должен быть 127.0.0.1:8080
+3. **Не установлен CA-сертификат** — HTTPS трафик не виден (failed to handshake)
+4. **Forward вместо Drop** — когда перехватили запрос, но не хотели его менять
+
+### Вопросы на понимание
+
+1. В чем разница между Proxy (Intercept on) и Repeater?
+2. Когда использовать Intruder типа Sniper, а когда Cluster bomb?
+3. Зачем нужен CA-сертификат Burp для HTTPS?
+4. Как найти успешный пейлоад в Intruder (кроме кода ответа)?
+
+### Адаптация под macOS (M2)
+
+```bash
+# Установка Burp Suite через Homebrew
+brew install --cask burp-suite
+
+# Экспорт сертификата через командную строку (если Burp уже запущен)
+# Откройте в браузере: http://127.0.0.1:8080/cert
+# Скачается cacert.der
+
+# Импорт в Keychain (автоматически)
+security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain cacert.der
+
+# Проверка, что сертификат добавлен
+security find-certificate -c "PortSwigger CA"
+```
+
 ---
+
+
+## Адаптация под macOS (M2, 8GB)
+
+- Для установки инструментов используйте Homebrew: `brew install <tool>`
+- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
+- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Docker работает нативно на M2: `docker pull <image>`
+- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
+- Для Python используйте `pip3 install` вместо `pip install`
+
 
 ## Задачи для самостоятельного выполнения
 

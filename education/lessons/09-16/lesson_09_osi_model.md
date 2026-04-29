@@ -56,7 +56,14 @@
 ```bash
 ip link show
 ```
-Обратите внимание на MAC-адреса (канальный уровень).
+Пример вывода:
+```
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: en0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP 
+    link/ether 00:1a:2b:3c:4d:5e brd ff:ff:ff:ff:ff:ff
+```
+Обратите внимание на MAC-адреса (канальный уровень) — строка `link/ether`.
 
 2. Проверьте IP-адресацию:
 ```bash
@@ -87,17 +94,55 @@ ss -tunap
 
 1. Просмотрите ARP-таблицу:
 ```bash
-arp -n
-# или
 ip neigh show
 ```
+Примечание: команда `arp -n` считается устаревшей, используйте `ip neigh`.
 
-2. Очистите ARP-таблицу для конкретного IP (требуется sudo):
+2. Очистите ARP-запись для конкретного IP (требуется sudo):
 ```bash
-sudo arp -d 192.168.1.1
+sudo ip neigh del 192.168.1.1 dev eth0
 ```
 
 3. Выполните ping до этого IP и снова проверьте ARP-таблицу — увидите, как заполнился MAC-адрес.
+
+## Примеры вывода
+
+### ip link show
+```
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: en0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP
+    link/ether 00:1a:2b:3c:4d:5e brd ff:ff:ff:ff:ff:ff
+```
+
+### ss -tunap
+```
+tcp   ESTAB  0  0  192.168.1.100:52341  151.101.1.69:443   users:(("curl",pid=1234,fd=3))
+udp   UNCONN 0  0  *:5353   *:*   users:(("mDNSResponder",pid=567,fd=4))
+```
+
+### ip neigh show
+```
+192.168.1.1 dev en0 lladdr 00:11:22:33:44:55 REACHABLE
+192.168.1.2 dev en0 lladdr aa:bb:cc:dd:ee:ff STALE
+```
+
+## Частые ошибки
+
+1. **Путаница уровней**: Часто путают сеансовый (L5) и транспортный (L4) уровни. Запомните: L4 — это порты (TCP/UDP), L5 — это управление сеансом.
+2. **MAC vs IP**: MAC-адрес работает на канальном уровне (L2) и меняется при прохождении роутеров. IP-адрес работает на сетевом уровне (L3) и остается неизменным при маршрутизации.
+3. **HTTP vs TCP**: HTTP — это L7 (прикладной), TCP — L4 (транспортный). HTTP работает ПОВЕРХ TCP, а не вместо него.
+
+## Вопросы на понимание
+
+1. На каком уровне OSI работает коммутатор (switch)?
+    <details><summary>Ответ</summary>Канальный (L2) — работает с MAC-адресами</details>
+2. Какой уровень отвечает за маршрутизацию пакетов между сетями?
+    <details><summary>Ответ</summary>Сетевой (L3) — IP-адресация и маршрутизация</details>
+3. Почему пентестеру важно знать разницу между TCP и UDP?
+    <details><summary>Ответ</summary>Многие атаки (SYN-flood) работают только на TCP. UDP-сервисы требуют других методов атаки (UDP flood, DNS amplification)</details>
+4. На каком уровне происходит SQL-инъекция?
+    <details><summary>Ответ</summary>Прикладной (L7) — атака на веб-приложение через HTTP-протокол</details>
 
 ## Задачи для самостоятельного выполнения
 
@@ -108,3 +153,39 @@ sudo arp -d 192.168.1.1
 3. **Практика с tcpdump**: Используя tcpdump, захватите 10 пакетов ICMP (ping) и проанализируйте их структуру по уровням OSI. Команда: `sudo tcpdump -i любой -c 10 icmp -vvv`
 
 4. **Инкапсуляция на примере curl**: Выполните `curl -v http://example.com` и опишите, какие уровни OSI задействуются при выполнении этой команды, какие заголовки добавляются на каждом уровне.
+
+## Адаптация под macOS (M2, 8GB)
+
+Для пользователей macOS (особенно на чипах M1/M2 и с 8GB RAM):
+
+- **Установка инструментов**: Используйте `brew install` вместо `apt install`:
+  ```bash
+  brew install ipcalc
+  brew install nmap
+  brew install wireshark
+  brew install mitmproxy
+  brew install bind  # для dig
+  ```
+
+- **Wireshark на macOS**: Устанавливается через `brew install wireshark`. Для захвата трафика может потребоваться дать права в Security & Privacy.
+
+- **Виртуализация**: Вместо VirtualBox (который может быть нестабилен на M2) рекомендуется использовать:
+  - **UTM** — нативный для Apple Silicon, бесплатный
+  - **Parallels** — платный, но быстрый на M-чипах
+  
+  На 8GB RAM запускайте VM с 3-4GB памяти. Kali требует минимум 2GB, легкие дистрибутивы (Alpine, Tiny Core) могут работать на 512MB.
+
+- **Устаревшие команды**: Везде, где в уроке упоминаются `ifconfig`, `netstat`, `arp` — эти команды считаются устаревшими. Используйте современные аналоги:
+  - `ifconfig` → `ip addr` / `ip link`
+  - `netstat -tunap` → `ss -tunap`
+  - `arp -n` → `ip neigh`
+  - `route -n` → `ip route`
+
+- **testssl.sh**: Не устанавливается через brew. Скачайте с GitHub:
+  ```bash
+  git clone https://github.com/drwetter/testssl.sh.git
+  cd testssl.sh
+  ./testssl.sh example.com
+  ```
+
+- **Ограничения 8GB RAM**: Не запускайте одновременно много тяжелых VM. Оптимально: 1 Kali (3GB) + 1 Metasploitable (512MB) = 3.5GB + хост ~4GB.

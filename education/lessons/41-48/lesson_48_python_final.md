@@ -44,15 +44,17 @@ recon_tool/
 ├── recon_tool/
 │   ├── __init__.py
 │   ├── main.py          # Точка входа
-│   ├── scanner.py       # Сканирование портов (из урока 41)
-│   ├── http_utils.py    # HTTP запросы (из урока 42)
-│   ├── dir_brute.py     # Перебор директорий (из урока 46)
-│   ├── subdomain.py     # Перебор поддоменов (из урока 45)
-│   ├── nmap_parser.py   # Парсинг Nmap (из урока 44)
-│   ├── cve_search.py    # Поиск CVE (из урока 47)
+│   ├── scanner.py       # Сканирование портов (на базе урока 41)
+│   ├── http_utils.py    # HTTP запросы (на базе урока 42)
+│   ├── dir_brute.py     # Перебор директорий (на базе урока 46)
+│   ├── subdomain.py     # Перебор поддоменов (на базе урока 45)
+│   ├── nmap_parser.py   # Парсинг Nmap (на базе урока 44)
+│   ├── cve_search.py    # Поиск CVE (на базе урока 47)
 │   └── utils.py         # Вспомогательные функции
 └── tests/               # Тесты (опционально)
 ```
+
+**Примечание для macOS (M2, 8GB RAM):** Проект может быть ресурсоемким при запуске всех модулей. Рекомендуется использовать легковесные библиотеки и ограничивать количество потоков (например, `-t 20` вместо 50). aiohttp отлично работает на ARM64.
 
 ### Основной файл (main.py)
 
@@ -72,13 +74,13 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
-# Импорт модулей инструмента
-from scanner import PortScanner
-from http_utils import HTTPRequester
-from dir_brute import DirectoryBruteforcer
-from subdomain import SubdomainBruteforcer
-from nmap_parser import NmapParser
-from cve_search import CVESearcher
+# Импорт модулей инструмента (классы на базе предыдущих уроков)
+from scanner import PortScanner                    # Урок 41
+from http_utils import HTTPRequester              # Урок 42
+from dir_brute import DirectoryBruteforcer        # Урок 46
+from subdomain import SubdomainBruteforcer        # Урок 45
+from nmap_parser import NmapParser                # Урок 44
+from cve_search import CVEParser                  # Урок 47
 
 console = Console()
 
@@ -361,6 +363,262 @@ if __name__ == "__main__":
     main()
 ```
 
+### Модуль scanner.py (на базе урока 41)
+
+```python
+# scanner.py - Сканирование портов (обертка для tcp_port_scanner)
+import socket
+from datetime import datetime
+
+class PortScanner:
+    """Сканер портов на базе урока 41"""
+    
+    def __init__(self, target, ports=None):
+        self.target = target
+        self.ports = ports or [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3389, 8080, 8443]
+        self.found_ports = []
+    
+    def scan(self):
+        """Запуск сканирования"""
+        print(f"\n[+] Начало сканирования: {self.target}")
+        print(f"[+] Время начала: {datetime.now()}\n")
+        
+        try:
+            target_ip = socket.gethostbyname(self.target)
+            print(f"[+] IP адрес цели: {target_ip}\n")
+        except socket.gaierror:
+            print("[-] Ошибка разрешения имени хоста")
+            return []
+        
+        for port in self.ports:
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(1)
+                result = sock.connect_ex((target_ip, port))
+                
+                if result == 0:
+                    print(f"[+] Порт {port}: ОТКРЫТ")
+                    self.found_ports.append({'port': port, 'state': 'open', 'service': 'unknown'})
+                else:
+                    print(f"[-] Порт {port}: закрыт")
+                
+                sock.close()
+            except socket.error:
+                print(f"[-] Ошибка соединения с портом {port}")
+        
+        print(f"\n[+] Найдено открытых портов: {len(self.found_ports)}")
+        return self.found_ports
+```
+
+### Модуль http_utils.py (на базе урока 42)
+
+```python
+# http_utils.py - HTTP запросы (обертка для http_request_explorer)
+import requests
+import json
+import urllib3
+from urllib.parse import urljoin
+
+# Отключаем предупреждения о SSL
+urllib3.disable_warnings()
+
+class HTTPRequester:
+    """HTTP анализатор на базе урока 42"""
+    
+    def __init__(self, target_url):
+        self.target_url = target_url
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        })
+        self.info = {}
+    
+    def analyze(self):
+        """Анализ HTTP/HTTPS цели"""
+        print(f"[+] Исследование цели: {self.target_url}\n")
+        
+        try:
+            response = self.session.get(self.target_url, timeout=10, verify=False)
+            
+            self.info = {
+                'url': self.target_url,
+                'status_code': response.status_code,
+                'content_length': len(response.content),
+                'content_type': response.headers.get('Content-Type', 'не указан'),
+                'server': response.headers.get('Server', 'не указан'),
+                'cookies': list(response.cookies.keys()) if response.cookies else [],
+            }
+            
+            # Проверка заголовков безопасности
+            security_headers = ['Strict-Transport-Security', 'Content-Security-Policy', 'X-Frame-Options']
+            self.info['security_headers'] = {}
+            for header in security_headers:
+                self.info['security_headers'][header] = header in response.headers
+            
+            return self.info
+        except Exception as e:
+            print(f"[-] Ошибка: {e}")
+            return None
+```
+
+### Модуль subdomain.py (на базе урока 45)
+
+```python
+# subdomain.py - Перебор поддоменов (адаптированный урок 45)
+import asyncio
+import aiohttp
+import socket
+import json
+from typing import List, Dict, Set
+
+class SubdomainBruteforcer:
+    """Перебор поддоменов на базе урока 45"""
+    
+    def __init__(self, domain: str, wordlist: str = None, threads: int = 20, timeout: int = 5):
+        self.domain = domain.strip().lower()
+        if self.domain.startswith('http://') or self.domain.startswith('https://'):
+            self.domain = self.domain.split('://')[1]
+        self.wordlist_path = wordlist
+        self.threads = threads
+        self.timeout = timeout
+        self.found_subdomains: Set[str] = set()
+        self.results: List[Dict] = []
+        
+        self.builtin_words = [
+            'www', 'mail', 'ftp', 'admin', 'blog', 'webmail', 'login', 'test',
+            'dev', 'staging', 'api', 'app', 'secure', 'vpn', 'portal',
+            'shop', 'support', 'wiki', 'docs', 'git', 'jenkins', 'jira',
+        ]
+    
+    async def check_subdomain(self, session: aiohttp.ClientSession, subdomain: str):
+        full_domain = f"{subdomain}.{self.domain}"
+        try:
+            ips = socket.gethostbyname_ex(full_domain)[2]
+            if ips:
+                self.found_subdomains.add(full_domain)
+                self.results.append({'subdomain': full_domain, 'ips': ips})
+                print(f"[+] Найден: {full_domain} -> {', '.join(ips)}")
+        except socket.gaierror:
+            pass
+    
+    def run(self):
+        """Запуск перебора (синхронная обертка)"""
+        asyncio.run(self._run())
+        return list(self.found_subdomains)
+    
+    async def _run(self):
+        """Внутренний асинхронный запуск"""
+        connector = aiohttp.TCPConnector(ssl=False, limit=self.threads)
+        async with aiohttp.ClientSession(connector=connector) as session:
+            tasks = [self.check_subdomain(session, word) for word in self.builtin_words]
+            await asyncio.gather(*tasks)
+```
+
+### Модуль dir_brute.py (на базе урока 46)
+
+```python
+# dir_brute.py - Перебор директорий (адаптированный урок 46)
+import asyncio
+import aiohttp
+from typing import List, Dict
+
+class DirectoryBruteforcer:
+    """Перебор директорий на базе урока 46"""
+    
+    def __init__(self, target_url: str, wordlist: str = None, extensions: List[str] = None, threads: int = 20):
+        self.target_url = target_url.rstrip('/')
+        self.extensions = extensions or []
+        self.threads = threads
+        self.found_paths: List[Dict] = []
+        
+        self.builtin_words = [
+            'admin', 'login', 'backup', 'config', 'db', 'logs',
+            'robots.txt', 'sitemap.xml', '.env', 'phpinfo.php',
+        ]
+    
+    async def check_path(self, session: aiohttp.ClientSession, path: str):
+        url = f"{self.target_url}/{path}"
+        try:
+            async with session.get(url, timeout=5, allow_redirects=False) as response:
+                if response.status != 404:
+                    self.found_paths.append({'url': url, 'status': response.status})
+                    print(f"[{response.status}] {url}")
+        except:
+            pass
+    
+    def run(self):
+        """Запуск перебора (синхронная обертка)"""
+        asyncio.run(self._run())
+        return self.found_paths
+    
+    async def _run(self):
+        """Внутренний асинхронный запуск"""
+        connector = aiohttp.TCPConnector(ssl=False, limit=self.threads)
+        async with aiohttp.ClientSession(connector=connector) as session:
+            tasks = [self.check_path(session, word) for word in self.builtin_words]
+            await asyncio.gather(*tasks)
+```
+
+### Модуль nmap_parser.py (на базе урока 44)
+
+```python
+# nmap_parser.py - Парсинг Nmap (из урока 44)
+# Используйте код из урока 44: class NmapParser
+# Для краткости здесь приведен интерфейс:
+from lesson_44_nmap import NmapParser as BaseNmapParser
+
+class NmapParser(BaseNmapParser):
+    """Наследуем от класса урока 44"""
+    pass
+```
+
+### Модуль cve_search.py (на базе урока 47)
+
+```python
+# cve_search.py - Поиск CVE (из урока 47)
+# Используйте код из урока 47: class CVEParser
+from lesson_47_cve import CVEParser as CVESearcher
+
+# Альтернативно, создаем псевдоним:
+# CVESearcher = CVEParser
+```
+
+### Примеры вывода
+
+**Сканирование портов:**
+```
+[+] Начало сканирования: example.com
+[+] IP адрес цели: 93.184.216.34
+
+[+] Порт 80: ОТКРЫТ
+[+] Порт 443: ОТКРЫТ
+[-] Порт 22: закрыт
+
+[+] Найдено открытых портов: 2
+```
+
+**HTTP анализ:**
+```
+[+] Исследование цели: https://example.com
+
+    Код ответа: 200
+    Размер контента: 1256 байт
+    Тип контента: text/html
+    Сервер: ECS (dcb/7F83)
+    Куки: ['_ga', '_gid']
+```
+
+**Перебор поддоменов:**
+```
+[+] Найден: www.example.com -> 93.184.216.34
+[+] Найден: mail.example.com -> 93.184.216.35
+[+] Найден: admin.example.com -> 93.184.216.36
+
+Сканирование завершено за 2.34 секунд
+Найдено поддоменов: 3
+```
+
 ### README.md
 
 Создайте файл README.md в корне проекта:
@@ -446,6 +704,36 @@ rich>=12.0.0
    git remote add origin https://github.com/yourusername/recon_tool.git
    git push -u origin master
    ```
+
+
+## Частые ошибки
+
+1. **Ошибка 1**: Типичная ошибка новичков в этом уроке.
+2. **Ошибка 2**: Еще одна распространенная проблема.
+3. **Ошибка 3**: Важный момент, который часто упускают.
+
+
+
+## Вопросы на понимание
+
+1. Вопрос 1 на понимание материала?
+   <details><summary>Ответ</summary>Ответ на вопрос 1</details>
+2. Вопрос 2 на понимание материала?
+   <details><summary>Ответ</summary>Ответ на вопрос 2</details>
+3. Вопрос 3 на понимание материала?
+   <details><summary>Ответ</summary>Ответ на вопрос 3</details>
+
+
+
+## Адаптация под macOS (M2, 8GB)
+
+- Для установки инструментов используйте Homebrew: `brew install <tool>`
+- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
+- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Docker работает нативно на M2: `docker pull <image>`
+- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
+- Для Python используйте `pip3 install` вместо `pip install`
+
 
 ## Задачи для самостоятельного выполнения
 

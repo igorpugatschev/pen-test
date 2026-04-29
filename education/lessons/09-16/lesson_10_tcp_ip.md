@@ -14,6 +14,28 @@ TCP/IP (Transmission Control Protocol/Internet Protocol) — набор прот
 - Соответствует сетевому уровню OSI
 - Протоколы: IP (IPv4, IPv6), ICMP, IGMP
 
+### IPv6 (кратко)
+
+IPv6 — новая версия протокола IP, призванная заменить IPv4 из-за нехватки адресов.
+
+**Особенности IPv6:**
+- 128-битные адреса (вместо 32-битных в IPv4): `2001:0db8:85a3::8a2e:0370:7334`
+- Отсутствие NAT (каждому устройству — публичный адрес)
+- Встроенная IPsec-поддержка
+- Упрощенная заголовка пакета
+- Автоконфигурация адресов (SLAAC)
+
+**Типы IPv6-адресов:**
+- **Unicast** — один получатель (аналог обычных IPv4-адресов)
+- **Multicast** — группа получателей (заменяет Broadcast в IPv6)
+- **Anycast** — ближайший из группы получателей
+
+**Специальные адреса:**
+- `::1/128` — loopback (аналог 127.0.0.1)
+- `fe80::/10` — link-local (для локальной связи, аналог 169.254.x.x)
+- `2000::/3` — глобальные адреса (публичные)
+- `fc00::/7` — уникальные локальные адреса (ULA, аналог private IPv4)
+
 **3. Транспортный (Transport)**
 - Соответствует транспортному уровню OSI
 - Протоколы: TCP, UDP
@@ -107,8 +129,9 @@ curl -s ifconfig.me
 
 Проверьте себя с помощью калькулятора подсетей:
 ```bash
-# Установите ipcalc (Debian/Ubuntu)
-sudo apt install ipcalc
+# Установите ipcalc (macOS: brew, Linux: apt)
+brew install ipcalc
+# Для Linux: sudo apt install ipcalc
 ipcalc 192.168.10.0/26
 ```
 
@@ -116,7 +139,9 @@ ipcalc 192.168.10.0/26
 
 1. Установите nmap:
 ```bash
-sudo apt install nmap
+# macOS: brew install nmap
+# Linux: sudo apt install nmap
+brew install nmap
 ```
 
 2. Сканируйте открытые TCP-порты на локальном хосте:
@@ -147,10 +172,60 @@ curl http://example.com
 ```
 
 3. В выводе tcpdump увидите:
-   - SYN (клиент -> сервер)
-   - SYN-ACK (сервер -> клиент)
-   - ACK (клиент -> сервер)
-   Это 3-way handshake
+    - SYN (клиент -> сервер)
+    - SYN-ACK (сервер -> клиент)
+    - ACK (клиент -> сервер)
+    Это 3-way handshake
+
+## Примеры вывода
+
+### ip addr show
+```
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN
+    inet 127.0.0.1/8 scope host lo
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP
+    inet 192.168.1.100/24 brd 192.168.1.255 scope global eth0
+```
+
+### ip route show
+```
+default via 192.168.1.1 dev eth0
+192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.100
+```
+
+### nmap -sT 127.0.0.1
+```
+Starting Nmap 7.94 ( https://nmap.org )
+Nmap scan report for localhost (127.0.0.1)
+Host is up (0.00010s latency).
+Not shown: 998 closed ports
+PORT     STATE SERVICE
+22/tcp   open  ssh
+80/tcp   open  http
+```
+
+### curl -s ifconfig.me
+```
+93.184.216.34
+```
+
+## Частые ошибки
+
+1. **Путаница маски и префикса**: Маска /24 — это 255.255.255.0, а не 255.0.0.0. Чем больше число после слэша, тем меньше хостов в сети.
+2. **Забывание вычесть 2**: В расчете хостов всегда вычитайте 2 (адрес сети и broadcast). Для /30 доступно только 2 хоста, не 4.
+3. **IPv4 vs IPv6**: IPv6-адреса пишутся в шестнадцатеричном виде и намного длиннее. Не путайте их с IPv4.
+4. **netstat вместо ss**: Команда `netstat` считается устаревшей. Используйте `ss -tunap` для просмотра соединений.
+
+## Вопросы на понимание
+
+1. Сколько хостов можно разместить в подсети 10.0.0.0/8?
+    <details><summary>Ответ</summary>2^(32-8) - 2 = 16,777,214 хостов</details>
+2. В чем разница между TCP и UDP с точки зрения пентестера?
+    <details><summary>Ответ</summary>TCP требует handshake и проверки состояния (легче заметить сканирование), UDP — без соединения (может быть шумным, но часто игнорируется файрволами)</details>
+3. Что такое MAC-адрес и на каком уровне он работает?
+    <details><summary>Ответ</summary>MAC-адрес — физический адрес сетевой карты, работает на канальном уровне (L2) модели OSI</details>
+4. Зачем нужен расчет подсетей пентестеру?
+    <details><summary>Ответ</summary>Для понимания границ сети, выбора целей для сканирования, планирования атак типа MITM внутри сегмента</details>
 
 ## Задачи для самостоятельного выполнения
 
@@ -173,3 +248,34 @@ sudo ip route del 10.10.10.0/24
 ```
 
 5. **Сравнение TCP и UDP**: Напишите простой Python-скрипт (или используйте netcat), который отправляет данные по UDP и TCP на localhost, и используйте tcpdump для захвата пакетов. Опишите разницу в заголовках и поведении протоколов.
+
+## Адаптация под macOS (M2, 8GB)
+
+Для пользователей macOS (особенно на чипах M1/M2 и с 8GB RAM):
+
+- **Установка инструментов**: Используйте `brew install` вместо `apt install`:
+  ```bash
+  brew install ipcalc
+  brew install nmap
+  brew install wireshark
+  brew install mtr
+  brew install tcptraceroute
+  ```
+
+- **Wireshark на macOS**: Устанавливается через `brew install wireshark`. Для захвата трафика может потребоваться дать права в Security & Privacy.
+
+- **Виртуализация**: Вместо VirtualBox (который может быть нестабилен на M2) рекомендуется использовать:
+  - **UTM** — нативный для Apple Silicon, бесплатный
+  - **Parallels** — платный, но быстрый на M-чипах
+  
+  На 8GB RAM запускайте VM с 3-4GB памяти. Kali требует минимум 2GB.
+
+- **Устаревшие команды**: Везде, где в уроке упоминаются `ifconfig`, `netstat`, `arp` — эти команды считаются устаревшими. Используйте современные аналоги:
+  - `ifconfig` → `ip addr` / `ip link`
+  - `netstat -tunap` → `ss -tunap`
+  - `arp -n` → `ip neigh`
+  - `route -n` → `ip route`
+
+- **IPv6 на macOS**: Для просмотра IPv6-адресов используйте `ifconfig` или `ip addr` (если установлен iproute2mac: `brew install iproute2mac`).
+
+- **Ограничения 8GB RAM**: Не запускайте одновременно много тяжелых VM. Оптимально: 1 Kali (3GB) + 1 Metasploitable (512MB) = 3.5GB + хост ~4GB.

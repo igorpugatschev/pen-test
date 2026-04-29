@@ -104,6 +104,50 @@ sqlmap -u "http://target.com/page.php?id=1" --tamper=space2comment,charencode --
 - `charencode` — кодирует полезную нагрузку
 - `charunicodeencode` — Unicode-кодирование
 
+
+## Примеры вывода
+
+Пример вывода команд будет добавлен индивидуально для каждого урока.
+
+
+
+## Частые ошибки
+
+1. **Ошибка 1**: Типичная ошибка новичков в этом уроке.
+2. **Ошибка 2**: Еще одна распространенная проблема.
+3. **Ошибка 3**: Важный момент, который часто упускают.
+
+
+
+## Вопросы на понимание
+
+1. Вопрос 1 на понимание материала?
+   <details><summary>Ответ</summary>Ответ на вопрос 1</details>
+2. Вопрос 2 на понимание материала?
+   <details><summary>Ответ</summary>Ответ на вопрос 2</details>
+3. Вопрос 3 на понимание материала?
+   <details><summary>Ответ</summary>Ответ на вопрос 3</details>
+
+
+
+## Форматы флагов
+
+- **TryHackMe**: `THM{...}`
+- **HackTheBox**: `HTB{...}`
+- **PortSwigger**: "Lab solved!" (без флагов)
+
+
+
+## Адаптация под macOS (M2, 8GB)
+
+- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): скачайте .ovpn файл и откройте через Tunnelblick
+- Виртуалки: используйте **UTM** (бесплатно для M2) или **Parallels** вместо VirtualBox
+- "На 8GB RAM выделяйте VM не более 3-4GB"
+- Docker работает нативно на M2: `docker pull <image>`
+- Для установки инструментов используйте Homebrew: `brew install <tool>`
+- Если требуется Python: `pip3 install <package>`
+
+
 ## Задачи для самостоятельного выполнения
 
 1. **Практика на PortSwigger:** Лабораторные "WAF Bypass" (если доступны) или "SQLi with filter bypass"

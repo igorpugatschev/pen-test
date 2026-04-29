@@ -19,7 +19,7 @@
 
 **Установка:**
 ```bash
-pip install requests
+pip3 install requests
 ```
 
 ## Практическое занятие
@@ -29,7 +29,11 @@ pip install requests
 ```python
 import requests
 import json
+import urllib3
 from urllib.parse import urljoin
+
+# Отключаем предупреждения о небезопасных SSL-сертификатах
+urllib3.disable_warnings()
 
 def http_request_explorer(target_url):
     """
@@ -127,9 +131,6 @@ def http_request_explorer(target_url):
         print(f"[-] Неожиданная ошибка: {e}")
 
 if __name__ == "__main__":
-    # Отключаем предупреждения о небезопасных SSL-сертификатах
-    requests.packages.urllib3.disable_warnings()
-    
     # Тестовый URL (можно заменить на реальную цель)
     target = "http://httpbin.org/get"
     http_request_explorer(target)
@@ -149,6 +150,73 @@ if __name__ == "__main__":
 python lesson_42_requests.py
 ```
 
+## Примеры вывода
+
+Пример успешного выполнения скрипта для `http://httpbin.org/get`:
+
+```
+[+] Исследование цели: http://httpbin.org/get
+
+[1] Выполняем GET-запрос...
+    Код ответа: 200
+    Размер контента: 306 байт
+    Тип контента: application/json
+    Сервер: gunicorn/19.9.0
+    Куки: ['_ga', '_gid']
+
+[2] Выполняем HEAD-запрос для получения только заголовков...
+    Заголовки ответа:
+      Content-Type: application/json
+      Content-Length: 306
+      Server: gunicorn/19.9.0
+      ...
+
+[4] Проверяем, является ли ответ JSON...
+    Ответ содержит JSON: {
+  "args": {},
+  "headers": {
+    "Accept": "text/html,application/xhtml+...",
+    "Host": "httpbin.org"
+  },
+  ...
+
+[5] Проверка заголовков безопасности...
+    [+] Strict-Transport-Security: max-age=15724800; includeSubDomains
+    [-] Content-Security-Policy: НЕ УСТАНОВЛЕН
+    [+] X-Frame-Options: DENY
+```
+
+## Частые ошибки
+
+1. **`requests.exceptions.SSLError`** — Ошибка SSL-сертификата. Решение: добавить `verify=False` в запрос или исправить сертификат.
+2. **`urllib3.disable_warnings()` не работает** — В новых версиях нужно явно импортировать `import urllib3` перед вызовом. Убедитесь, что используете правильный синтаксис:
+   ```python
+   import urllib3
+   urllib3.disable_warnings()
+   ```
+3. **`requests.exceptions.Timeout`** — Превышено время ожидания. Увеличьте параметр `timeout` или проверьте доступность цели.
+4. **`NameError: name 'urllib3' is not defined`** — Забыли импортировать библиотеку. Добавьте `import urllib3` перед использованием.
+
+## Вопросы на понимание
+
+1. **В чем разница между `requests.get()` и `session.get()`?**
+   <details>
+   <summary>Ответ</summary>
+   `requests.get()` создает новый запрос каждый раз. `session.get()` использует сессию, которая сохраняет куки, заголовки и другие параметры между запросами, что важно для сохранения состояния (например, после авторизации).
+   </details>
+
+2. **Зачем нужен параметр `verify=False` и чем он опасен?**
+   <details>
+   <summary>Ответ</summary>
+   `verify=False` отключает проверку SSL-сертификата. Это опасно, так как делает запрос уязвимым к MITM-атакам (подмене сертификата). Используйте только для тестирования на известных целях.
+   </details>
+
+3. **Чем отличается `allow_redirects=False` от отсутствия этого параметра?**
+   <details>
+   <summary>Ответ</summary>
+   По умолчанию `requests` следует редиректам (коды 301, 302 и т.д.). При `allow_redirects=False` библиотека не будет переходить по редиректам, а вернет ответ с кодом 3xx и заголовком Location.
+   </details>
+
 ## Задачи для самостоятельного выполнения
 
 1. **Базовая аутентификация:** Добавьте поддержку HTTP Basic Auth в скрипт. Используйте параметр `auth=(username, password)` в запросах.
@@ -167,3 +235,12 @@ python lesson_42_requests.py
 6. **Сохранение ответов:** Добавьте возможность сохранения HTML-ответов в файлы для последующего анализа. Создайте структуру папок по URL.
 
 7. **Fuzzer параметров:** Напишите функцию, которая подставляет различные значения в GET-параметры и анализирует изменения в ответе (размер, код ответа).
+
+## Адаптация под macOS (M2, 8GB)
+
+При выполнении заданий на компьютере Mac с процессором M2 и 8GB оперативной памяти учитывайте следующие особенности:
+
+- Для установки библиотек используйте `pip3 install <package>`, а не `pip install`.
+- На M2 можно использовать `asyncio`, он поддерживает ARM.
+- На 8GB RAM проект может быть тяжелым, используйте легковесные библиотеки.
+- Для работы с aiohttp в будущих уроках используйте `connector = aiohttp.TCPConnector(ssl=False)` вместо передачи `ssl=False` напрямую в `get()`.

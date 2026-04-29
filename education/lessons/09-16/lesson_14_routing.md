@@ -116,6 +116,9 @@ sudo ip route del 172.16.0.0/16
 
 1. Установите traceroute:
 ```bash
+# macOS
+brew install traceroute
+# Linux
 sudo apt install traceroute
 ```
 
@@ -138,13 +141,17 @@ sudo traceroute -I 8.8.8.8
 
 1. Используйте mtr (комбинация ping и traceroute):
 ```bash
-sudo apt install mtr
+# macOS: brew install mtr
+# Linux: sudo apt install mtr
+brew install mtr
 mtr 8.8.8.8
 ```
 
 2. Используйте tcptraceroute:
 ```bash
-sudo apt install tcptraceroute
+# macOS: brew install tcptraceroute
+# Linux: sudo apt install tcptraceroute
+brew install tcptraceroute
 tcptraceroute 8.8.8.8
 ```
 
@@ -152,6 +159,56 @@ tcptraceroute 8.8.8.8
 ```bash
 curl --max-time 10 -v http://example.com 2>&1 | grep -i "trying"
 ```
+
+## Примеры вывода
+
+### ip route show
+```
+default via 192.168.1.1 dev eth0 proto static
+192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.100
+```
+
+### traceroute 8.8.8.8
+```
+traceroute to 8.8.8.8 (8.8.8.8), 30 hops max, 60 byte packets
+ 1  _gateway (192.168.1.1)  0.456 ms  0.401 ms  0.387 ms
+ 2  10.0.0.1 (10.0.0.1)  1.234 ms  1.198 ms  1.156 ms
+ 3  172.16.0.1 (172.16.0.1)  5.678 ms  5.543 ms  5.432 ms
+ 4  8.8.8.8 (8.8.8.8)  12.345 ms  12.298 ms  12.156 ms
+```
+
+### mtr 8.8.8.8 (интерактивный вывод)
+```
+Host       Loss%   Snt   Last   Avg  Best  Wrst StDev
+ 1. _gateway     0.0%    10    0.4   0.5   0.3   0.8   0.2
+ 2. 10.0.0.1     0.0%    10    1.2   1.3   1.1   1.8   0.3
+ 3. 172.16.0.1   0.0%    10    5.5   5.6   5.4   6.1   0.3
+ 4. 8.8.8.8      0.0%    10   12.3  12.4  12.1  13.2   0.5
+```
+
+### ip route get 8.8.8.8
+```
+8.8.8.8 via 192.168.1.1 dev eth0 src 192.168.1.100 uid 1000
+    cache
+```
+
+## Частые ошибки
+
+1. **Путаница метрик маршрутов**: Когда есть несколько маршрутов до одной сети, выбирается маршрут с большей специфичностью (больший префикс, например /24 важнее /16).
+2. **Забыли включить IP forwarding**: Для работы как роутер нужно `sysctl net.ipv4.ip_forward=1`. Без этого транзитные пакеты отбрасываются.
+3. **route vs ip route**: Команда `route -n` устарела, используйте `ip route show` для просмотра таблицы маршрутизации.
+4. **traceroute и файрволы**: Traceroute по умолчанию использует UDP. Если не работает, попробуйте `-T` (TCP) или `-I` (ICMP).
+
+## Вопросы на понимание
+
+1. В каком порядке просматривается таблица маршрутизации?
+    <details><summary>Ответ</summary>Сначала проверяются самые специфичные маршруты (больший префикс, например /32), затем менее специфичные, в конце — default gateway (0.0.0.0/0)</details>
+2. Зачем пентестеру знать топологию сети?
+    <details><summary>Ответ</summary>Для понимания границ сети, поиска критичных серверов, планирования атак типа MITM или lateral movement</details>
+3. Как работает traceroute?
+    <details><summary>Ответ</summary>Отправляет пакеты с увеличивающимся TTL. Когда TTL=0, роутер отправляет ICMP Time Exceeded, так определяется каждый хоп</details>
+4. Что такое маршрутизация по умолчанию?
+    <details><summary>Ответ</summary>Маршрут для пакетов, для которых не найдено более конкретного маршрута (обычно ведет к провайдеру/интернету)</details>
 
 ## Задачи для самостоятельного выполнения
 
@@ -174,3 +231,35 @@ nmap -sn -PS80 192.168.1.0/24  # TCP SYN на 80
 nmap -sn -PA80 192.168.1.0/24  # TCP ACK на 80
 ```
 Сравните результаты. Какой метод эффективнее при наличии файрволов?
+
+## Адаптация под macOS (M2, 8GB)
+
+Для пользователей macOS (особенно на чипах M1/M2 и с 8GB RAM):
+
+- **Установка инструментов**: Используйте `brew install` вместо `apt install`:
+  ```bash
+  brew install nmap
+  brew install mtr
+  brew install traceroute
+  brew install tcptraceroute
+  ```
+
+- **Сетевые команды на macOS**: В macOS нет `ip route`. Используйте:
+  - `netstat -rn` — показать таблицу маршрутизации
+  - `route -n get <ip>` — показать маршрут до конкретного IP
+  - `ifconfig` — просмотр интерфейсов (устаревший, но работает)
+  - Для `ip` команд: `brew install iproute2mac`
+
+- **Виртуализация**: Вместо VirtualBox (который может быть нестабилен на M2) рекомендуется использовать:
+  - **UTM** — нативный для Apple Silicon, бесплатный
+  - **Parallels** — платный, но быстрый на M-чипах
+  
+  На 8GB RAM запускайте VM с 3-4GB памяти.
+
+- **Устаревшие команды**: Везде, где в уроке упоминаются `ifconfig`, `netstat`, `arp` — эти команды считаются устаревшими. Используйте современные аналоги:
+  - `ifconfig` → `ip addr` / `ip link`
+  - `netstat -tunap` → `ss -tunap`
+  - `arp -n` → `ip neigh`
+  - `route -n` → `ip route`
+
+- **Ограничения 8GB RAM**: Не запускайте одновременно много тяжелых VM. Оптимально: 1 Kali (3GB) + 1 маршрутизатор (1GB) = 4GB + хост ~4GB.

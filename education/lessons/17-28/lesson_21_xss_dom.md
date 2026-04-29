@@ -58,7 +58,7 @@ document.write("Page: " + default);
 
 ### Настройка bWAPP
 
-1. Откройте http://localhost (bWAPP)
+1. Откройте http://192.168.0.x (bWAPP)
 2. Войдите: bee / bug
 3. В выпадающем списке выберите **XSS - DOM (Resource interpretation)**
 4. Установите уровень **low** и нажмите **Hack**
@@ -67,18 +67,18 @@ document.write("Page: " + default);
 
 **Шаг 1: Базовый пейлоад через URL**
 ```
-URL: http://localhost/xss_dom.php?default=<script>alert(1)</script>
+URL: http://192.168.0.x/xss_dom.php?default=<script>alert(1)</script>
 ```
 Результат: всплывает alert(1).
 
 **Шаг 2: Использование iframe**
 ```
-URL: http://localhost/xss_dom.php?default=<iframe src="javascript:alert(2)"></iframe>
+URL: http://192.168.0.x/xss_dom.php?default=<iframe src="javascript:alert(2)"></iframe>
 ```
 
 **Шаг 3: Использование img (если script заблокирован)**
 ```
-URL: http://localhost/xss_dom.php?default=<img src=x onerror=alert(3)>
+URL: http://192.168.0.x/xss_dom.php?default=<img src=x onerror=alert(3)>
 ```
 
 **Шаг 4: Анализ исходного кода**
@@ -93,7 +93,7 @@ document.write("<option value='" + lang + "'>" + decodeURI(lang) + "</option>");
 **Шаг 5: Обход фильтра через события**
 Если `<script>` отфильтрован:
 ```
-URL: http://localhost/xss_dom.php?default=#<img src=x onerror=alert('DOM XSS')>
+URL: http://192.168.0.x/xss_dom.php?default=#<img src=x onerror=alert('DOM XSS')>
 ```
 
 ### Поиск DOM XSS с помощью DevTools
@@ -109,8 +109,8 @@ URL: http://localhost/xss_dom.php?default=#<img src=x onerror=alert('DOM XSS')>
 
 **Пейлоады:**
 ```
-URL: http://localhost/vulnerabilities/xss_d/?default=English<script>alert(1)</script>
-URL: http://localhost/vulnerabilities/xss_d/?default=English<img src=x onerror=alert(1)>
+URL: http://192.168.0.x/vulnerabilities/xss_d/?default=English<script>alert(1)</script>
+URL: http://192.168.0.x/vulnerabilities/xss_d/?default=English<img src=x onerror=alert(1)>
 ```
 
 Посмотрите исходный код страницы (Ctrl+U) — пейлоад НЕ будет в HTML. Он обрабатывается только JavaScript.
@@ -121,7 +121,69 @@ URL: http://localhost/vulnerabilities/xss_d/?default=English<img src=x onerror=a
 2. **Скриншот 2**: Исходный код страницы (Ctrl+U) — показать, что пейлоад отсутствует в HTML
 3. **Скриншот 3**: DevTools → Sources — фрагмент JavaScript-кода с уязвимостью
 
+### Примеры вывода
+
+**DOM XSS в bWAPP — ответ сервера (Ctrl+U):**
+```html
+<!-- Пейлоад НЕТ в HTML ответе -->
+<select name="language" onchange="change_language()">
+  <option value="lang_en.php">English</option>
+  <option value="lang_fr.php">Français</option>
+</select>
+```
+
+**Но в DevTools → Elements видно:**
+```html
+<option value="<script>alert(1)</script>"><script>alert(1)</script></option>
+```
+
+**JavaScript-код уязвимости:**
+```javascript
+var lang = document.location.href.substring(document.location.href.indexOf("default=")+8);
+document.write("<option value='" + lang + "'>" + decodeURI(lang) + "</option>");
+```
+
+### Частые ошибки
+
+1. **Искать пейлоад в View Source** — в DOM XSS его там нет, смотрите DevTools → Elements
+2. **Забыть про URL-encoding** — символы `<`, `>` нужно кодировать, если фильтр проверяет
+3. **Использовать # (hash)** — часть после # не отправляется на сервер, но доступна в JavaScript
+4. **Путать DOM и Reflected** — DOM обрабатывается на клиенте, Reflected — на сервере
+
+### Вопросы на понимание
+
+1. Почему пейлоад DOM XSS не виден в исходном коде страницы (Ctrl+U)?
+2. Какую роль играет `document.location` в DOM XSS?
+3. Почему `location.hash` часто используется для обхода фильтров?
+4. Чем `innerHTML` опасен с точки зрения DOM XSS?
+
+### Адаптация под macOS (M2)
+
+```bash
+# Тестирование DOM XSS через curl (пейлоад не будет в ответе)
+curl -s "http://192.168.0.x/xss_dom.php?default=<script>alert(1)</script>" | grep "script"
+# Ничего не найдет, так как это DOM XSS
+
+# Поиск уязвимостей в JS-файлах (на macOS)
+grep -r "innerHTML\|document.write\|eval" /path/to/js/files
+
+# Установка Node.js для тестирования DOM (работает на M2)
+brew install node
+node -e "console.log(decodeURIComponent('<script>alert(1)</script>'))"
+```
+
 ---
+
+
+## Адаптация под macOS (M2, 8GB)
+
+- Для установки инструментов используйте Homebrew: `brew install <tool>`
+- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
+- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Docker работает нативно на M2: `docker pull <image>`
+- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
+- Для Python используйте `pip3 install` вместо `pip install`
+
 
 ## Задачи для самостоятельного выполнения
 

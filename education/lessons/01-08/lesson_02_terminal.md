@@ -44,10 +44,33 @@
 ```bash
 # Подробный список файлов в домашней директории
 ls -la ~
+```
+**Пример вывода `ls -la ~`:**
+```text
+total 48
+drwxr-xr-x 1 user user 4096 Jan 10 10:00 .
+drwxr-xr-x 1 root root 4096 Jan 10 09:00 ..
+-rw-r--r-- 1 user user  220 Jan 10 09:00 .bash_logout
+-rw-r--r-- 1 user user 3771 Jan 10 09:00 .bashrc
+drwxr-xr-x 1 user user 4096 Jan 10 10:00 .cache
+drwxr-xr-x 1 user user 4096 Jan 10 10:00 terminal_practice
+-rw-r--r-- 1 user user    0 Jan 10 10:00 test.txt
+```
 
+```bash
 # Список файлов с человекочитаемым размером
 ls -lah /var/log/
+```
+**Пример вывода `ls -lah /var/log/`:**
+```text
+total 1.2M
+drwxr-xr-x 1 root root 4.0K Jan 10 10:00 .
+drwxr-xr-x 1 root root 4.0K Jan 10 09:00 ..
+-rw-r--r-- 1 root root  50K Jan 10 09:30 auth.log
+-rw-r--r-- 1 root root 200K Jan 10 10:00 syslog
+```
 
+```bash
 # Показать только скрытые файлы
 ls -d .*
 
@@ -90,15 +113,42 @@ echo "Строка 3" >> test.txt
 
 # Просмотр через cat
 cat test.txt
+```
+**Пример вывода `cat test.txt`:**
+```text
+Строка 1
+Строка 2
+Строка 3
+```
 
+```bash
 # Просмотр с номерами строк
 cat -n test.txt
+```
+**Пример вывода `cat -n test.txt`:**
+```text
+     1	Строка 1
+     2	Строка 2
+     3	Строка 3
+```
 
+```bash
 # Постраничный просмотр (q для выхода)
 less /etc/passwd
 
 # Просмотр первых/последних строк
 head -5 /etc/passwd
+```
+**Пример вывода `head -5 /etc/passwd`:**
+```text
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+```
+
+```bash
 tail -5 /etc/passwd
 tail -f /var/log/syslog  # следить за логом в реальном времени
 ```
@@ -118,9 +168,24 @@ cat file_list.txt
 
 # Пайп — передать вывод ls в grep
 ls -la /etc | grep passwd
+```
+**Пример вывода `ls -la /etc | grep passwd`:**
+```text
+-rw-r--r-- 1 root root   2728 Jan 10 09:00 passwd
+-rw-r--r-- 1 root root   2728 Jan 10 09:00 passwd-
+```
 
+```bash
 # Цепочка команд
 cat /etc/passwd | head -10 | tail -5
+```
+**Пример вывода:**
+```text
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
 ```
 
 ### Шаг 5: Работа со справкой (man)
@@ -137,14 +202,45 @@ ls --help
 help cd
 ```
 
+
+## Примеры вывода
+
+Пример вывода команд будет добавлен индивидуально для каждого урока.
+
+
+
+## Адаптация под macOS (M2, 8GB)
+
+- Для установки инструментов используйте Homebrew: `brew install <tool>`
+- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
+- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Docker работает нативно на M2: `docker pull <image>`
+- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
+- Для Python используйте `pip3 install` вместо `pip install`
+
+
 ## Задачи для самостоятельного выполнения
 
 1. Создайте директорию `~/practice` и внутри неё создайте структуру: 3 файла `report1.txt`, `report2.txt`, `report3.txt` и папку `archive/`. Скопируйте все `.txt` файлы в `archive/`.
 
-2. Найдите все файлы в `/etc`, содержащие в названии "conf", и запишите их список в файл `~/conf_files.txt`. Используйте `ls` и пайп с `grep`.
+2. Найдите все файлы в `/etc`, содержащие в названии "conf", и запишите их список в файл `~/conf_files.txt`. Используйте `ls /etc | grep conf`.
 
 3. Используя `cat` и перенаправление `>`, создайте файл `contacts.txt` с тремя записями (имя, email) на разных строках. Добавьте четвертую запись с помощью `>>`.
 
 4. Изучите справку (`man`) по командам `cp` и `mv`. Найдите ключ, который позволяет сохранять атрибуты файла (владелец, группа, временные метки) при копировании. Запишите этот ключ.
 
 5. Выведите содержимое `/etc/passwd` постранично через `less`. Найдите в файле всех пользователей, у которых оболочка — `/bin/bash` (используйте поиск внутри `less` по `/bash`).
+
+## Частые ошибки
+
+1. **Использование `rm -rf` без проверки.** Всегда проверяйте текущую директорию через `pwd` перед выполнением опасных команд удаления.
+2. **Перезапись файла вместо добавления.** `>` перезаписывает файл, `>>` добавляет в конец. Часто путают эти символы.
+3. **Забытый `|` (пайп).** При использовании `grep` после `ls` нужно передать вывод через `|`, иначе `grep` будет ждать ввода с клавиатуры.
+
+## Вопросы на понимание
+
+1. Чем отличается `ls -l` от `ls -la`?
+2. Какой символ используется для перенаправления вывода в конец файла (добавление)?
+3. Что делает команда `mv file1.txt dir1/` — перемещает или переименовывает?
+4. Как посмотреть справку по любой команде в терминале?
+5. Чем отличается `cat` от `less` при просмотре больших файлов?

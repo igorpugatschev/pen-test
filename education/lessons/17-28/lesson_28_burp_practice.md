@@ -88,7 +88,87 @@
 3. **Скриншот 3**: Intruder — атака завершена, найдены успешные пейлоады (с Grep match)
 4. **Скриншот 4**: Comparer — сравнение двух ответов, видна разница
 
+### Примеры вывода
+
+**Target → Site Map — структура DVWA:**
+```
+http://192.168.0.x/
+├── index.php
+├── login.php
+├── logout.php
+├── security.php
+├── setup.php
+└── vulnerabilities/
+    ├── sqli/
+    ├── sqli_blind/
+    ├── xss_r/
+    ├── xss_s/
+    ├── xss_d/
+    ├── csrf/
+    ├── exec/
+    ├── brute/
+    └── upload/
+```
+
+**Comparer — побайтовое сравнение (Bytes view):**
+```
+Line 15:
+< Surname: admin         (Response 1 - success)
+> Surname:               (Response 2 - fail)
+```
+
+**Decoder — результаты кодирования:**
+```
+Original: <script>alert(1)</script>
+URL-encoded: %3Cscript%3Ealert%281%29%3C%2Fscript%3E
+Base64: PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==
+HTML-entity: &lt;script&gt;alert(1)&lt;/script&gt;
+```
+
+### Частые ошибки
+
+1. **Не менять User-Agent в Intruder** — многие WAF блокируют дефолтный Burp
+2. **Забыть про Grep-Match** — сложно найти успешные пейлоады без поиска по ответу
+3. **Игнорировать Site Map** — можно пропустить важные эндпоинты
+4. **Неправильно использовать Comparer** — сравнивайте похожие запросы (успех vs провал)
+
+### Вопросы на понимание
+
+1. В чем преимущество использования Site Map перед ручным изучением сайта?
+2. Как Grep-Match помогает при фаззинге?
+3. Когда использовать Comparer (Words vs Bytes)?
+4. Зачем менять User-Agent при атаке через Intruder?
+
+### Адаптация под macOS (M2)
+
+```bash
+# Экспорт результатов Burp для отчета (на macOS)
+# В Burp: Intruder → Attack → Results → Save → Results Table
+
+# Использование ярлыков на macOS для Burp:
+# Cmd+Shift+P — открыть Repeater
+# Cmd+Shift+I — открыть Intruder
+# Cmd+Shift+T — открыть Target
+
+# Скриншоты через встроенную утилиту macOS
+screencapture -x /tmp/burp_screenshot_$(date +%s).png
+
+# Автоматизация через AppleScript (открытие Burp)
+osascript -e 'tell application "Burp Suite Community Edition" to activate'
+```
+
 ---
+
+
+## Адаптация под macOS (M2, 8GB)
+
+- Для установки инструментов используйте Homebrew: `brew install <tool>`
+- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
+- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Docker работает нативно на M2: `docker pull <image>`
+- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
+- Для Python используйте `pip3 install` вместо `pip install`
+
 
 ## Задачи для самостоятельного выполнения
 
