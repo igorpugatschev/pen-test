@@ -1,5 +1,25 @@
 # Урок 39: Итоговая практика с инструментами
 
+## Учебная рамка
+
+**Входные требования:** Умение работать в терминале, понимать IP/порт, scope и базовые юридические ограничения.
+
+**Результат занятия:** Студент запускает инструмент только по разрешенной цели, читает ключевые строки вывода и оформляет результат как находку или наблюдение.
+
+**Безопасная цель:** Только `192.168.100.20`, `target.local`, Metasploitable/VulnHub/THM/HTB/PortSwigger в рамках их правил. Не использовать домашний роутер как цель атаки.
+
+**Среда выполнения:** Основной путь — macOS native, браузер, DevTools, Homebrew и Python. Kali Linux ARM64 VM, UTM или cloud lab используются только если это явно требуется задачей или вынесено в углубление.
+
+**Обязательный путь новичка:** Запустить безопасный минимальный режим инструмента, сохранить команду и объяснить 2-3 ключевых параметра.
+
+**Углубление:** Сравнить два режима инструмента, добавить ограничение скорости/потоков и оформить краткий риск-анализ.
+
+**Минимальная проверка успеха:** Команда выполнена по учебной цели, вывод сохранен, студент отличает обнаружение от подтвержденной уязвимости.
+
+**Эталонный вывод:** В отчете есть target, команда, сокращенный вывод, интерпретация и пометка `разрешенная учебная цель`.
+
+**Критерии сдачи:** Зачет: корректный запуск и интерпретация. Отлично: добавлены ограничения безопасности, rate limit или проверка false positive.
+
 ## Теория
 
 Комплексный пентест требует умения связывать разные инструменты в цепочки (chains). Один инструмент находит поддомены, другой проверяет живые хосты, третий ищет уязвимости.
@@ -14,26 +34,30 @@
 
 ## Практическое занятие
 
-### Цель: Metasploitable2
+### Цель: разрешенная лаборатория
 
-Разверните Metasploitable2 в VM (логин/пароль: msfadmin/msfadmin).
+Основной путь для MacBook Air M2 (8GB): TryHackMe AttackBox, HackTheBox/Pwnbox, PortSwigger Academy или локальный легкий учебный сервис. Локальная Kali ARM64 VM допустима как углубление. Metasploitable2/x86_64 не является базовой целью для Apple Silicon.
 
 ### Шаг 1: Разведка
 ```bash
-# Определите IP Metasploitable
-sudo nmap -sn 192.168.1.0/24  # Поиск хоста в сети
+# Определите IP разрешенной лабораторной цели
+sudo nmap -sn 192.168.100.0/24  # Только в изолированной лаборатории
 # Пример вывода:
-# Nmap scan report for 192.168.1.101
+# Nmap scan report for 192.168.100.20
 # Host is up (0.00047s latency).
 
-# Предположим, IP = 192.168.1.101
-TARGET=192.168.1.101
+# Предположим, IP = 192.168.100.20
+TARGET=192.168.100.20
 ```
 
 ### Шаг 2: Сканирование портов (Nmap)
 ```bash
-# Полное сканирование
-sudo nmap -A -p- -oA nmap_full $TARGET
+# Минимум: ограниченная проверка ожидаемых портов
+nmap -sV -p 22,80,443 -oN nmap_minimal_$TARGET.txt $TARGET
+
+# Углубление: полное сканирование допустимо только в изолированной лаборатории или cloud lab
+# Укажите окно тестирования, rate limit и stop conditions до запуска.
+# sudo nmap -A -p- --max-rate 50 -oA nmap_full $TARGET
 # Пример вывода:
 # PORT     STATE SERVICE    VERSION
 # 21/tcp   open  ftp        vsftpd 2.3.4
@@ -47,7 +71,7 @@ sudo nmap -A -p- -oA nmap_full $TARGET
 ### Шаг 3: Поиск веб-директорий
 ```bash
 # Поиск на порту 80
-ffuf -u http://$TARGET/FUZZ -w /opt/homebrew/share/seclists/Discovery/Web-Content/common.txt -e .txt,.php,.bak
+ffuf -u http://$TARGET/FUZZ -w /opt/homebrew/share/seclists/Discovery/Web-Content/common.txt -e .txt,.php,.bak -rate 20
 # Пример вывода:
 # [Status: 200] [Size: 1234] /index.php
 # [Status: 302] [Size: 0] /dvwa
@@ -58,16 +82,16 @@ ffuf -u http://$TARGET/FUZZ -w /opt/homebrew/share/seclists/Discovery/Web-Conten
 
 ### Шаг 4: Поиск уязвимостей (Nuclei)
 ```bash
-# Сканирование на уязвимости
-nuclei -u http://$TARGET -severity critical,high
+# Сканирование на уязвимости только в lab/cloud и с ограничением скорости
+nuclei -u http://$TARGET -severity critical,high -rate-limit 10
 # Пример вывода:
 # [CRITICAL] [http://$TARGET] [cves/2021/CVE-2021-41773] [...]
 
-# Nmap NSE
-nmap --script vuln -p 21,22,23,80,445 $TARGET
+# Nmap NSE только по согласованным портам лабораторной цели
+nmap --script vuln --max-rate 20 -p 21,22,23,80,445 $TARGET
 # Пример вывода:
 # |_  smb-vuln-ms08-067: ERROR: Script execution failed
-# |  ftp-vsftpd-backdoor: VULNERABLE: vsftpd 2.3.4 backdoor
+# |  ftp-vsftpd-vuln: VULNERABLE: vsftpd 2.3.4 issue
 ```
 
 ### Шаг 5: Поиск эксплойтов (SearchSploit)
@@ -91,19 +115,20 @@ searchsploit samba 3.0
 #!/bin/bash
 TARGET=$1
 
-echo "[*] Starting full scan for $TARGET"
+echo "[*] Starting lab-only scan for $TARGET"
+echo "[!] Run only in isolated lab/cloud target with written scope"
 
-echo "[1] Nmap full scan..."
-nmap -A -p- -oN nmap_$TARGET.txt $TARGET
+echo "[1] Nmap limited scan..."
+nmap -sV -p 22,80,443 -oN nmap_$TARGET.txt $TARGET
 
-echo "[2] Directory bruteforce (port 80)..."
-ffuf -u http://$TARGET/FUZZ -w /opt/homebrew/share/seclists/Discovery/Web-Content/common.txt -o dirs_$TARGET.json -of json
+echo "[2] Directory enumeration (port 80, rate-limited)..."
+ffuf -u http://$TARGET/FUZZ -w /opt/homebrew/share/seclists/Discovery/Web-Content/common.txt -rate 20 -o dirs_$TARGET.json -of json
 
-echo "[3] Nuclei vulnerability scan..."
-nuclei -u http://$TARGET -o nuclei_$TARGET.txt
+echo "[3] Nuclei vulnerability scan (rate-limited, lab only)..."
+nuclei -u http://$TARGET -rate-limit 10 -o nuclei_$TARGET.txt
 
 echo "[4] SearchSploit..."
-nmap -sV -p- $TARGET -oX nmap_$TARGET.xml
+nmap -sV -p 22,80,443 $TARGET -oX nmap_$TARGET.xml
 searchsploit --nmap nmap_$TARGET.xml
 
 echo "[*] Scan complete!"
@@ -112,15 +137,22 @@ echo "[*] Scan complete!"
 
 ## Примеры вывода
 
-Пример вывода команд будет добавлен индивидуально для каждого урока.
+Минимальный эталонный вывод для сдачи:
+
+```text
+$ <команда из практики>
+<3-10 строк фактического вывода из разрешенной среды>
+```
+
+В отчете студент указывает среду выполнения, безопасную цель, команду или ручные шаги и коротко объясняет, какая строка подтверждает результат.
 
 
 
 ## Адаптация под macOS (M2, 8GB)
 
-- Для установки инструментов используйте Homebrew: `brew install <tool>`
-- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
-- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Для macOS native используйте Homebrew или официальный installer: `brew install <tool>`; для явно помеченной Kali/Linux-среды допустим `apt`.
+- Kali/Linux VM запускайте только как углубление и выделяйте не более 3-4GB RAM на MacBook Air M2 (8GB)
+- Если нужна Kali/Linux VM на Apple Silicon, используйте ARM64-образ в UTM/VMware Fusion/Parallels; не используйте x86/x64 VM как базовый путь.
 - Docker работает нативно на M2: `docker pull <image>`
 - Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
 - Для Python используйте `pip3 install` вместо `pip install`
@@ -128,15 +160,15 @@ echo "[*] Scan complete!"
 
 ## Задачи для самостоятельного выполнения
 
-1. Разверните Metasploitable2. Выполните полный пентест по шагам выше. Составьте список найденных уязвимостей.
+1. **Минимум:** выберите разрешенную учебную цель и выполните только пассивный/мягкий workflow: заголовки, один ограниченный nmap-запуск, ручная проверка веб-страницы.
 
-2. Напишите скрипт на Python, который связывает Subfinder → httpx → Nuclei. Скрипт должен принимать домен и выдавать найденные уязвимости.
+2. **Углубление:** в cloud lab или ARM64 VM выполните полный workflow по шагам выше. Составьте список найденных уязвимостей и отметьте, какие инструменты были шумными.
 
-3. Используя Shodan, найдите 5 интересных хостов (с уязвимыми сервисами). Попробуйте подключиться к ним (только те, которые вам принадлежат или имеют разрешение!).
+3. Напишите скрипт на Python, который связывает Subfinder → httpx → Nuclei, но добавьте allowlist доменов и dry-run режим.
 
-4. Настройте связку: Amass → Subfinder → ffuf → Nuclei. Результат сохраните в Markdown-отчет.
+4. Используя Shodan, найдите 5 учебных примеров баннеров, но не подключайтесь к чужим хостам. Анализируйте только публичные метаданные.
 
-5. Изучите логи Metasploitable во время вашего сканирования. Какие инструменты вызвали подозрение? Как можно скрыть сканирование (stealth)?
+5. Изучите логи своей лаборатории во время сканирования. Какие инструменты вызвали подозрение? Как снизить шум легальными способами: rate limit, согласованное окно, точный scope?
 
 ## Частые ошибки
 
@@ -158,4 +190,32 @@ echo "[*] Scan complete!"
 
 4. Как автоматизировать весь процесс пентеста одним скриптом?
 
+## Практика на Slider AI
 
+**Цель стенда:** `https://olddev.slider-ai.ru`
+
+**Контекст разрешения:** тестовый стенд проекта Slider AI, доступен QA для обучения и проверки безопасности. Production и любые другие домены не входят в это задание.
+
+**Ограничения безопасности:** соблюдать `education/slider_ai_scope.md`; не выполнять DoS/load-тесты, brute force, destructive payloads, изменение чужих данных, извлечение секретов и действия вне согласованного scope.
+
+**Уровень прогрессии:** Toolchain planning
+
+### Минимум
+
+Соберите безопасный pipeline проверки Slider AI без запуска intrusive инструментов.
+
+### Практика Slider AI
+
+Для каждого инструмента укажите режим: manual/passive/low-rate/forbidden.
+
+### Углубление после изучения следующих уроков
+
+После урока 40 превратите pipeline в отчетный чек-лист с evidence slots.
+
+### Артефакт сдачи
+
+Markdown-запись по шаблону из `education/slider_ai_scope.md`: урок, компонент Slider AI, шаги, фактический результат, доказательства без секретов, риск, рекомендация и статус.
+
+### Критерий готовности
+
+Задание выполнено только на `olddev.slider-ai.ru`, не выходит за scope, содержит проверяемый артефакт и явно отмечает `finding`, `informational`, `not reproducible`, `not applicable` или `requires approval`.

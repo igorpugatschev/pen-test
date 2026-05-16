@@ -1,5 +1,25 @@
 # Урок 30: Nmap NSE (Nmap Scripting Engine)
 
+## Учебная рамка
+
+**Входные требования:** Умение работать в терминале, понимать IP/порт, scope и базовые юридические ограничения.
+
+**Результат занятия:** Студент запускает инструмент только по разрешенной цели, читает ключевые строки вывода и оформляет результат как находку или наблюдение.
+
+**Безопасная цель:** Только `192.168.100.20`, `target.local`, Metasploitable/VulnHub/THM/HTB/PortSwigger в рамках их правил. Не использовать домашний роутер как цель атаки.
+
+**Среда выполнения:** Основной путь — macOS native, браузер, DevTools, Homebrew и Python. Kali Linux ARM64 VM, UTM или cloud lab используются только если это явно требуется задачей или вынесено в углубление.
+
+**Обязательный путь новичка:** Запустить безопасный минимальный режим инструмента, сохранить команду и объяснить 2-3 ключевых параметра.
+
+**Углубление:** Сравнить два режима инструмента, добавить ограничение скорости/потоков и оформить краткий риск-анализ.
+
+**Минимальная проверка успеха:** Команда выполнена по учебной цели, вывод сохранен, студент отличает обнаружение от подтвержденной уязвимости.
+
+**Эталонный вывод:** В отчете есть target, команда, сокращенный вывод, интерпретация и пометка `разрешенная учебная цель`.
+
+**Критерии сдачи:** Зачет: корректный запуск и интерпретация. Отлично: добавлены ограничения безопасности, rate limit или проверка false positive.
+
 ## Теория
 
 NSE (Nmap Scripting Engine) позволяет расширить функционал Nmap с помощью скриптов на Lua. Скрипты делятся на категории:
@@ -33,13 +53,13 @@ nmap --script-help http-enum
 nmap --script-help smb-os-discovery
 
 # Запуск конкретного скрипта
-nmap --script http-enum 192.168.1.1
+nmap --script http-enum 192.168.100.20
 # Пример вывода:
 # | http-enum:
 # |   /admin/: Possible admin folder
 # |   /phpMyAdmin/: phpMyAdmin
 
-nmap --script smb-os-discovery 192.168.1.1
+nmap --script smb-os-discovery 192.168.100.20
 # Пример вывода:
 # | smb-os-discovery:
 # |   OS: Windows 10
@@ -49,24 +69,24 @@ nmap --script smb-os-discovery 192.168.1.1
 ### Полезные скрипты
 ```bash
 # Поиск директорий через HTTP
-nmap --script http-enum -p 80 192.168.1.1
+nmap --script http-enum -p 80 192.168.100.20
 
 # Информация о SMB (Windows shares)
-nmap --script smb-os-discovery -p 445 192.168.1.1
-nmap --script smb-enum-shares -p 445 192.168.1.1
+nmap --script smb-os-discovery -p 445 192.168.100.20
+nmap --script smb-enum-shares -p 445 192.168.100.20
 # Пример вывода:
 # | smb-enum-shares:
 # |   ADMIN$: READ ONLY
 # |   C$: READ ONLY
 
 # Проверка на common vulns
-nmap --script vuln 192.168.1.1
+nmap --script vuln 192.168.100.20
 
 # Брутфорс HTTP аутентификации
-nmap --script http-brute -p 80 192.168.1.1
+nmap --script http-brute -p 80 192.168.100.20
 
 # Проверка SSL/TLS
-nmap --script ssl-enum-ciphers -p 443 192.168.1.1
+nmap --script ssl-enum-ciphers -p 443 192.168.100.20
 # Пример вывода:
 # | ssl-enum-ciphers:
 # |   TLSv1.2:
@@ -74,36 +94,43 @@ nmap --script ssl-enum-ciphers -p 443 192.168.1.1
 # |       TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
 
 # DNS информация
-nmap --script dns-zone-transfer -p 53 192.168.1.1
+nmap --script dns-zone-transfer -p 53 192.168.100.20
 ```
 
 ### Запуск групп скриптов
 ```bash
 # Все скрипты категории safe
-nmap --script "safe" 192.168.1.1
+nmap --script "safe" 192.168.100.20
 
 # Discovery + version
-nmap --script "discovery,version" 192.168.1.1
+nmap --script "discovery,version" 192.168.100.20
 
 # Исключить intrusive
-nmap --script "not intrusive" 192.168.1.1
+nmap --script "not intrusive" 192.168.100.20
 
 # Все, кроме brute
-nmap --script "default or safe" 192.168.1.1
+nmap --script "default or safe" 192.168.100.20
 ```
 
 
 ## Примеры вывода
 
-Пример вывода команд будет добавлен индивидуально для каждого урока.
+Минимальный эталонный вывод для сдачи:
+
+```text
+$ <команда из практики>
+<3-10 строк фактического вывода из разрешенной среды>
+```
+
+В отчете студент указывает среду выполнения, безопасную цель, команду или ручные шаги и коротко объясняет, какая строка подтверждает результат.
 
 
 
 ## Адаптация под macOS (M2, 8GB)
 
-- Для установки инструментов используйте Homebrew: `brew install <tool>`
-- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
-- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Для macOS native используйте Homebrew или официальный installer: `brew install <tool>`; для явно помеченной Kali/Linux-среды допустим `apt`.
+- Kali/Linux VM запускайте только как углубление и выделяйте не более 3-4GB RAM на MacBook Air M2 (8GB)
+- Если нужна Kali/Linux VM на Apple Silicon, используйте ARM64-образ в UTM/VMware Fusion/Parallels; не используйте x86/x64 VM как базовый путь.
 - Docker работает нативно на M2: `docker pull <image>`
 - Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
 - Для Python используйте `pip3 install` вместо `pip install`
@@ -152,4 +179,32 @@ nmap --script "default or safe" 192.168.1.1
 
 4. Как написать свой NSE-скрипт и где его сохранить?
 
+## Практика на Slider AI
 
+**Цель стенда:** `https://olddev.slider-ai.ru`
+
+**Контекст разрешения:** тестовый стенд проекта Slider AI, доступен QA для обучения и проверки безопасности. Production и любые другие домены не входят в это задание.
+
+**Ограничения безопасности:** соблюдать `education/slider_ai_scope.md`; не выполнять DoS/load-тесты, brute force, destructive payloads, изменение чужих данных, извлечение секретов и действия вне согласованного scope.
+
+**Уровень прогрессии:** Nmap NSE safe scripts
+
+### Минимум
+
+Выберите только safe/default NSE-скрипт, не `vuln` и не intrusive.
+
+### Практика Slider AI
+
+Проверьте один разрешенный скрипт против 443 и объясните, почему он безопасный.
+
+### Углубление после изучения следующих уроков
+
+После урока 40 добавьте результат в инструментальный отчет с caveat о false positive.
+
+### Артефакт сдачи
+
+Markdown-запись по шаблону из `education/slider_ai_scope.md`: урок, компонент Slider AI, шаги, фактический результат, доказательства без секретов, риск, рекомендация и статус.
+
+### Критерий готовности
+
+Задание выполнено только на `olddev.slider-ai.ru`, не выходит за scope, содержит проверяемый артефакт и явно отмечает `finding`, `informational`, `not reproducible`, `not applicable` или `requires approval`.

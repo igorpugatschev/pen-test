@@ -1,5 +1,25 @@
 # Занятие 67. eJPT подготовка: практические лабы INE
 
+## Учебная рамка
+
+**Входные требования:** Понимание полного цикла пентеста, базовые навыки отчетности и опыт работы с учебными лабораториями.
+
+**Результат занятия:** Студент применяет методологию, оформляет артефакт профессионального уровня и отделяет факты от предположений.
+
+**Безопасная цель:** Учебный scope, подписанный RoE, собственная лаборатория или платформа с явным разрешением. Реальные организации только с письменным согласием.
+
+**Среда выполнения:** Основной путь — macOS native, браузер, DevTools, Homebrew и Python. Kali Linux ARM64 VM, UTM или cloud lab используются только если это явно требуется задачей или вынесено в углубление.
+
+**Обязательный путь новичка:** Заполнить шаблон документа/чек-листа по учебному кейсу и связать каждую находку с доказательством.
+
+**Углубление:** Добавить приоритизацию рисков, executive summary, ограничения тестирования и план повторной проверки.
+
+**Минимальная проверка успеха:** Документ содержит scope, методологию, доказательства, ограничения и понятные рекомендации.
+
+**Эталонный вывод:** Сданный артефакт: отчет, чек-лист, RoE, матрица рисков или презентация с проверяемыми доказательствами.
+
+**Критерии сдачи:** Зачет: полный артефакт по шаблону. Отлично: ясная бизнес-интерпретация, приоритизация и план remediation.
+
 ## Теория
 
 ### Что такое eJPT (eLearnSecurity Junior Penetration Tester)
@@ -100,8 +120,15 @@ eJPT (eJPTv2 — текущая версия) — сертификация от 
 
 Для подготовки к eJPT вам понадобятся:
 
-1. **Kali Linux** (основная рабочая станция)
-2. **VulnHub VMs** (цели для практики):
+1. **MacBook Air M2 как рабочая станция**: заметки, браузер, VPN-клиент, Burp/ZAP, `nmap`, Python, Git.
+   - Kali Linux ARM64 VM используется как углубление, если нужен Kali-специфичный инструмент.
+   - TryHackMe AttackBox/HTB/Pwnbox предпочтительны для тяжелых лабораторий и Metasploit.
+2. **Cloud/готовые лаборатории** (предпочтительно для 8GB RAM):
+   - TryHackMe Jr Penetration Tester rooms
+   - Hack The Box Starting Point / Academy
+   - PortSwigger Academy для web-блока
+
+3. **VulnHub VMs** (цели для практики, только если есть подходящая ARM64/легкая конфигурация):
    - **Basic Pentesting 1** — отлично для начала
    - **Kioptrix Level 1** — классика
    - **Metasploitable 2/3** — для сканирования и эксплуатации
@@ -109,11 +136,12 @@ eJPT (eJPTv2 — текущая версия) — сертификация от 
    - **Stapler** — разнообразные векторы
    - **SickOs 1.2** — веб + привилегии
 
-3. **TryHackMe** (онлайн-платформа):
+4. **TryHackMe** (онлайн-платформа):
    - Пройдите комнаты: "Intro to Researching", "Nmap", "Metasploit", "John the Ripper", "Hydra"
+   - Все комнаты с Hydra/Metasploit/John выполнять только внутри правил THM/HTB/INE, не переносить техники на Slider AI и реальные сервисы.
    - Изучите "Penetration Testing" learning path
 
-4. **Hack The Box** (Starting Point machines):
+5. **Hack The Box** (Starting Point machines):
    - Meow, Fawn, Dancing, Redeemer, Tier 2 machines
 
 ### Практические лабы: Checklist
@@ -152,13 +180,13 @@ eJPT (eJPTv2 — текущая версия) — сертификация от 
 - [ ] Buffer Overflow: базовое понимание (пройти модуль в курсе)
 - [ ] Web exploits: SQLi (union, boolean), XSS (reflected)
 
-## 5. Post-Exploitation
+## 5. Post-Exploitation (понимание и reporting)
 - [ ] Linux privilege escalation: перечисление (linpeas.sh, linenum.sh)
 - [ ] Windows privilege escalation: перечисление (winpeas.exe)
 - [ ] SUID/SGID exploits (Linux)
 - [ ] Crontab exploits (Linux)
 - [ ] Token impersonation (Windows)
-- [ ] Dumping hashes: mimikatz, hashdump
+- [ ] Dumping hashes: mimikatz, hashdump — только как лабораторная/экзаменационная тема; для рабочего QA-стенда формулировать риск и detection evidence, не выполнять
 - [ ] Cracking hashes: John the Ripper, hashcat
 
 ## 6. Pivoting & Lateral Movement
@@ -175,9 +203,9 @@ eJPT (eJPTv2 — текущая версия) — сертификация от 
 - [ ] LFI/RFI: базовое понимание
 
 ## 8. Password Attacks
-- [ ] Brute-force: hydra (FTP, SSH, HTTP, SMB)
-- [ ] Wordlists: crunch, cewl, rockyou.txt
-- [ ] Password spraying
+- [ ] Brute-force: hydra (FTP, SSH, HTTP, SMB) — только THM/HTB/INE lab с лимитами
+- [ ] Wordlists: crunch, cewl, rockyou.txt; на Kali путь обычно `/usr/share/wordlists`, на macOS используйте локальный файл или `/opt/homebrew/share`
+- [ ] Password spraying — знать как риск и анти-паттерн; не выполнять без отдельного письменного разрешения
 - [ ] John the Ripper: cracking hashes
 
 ## 9. Reporting
@@ -202,29 +230,36 @@ eJPT (eJPTv2 — текущая версия) — сертификация от 
 
 ## Примеры вывода
 
-Пример вывода команд будет добавлен индивидуально для каждого урока.
+Минимальный эталонный вывод для сдачи:
+
+```text
+$ <команда из практики>
+<3-10 строк фактического вывода из разрешенной среды>
+```
+
+В отчете студент указывает среду выполнения, безопасную цель, команду или ручные шаги и коротко объясняет, какая строка подтверждает результат.
 
 
 
 
 ## Адаптация под macOS (M2, 8GB)
 
-- Для установки инструментов используйте Homebrew: `brew install <tool>`
-- На MacBook Air M2 (8GB) запускайте VM с памятью не более 3-4GB
-- Используйте UTM вместо VirtualBox (лучшая поддержка ARM)
+- Для macOS native используйте Homebrew или официальный installer: `brew install <tool>`; для явно помеченной Kali/Linux-среды допустим `apt`.
+- Kali/Linux VM запускайте только как углубление и выделяйте не более 3-4GB RAM на MacBook Air M2 (8GB)
+- Если нужна Kali/Linux VM на Apple Silicon, используйте ARM64-образ в UTM/VMware Fusion/Parallels; не используйте x86/x64 VM как базовый путь.
 - Docker работает нативно на M2: `docker pull <image>`
 - Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
 
 
 ## Задачи для самостоятельного выполнения
 
-1. **VulnHub Challenge**: Скачайте и взломайте Basic Pentesting 1 (VulnHub). Напишите отчет по методологии PTES: Information Gathering → Exploitation → Privilege Escalation → Post-Exploitation.
+1. **Cloud-first Challenge**: пройдите одну комнату TryHackMe/HTB из разрешенного learning path и напишите отчет по PTES: Information Gathering → Exploitation → Privilege Escalation → Post-Exploitation.
 
-2. **Nmap Mastery**: Напишите скрипт на Bash/Python, который автоматизирует сканирование: 1) Пинг-сканирование всей сети, 2) Детальное сканирование живых хостов, 3) Скриптовое сканирование и сохранение всех результатов.
+2. **Nmap Mastery**: Напишите скрипт на Bash/Python, который автоматизирует сканирование только allowlist-целей: 1) пинг-сканирование лабораторной сети, 2) ограниченное сканирование живых хостов, 3) сохранение результатов. Добавьте rate limit и отказ от запуска вне lab/cloud.
 
-3. **Metasploit Lab**: Используя Metasploitable 2, найдите и проэксплуатируйте минимум 5 уязвимостей через Metasploit (VSFTPD, IRC, Distcc, PHP CGI, Samba). Для каждой получите shell и соберите доказательства.
+3. **Metasploit Lab**: используйте TryHackMe AttackBox/HTB/Pwnbox или Kali ARM64 VM с разрешенной целью. Найдите и подтвердите 1-2 учебные уязвимости, не требуя локального Metasploitable2 на MacBook.
 
-4. **Privilege Escalation**: На VulnHub VM (например, Kioptrix или Stapler) получите начальный доступ, затем повысьте привилегии до root. Используйте linpeas.sh для перечисления. Опишите найденный вектор.
+4. **Privilege Escalation**: выполните privesc только в cloud lab или легкой локальной ARM64 VM. Используйте linpeas.sh для перечисления и опишите найденный вектор.
 
 5. **TryHackMe Path**: Зарегистрируйтесь на TryHackMe и пройдите минимум 10 комнат из раздела "Learning Paths" → "Complete Beginner" или "Offensive Pentesting". Скриншоты результатов приложите к отчету.
 
@@ -242,3 +277,33 @@ eJPT (eJPTv2 — текущая версия) — сертификация от 
 3. Какая бесплатная альтернатива eJPT существует?
 4. Сколько времени рекомендуется готовиться к eJPT?
 5. Какие темы покрывает eJPT?
+
+## Практика на Slider AI
+
+**Цель стенда:** `https://olddev.slider-ai.ru`
+
+**Контекст разрешения:** тестовый стенд проекта Slider AI, доступен QA для обучения и проверки безопасности. Production и любые другие домены не входят в это задание.
+
+**Ограничения безопасности:** соблюдать `education/slider_ai_scope.md`; не выполнять DoS/load-тесты, brute force, destructive payloads, изменение чужих данных, извлечение секретов и действия вне согласованного scope.
+
+**Уровень прогрессии:** eJPT readiness for QA
+
+### Минимум
+
+Отметьте, какие eJPT-навыки уже применялись в Slider AI-практике.
+
+### Практика Slider AI
+
+Составьте личный план добора навыков без расширения scope стенда.
+
+### Углубление после изучения следующих уроков
+
+После экзамена обновите курс: какие навыки реально помогли в QA.
+
+### Артефакт сдачи
+
+Markdown-запись по шаблону из `education/slider_ai_scope.md`: урок, компонент Slider AI, шаги, фактический результат, доказательства без секретов, риск, рекомендация и статус.
+
+### Критерий готовности
+
+Задание выполнено только на `olddev.slider-ai.ru`, не выходит за scope, содержит проверяемый артефакт и явно отмечает `finding`, `informational`, `not reproducible`, `not applicable` или `requires approval`.

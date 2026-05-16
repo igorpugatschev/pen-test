@@ -113,12 +113,17 @@ bash check_lessons.sh        # Проверка структуры
 python3 final_fix_all.py     # Исправление ошибок
 ```
 
-## Адаптация под macOS (M2, 8GB)
+## Рабочая среда: MacBook Air M2 (8GB)
 
-Каждый урок содержит раздел "Адаптация под macOS" с:
-- Использованием `brew install` вместо `apt install`
-- Рекомендациями по выделению RAM для VM (3-4GB)
-- Ссылками на облачные альтернативы (AttackBox, Tunnelblick)
+MacBook используется как рабочая станция QA/пентестера, а не как единственная среда для всех инструментов. Каждый урок должен явно выбирать путь выполнения:
+- **Основной путь новичка:** macOS native, Homebrew, браузер, DevTools, Burp/ZAP, `curl`, `nmap`, Python.
+- **Углубление:** Kali Linux ARM64 VM в UTM/VMware Fusion/Parallels, если нужны Linux/Kali-специфичные инструменты, снапшоты или изоляция.
+- **Cloud lab:** TryHackMe AttackBox, HackTheBox/Pwnbox, PortSwigger Academy и другие легальные стенды для тяжелых сценариев.
+
+Правило установки:
+- `brew`, официальный macOS installer или `pipx/pip3` — для macOS native.
+- `apt` — только для явно помеченной Kali/Linux-среды.
+- VirtualBox на Apple Silicon не использовать для x86/x64 guest OS; если VM нужна локально, выбирать ARM64-образы и лимит 3-4GB RAM.
 
 ## Полная программа
 

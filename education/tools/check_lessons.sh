@@ -3,6 +3,7 @@
 # Запуск: bash check_lessons.sh
 
 LESSONS_DIR="/Users/formacepht/PycharmProjects/pen-test/education/lessons"
+EDUCATION_DIR="/Users/formacepht/PycharmProjects/pen-test/education"
 ERRORS=0
 
 echo "=========================================="
@@ -158,17 +159,91 @@ for dir in "$LESSONS_DIR"/*/; do
         check_cyrillic "$file"
         
         # Проверка обязательных разделов
-        sections=("## Теория" "## Практическое занятие" "## Примеры вывода" "## Частые ошибки" "## Вопросы на понимание" "## Задачи для самостоятельного выполнения" "## Адаптация под macOS")
+        sections=("## Учебная рамка" "## Теория" "## Практическое занятие" "## Примеры вывода" "## Частые ошибки" "## Вопросы на понимание" "## Задачи для самостоятельного выполнения" "## Адаптация под macOS" "## Практика на Slider AI")
         
         for section in "${sections[@]}"; do
-            check_section "$file" "$section"
+            check_section "$file" "$section" || ((ERRORS++))
+        done
+
+        # Проверка обязательных полей двухслойной методической модели
+        learning_fields=(
+            "**Входные требования:**"
+            "**Результат занятия:**"
+            "**Безопасная цель:**"
+            "**Среда выполнения:**"
+            "**Обязательный путь новичка:**"
+            "**Углубление:**"
+            "**Минимальная проверка успеха:**"
+            "**Эталонный вывод:**"
+            "**Критерии сдачи:**"
+        )
+
+        for field in "${learning_fields[@]}"; do
+            if ! grep -Fq "$field" "$file" 2>/dev/null; then
+                echo "  [ПРОБЛЕМА] $lesson — отсутствует поле учебной рамки: $field"
+                ((ERRORS++))
+            fi
+        done
+
+        if grep -Fq "Пример вывода команд будет добавлен индивидуально" "$file" 2>/dev/null; then
+            echo "  [ПРОБЛЕМА] $lesson — остался placeholder вместо эталонного вывода"
+            ((ERRORS++))
+        fi
+
+        if grep -Fq "Kali Linux (основная рабочая станция)" "$file" 2>/dev/null; then
+            echo "  [ПРОБЛЕМА] $lesson — Kali указана как основная рабочая станция вместо MacBook"
+            ((ERRORS++))
+        fi
+
+        if grep -Fq "Настроить простую сеть в VirtualBox" "$file" 2>/dev/null; then
+            echo "  [ПРОБЛЕМА] $lesson — VirtualBox указан как базовая среда для Apple Silicon"
+            ((ERRORS++))
+        fi
+
+        # Проверка обязательной практики на тестовом стенде Slider AI
+        if ! grep -Fq "https://olddev.slider-ai.ru" "$file" 2>/dev/null; then
+            echo "  [ПРОБЛЕМА] $lesson — отсутствует целевой стенд Slider AI: https://olddev.slider-ai.ru"
+            ((ERRORS++))
+        fi
+
+        slider_fields=(
+            "**Уровень прогрессии:**"
+            "### Минимум"
+            "### Практика Slider AI"
+            "### Углубление после изучения следующих уроков"
+            "### Артефакт сдачи"
+            "### Критерий готовности"
+        )
+
+        for field in "${slider_fields[@]}"; do
+            if ! grep -Fq "$field" "$file" 2>/dev/null; then
+                echo "  [ПРОБЛЕМА] $lesson — отсутствует поле практики Slider AI: $field"
+                ((ERRORS++))
+            fi
         done
         
         echo ""
     done
 done
 
-echo "3. ПРОВЕРКА ИСПРАВЛЕНИЯ ОШИБОК ИЗ РЕВЬЮ"
+echo "3. ПРОВЕРКА МАТРИЦЫ ПРОГРЕССИИ SLIDER AI"
+echo "------------------------------------------"
+
+if [ ! -f "$EDUCATION_DIR/slider_ai_progression_matrix.md" ]; then
+    echo "  [ПРОБЛЕМА] отсутствует education/slider_ai_progression_matrix.md"
+    ((ERRORS++))
+else
+    matrix_rows=$(grep -c "^| Занятие\|^| Урок" "$EDUCATION_DIR/slider_ai_progression_matrix.md" 2>/dev/null)
+    if [ "$matrix_rows" -lt 72 ]; then
+        echo "  [ПРОБЛЕМА] матрица прогрессии содержит слишком мало уроков: $matrix_rows"
+        ((ERRORS++))
+    else
+        echo "  Матрица прогрессии найдена, строк уроков: $matrix_rows"
+    fi
+fi
+
+echo ""
+echo "4. ПРОВЕРКА ИСПРАВЛЕНИЯ ОШИБОК ИЗ РЕВЬЮ"
 echo "------------------------------------------"
 
 # Специфические проверки на основе ревью
