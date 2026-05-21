@@ -1,477 +1,126 @@
-# Занятие 44: Автоматизация Nmap — обработка XML-вывода через Python
+# Занятие 44: Nmap XML parser
 
 ## Учебная рамка
 
-**Входные требования:** Минимальные навыки процедурного Python: переменные, функции, циклы, списки, словари, запуск `.py` из терминала.
+**Входные требования:** Завершен SDET Python QA Automation Apprenticeship или освоены pytest/API/UI/DB basics; студент умеет запускать Python из терминала и читать traceback.
 
-**Результат занятия:** Студент запускает или дорабатывает Python-скрипт, понимает поток выполнения и проверяет результат на безопасной цели.
+**Результат занятия:** парсер готового lab XML без запуска scan по продукту.
 
-**Безопасная цель:** `127.0.0.1`, локальный тестовый HTTP-сервер, учебная VM `192.168.100.20` или заранее разрешенная лаборатория.
+**Наследуемая SDET-компетенция:** security automation engineering: тестируемый Python-код, allowlist, rate limit, structured output и review.
 
-**Среда выполнения:** Основной путь — macOS native, браузер, DevTools, Homebrew и Python. Kali Linux ARM64 VM, UTM или cloud lab используются только если это явно требуется задачей или вынесено в углубление.
+**Security QA-компетенция:** создание безопасных security QA helpers с отказом от опасных действий по умолчанию.
 
-**Обязательный путь новичка:** Запустить базовый скрипт, изменить один параметр, добавить один понятный вывод и проверить результат.
+**Связь с книгами:** «Легкий способ выучить Python 3 еще глубже» — CLI/файлы/текст; «Объектно-ориентированный Python» — классы и исключения; «Паттерны разработки на Python» — service boundaries; «Black Hat Python» — только lab-only идеи и defensive interpretation.
 
-**Углубление:** Добавить обработку ошибок, CLI-аргументы, сохранение результатов или ограничение скорости без усложнения основной логики.
+**Процессный артефакт:** `education/security_process/SECURITY_AUTOMATION_ARCHITECTURE.md`: helper, тесты, allowlist, output contract.
 
-**Минимальная проверка успеха:** Скрипт запускается без traceback, результат воспроизводим, студент может объяснить основные функции и входные данные.
+**Безопасная цель:** `127.0.0.1`, локальный тестовый HTTP-сервер, заранее подготовленный lab-файл или `https://olddev.slider-ai.ru` только в безопасном scope из `education/slider_ai_scope.md`.
 
-**Эталонный вывод:** В отчете есть команда запуска, фрагмент вывода, измененный параметр и короткое объяснение работы скрипта.
+**Среда выполнения:** macOS native, PyCharm/terminal, Python 3.12+, `.venv`, pytest. Kali/cloud lab используется только для lab-only техник, явно вынесенных в углубление.
 
-**Критерии сдачи:** Зачет: базовый запуск и небольшая доработка. Отлично: добавлена безопасная обработка ошибок и понятный README-фрагмент.
+**Обязательный путь новичка:** Реализовать минимальный безопасный helper, добавить отказ от небезопасного target/action и один pytest-тест этого отказа.
+
+**Углубление:** Добавить Pydantic/typed output, Markdown/JSON report, CI-like команду, code review checklist и интеграцию с process template.
+
+**Минимальная проверка успеха:** Helper запускается без traceback, опасное действие блокируется, output не содержит секретов, pytest-тесты проходят.
+
+**Эталонный вывод:** Команда запуска, один sanitized JSON/Markdown фрагмент, результат pytest и короткое объяснение safety guard.
+
+**Критерии сдачи:** Зачет: безопасный helper + тест отказа + artifact. Отлично: typed output, README, review checklist и automation appendix для отчета.
 
 ## Теория
 
-**Nmap** — самый популярный инструмент для сканирования сети и аудита безопасности. Он поддерживает вывод результатов в различных форматах, включая XML, который удобно парсить программно.
+SDET переносит навык обработки structured output: Nmap XML из лаборатории парсится как входной артефакт, а не генерируется широким scan по продукту. Код должен отличать “обнаруженный сервис” от “подтвержденной уязвимости”.
 
-**Зачем автоматизировать Nmap через Python:**
-- Обработка больших объемов данных сканирования
-- Интеграция результатов в отчеты
-- Фильтрация и поиск специфических сервисов/уязвимостей
-- Создание собственных инструментов на базе Nmap
+Security automation в этом курсе наследует SDET-подход:
 
-**Библиотеки:**
-- `xml.etree.ElementTree` (стандартная) — для парсинга XML
-- `subprocess` (стандартная) — для запуска Nmap
-- `re` — для регулярных выражений
-- `nmap` (опционально) — Python-обертка для Nmap (требует установки)
-
-**Установка Nmap:**
-```bash
-# macOS
-brew install nmap
-
-# Linux (Ubuntu/Debian)
-sudo apt-get install nmap
-
-# Windows: скачать с https://nmap.org/download.html
-```
-
-**Установка библиотеки python-nmap (опционально):**
-```bash
-pip install python-nmap
-```
+1. Сначала определяется риск и scope.
+2. Затем пишется минимальный helper с безопасными дефолтами.
+3. Опасное поведение блокируется тестами.
+4. Output становится evidence, а не “сырым логом”.
+5. Tool output не является finding без ручной валидации.
 
 ## Практическое занятие
 
-Напишем скрипт, который запускает Nmap, сохраняет результат в XML и парсит его для извлечения полезной информации.
-
 ```python
-import subprocess
 import xml.etree.ElementTree as ET
-import os
-import json
-from datetime import datetime
 
-class NmapParser:
-    """Класс для автоматизации Nmap и парсинга результатов"""
-    
-    def __init__(self, output_dir="nmap_results"):
-        """
-        Инициализация
-        :param output_dir: директория для сохранения результатов
-        """
-        self.output_dir = output_dir
-        os.makedirs(output_dir, exist_ok=True)
-        self.scan_results = {}
-    
-    def run_nmap_scan(self, target, options="-sV -sC -p- --open", output_file=None):
-        """
-        Запуск Nmap сканирования
-        :param target: цель (IP, диапазон, подсеть)
-        :param options: опции Nmap
-        :param output_file: имя файла для сохранения (если None, генерируется автоматически)
-        :return: путь к XML-файлу с результатами
-        """
-        if output_file is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_file = f"scan_{target.replace('/', '_')}_{timestamp}.xml"
-        
-        output_path = os.path.join(self.output_dir, output_file)
-        
-        # Формируем команду Nmap с выводом в XML
-        # Правильный порядок: nmap [опции] [цель] -oX [файл]
-        cmd = ['nmap'] + options.split() + [target, '-oX', output_path]
-        
-        print(f"[+] Запуск Nmap сканирования: {target}")
-        print(f"    Команда: {' '.join(cmd)}")
-        
-        try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=3600  # Таймаут 1 час
-            )
-            
-            if result.returncode == 0:
-                print(f"[+] Сканирование завершено успешно")
-                print(f"    Результаты сохранены: {output_path}")
-                return output_path
-            else:
-                print(f"[-] Ошибка Nmap: {result.stderr}")
-                return None
-                
-        except subprocess.TimeoutExpired:
-            print("[-] Превышен таймаут сканирования (1 час)")
-            return None
-        except FileNotFoundError:
-            print("[-] Nmap не установлен. Установите: brew install nmap (macOS) или apt install nmap (Linux)")
-            return None
-        except Exception as e:
-            print(f"[-] Ошибка при запуске Nmap: {e}")
-            return None
-    
-    def parse_nmap_xml(self, xml_file):
-        """
-        Парсинг XML-файла Nmap
-        :param xml_file: путь к XML-файлу
-        :return: словарь с результатами
-        """
-        print(f"\n[+] Парсинг результатов: {xml_file}")
-        
-        try:
-            tree = ET.parse(xml_file)
-            root = tree.getroot()
-        except Exception as e:
-            print(f"[-] Ошибка парсинга XML: {e}")
-            return None
-        
-        results = {
-            'scan_info': {},
-            'hosts': [],
-            'raw_xml': xml_file
-        }
-        
-        # Информация о сканировании
-        scaninfo = root.find('scaninfo')
-        if scaninfo is not None:
-            results['scan_info'] = {
-                'type': scaninfo.get('type'),
-                'protocol': scaninfo.get('protocol'),
-                'numservices': scaninfo.get('numservices'),
-                'services': scaninfo.get('services')
-            }
-        
-        # Парсим хосты
-        for host in root.findall('host'):
-            host_data = {
-                'addresses': [],
-                'hostnames': [],
-                'ports': [],
-                'status': host.find('status').get('state') if host.find('status') is not None else 'unknown'
-            }
-            
-            # IP и MAC адреса
-            for addr in host.findall('address'):
-                addr_info = {
-                    'addr': addr.get('addr'),
-                    'addrtype': addr.get('addrtype'),
-                    'vendor': addr.get('vendor', 'unknown')
-                }
-                host_data['addresses'].append(addr_info)
-            
-            # Имена хостов
-            hostnames = host.find('hostnames')
-            if hostnames is not None:
-                for hn in hostnames.findall('hostname'):
-                    host_data['hostnames'].append({
-                        'name': hn.get('name'),
-                        'type': hn.get('type')
-                    })
-            
-            # Порты
-            ports = host.find('ports')
-            if ports is not None:
-                for port in ports.findall('port'):
-                    port_data = {
-                        'portid': port.get('portid'),
-                        'protocol': port.get('protocol'),
-                        'state': 'unknown',
-                        'service': {},
-                        'scripts': []
-                    }
-                    
-                    # Состояние порта
-                    state = port.find('state')
-                    if state is not None:
-                        port_data['state'] = state.get('state')
-                    
-                    # Информация о сервисе
-                    service = port.find('service')
-                    if service is not None:
-                        port_data['service'] = {
-                            'name': service.get('name'),
-                            'product': service.get('product', ''),
-                            'version': service.get('version', ''),
-                            'extrainfo': service.get('extrainfo', ''),
-                            'ostype': service.get('ostype', ''),
-                            'method': service.get('method')
-                        }
-                    
-                    # Результаты скриптов Nmap (NSE)
-                    for script in port.findall('script'):
-                        script_data = {
-                            'id': script.get('id'),
-                            'output': script.get('output')
-                        }
-                        port_data['scripts'].append(script_data)
-                    
-                    host_data['ports'].append(port_data)
-            
-            results['hosts'].append(host_data)
-        
-        self.scan_results = results
-        print(f"    Найдено хостов: {len(results['hosts'])}")
-        total_ports = sum(len(h['ports']) for h in results['hosts'])
-        print(f"    Всего портов: {total_ports}")
-        
-        return results
-    
-    def filter_open_ports(self):
-        """Фильтрация только открытых портов"""
-        open_ports = []
-        for host in self.scan_results.get('hosts', []):
-            if host['status'] != 'up':
-                continue
-            for port in host['ports']:
-                if port['state'] == 'open':
-                    open_ports.append({
-                        'host': host['addresses'][0]['addr'] if host['addresses'] else 'unknown',
-                        'port': port['portid'],
-                        'protocol': port['protocol'],
-                        'service': port['service'].get('name', 'unknown'),
-                        'product': port['service'].get('product', ''),
-                        'version': port['service'].get('version', '')
-                    })
-        return open_ports
-    
-    def find_service(self, service_name):
-        """
-        Поиск сервисов по имени
-        :param service_name: имя сервиса (например, 'http', 'ssh')
-        """
-        found = []
-        for host in self.scan_results.get('hosts', []):
-            for port in host['ports']:
-                if port['state'] == 'open':
-                    svc_name = port['service'].get('name', '').lower()
-                    if service_name.lower() in svc_name:
-                        found.append({
-                            'host': host['addresses'][0]['addr'] if host['addresses'] else 'unknown',
-                            'port': port['portid'],
-                            'service': port['service']
-                        })
-        return found
-    
-    def print_summary(self):
-        """Вывод краткой сводки по результатам"""
-        if not self.scan_results:
-            print("[-] Нет данных для вывода")
-            return
-        
-        print("\n" + "="*60)
-        print("СВОДКА ПО СКАНИРОВАНИЮ NMAP")
-        print("="*60)
-        
-        print(f"\nТип сканирования: {self.scan_results['scan_info'].get('type', 'N/A')}")
-        print(f"Протокол: {self.scan_results['scan_info'].get('protocol', 'N/A')}")
-        
-        for i, host in enumerate(self.scan_results['hosts'], 1):
-            print(f"\n--- Хост #{i} ---")
-            print(f"Статус: {host['status']}")
-            
-            # Адреса
-            for addr in host['addresses']:
-                print(f"IP: {addr['addr']} ({addr['addrtype']})")
-                if addr['vendor'] != 'unknown':
-                    print(f"  Вендор: {addr['vendor']}")
-            
-            # Имена
-            if host['hostnames']:
-                print(f"Имена: {', '.join([h['name'] for h in host['hostnames']])}")
-            
-            # Открытые порты
-            open_ports = [p for p in host['ports'] if p['state'] == 'open']
-            if open_ports:
-                print(f"\nОткрытые порты ({len(open_ports)}):")
-                for port in open_ports:
-                    svc = port['service']
-                    svc_str = svc.get('name', 'unknown')
-                    if svc.get('product'):
-                        svc_str += f" ({svc['product']}"
-                        if svc.get('version'):
-                            svc_str += f" {svc['version']}"
-                        svc_str += ")"
-                    print(f"  {port['portid']}/{port['protocol']}: {svc_str}")
-                    
-                    # Вывод результатов скриптов (если есть)
-                    if port['scripts']:
-                        for script in port['scripts']:
-                            print(f"    [NSE] {script['id']}: {script['output'][:100]}...")
-        
-        print("\n" + "="*60)
-    
-    def save_to_json(self, output_file="nmap_results.json"):
-        """Сохранение результатов в JSON"""
-        output_path = os.path.join(self.output_dir, output_file)
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(self.scan_results, f, indent=2, ensure_ascii=False)
-        print(f"\n[+] Результаты сохранены в JSON: {output_path}")
-        return output_path
 
-if __name__ == "__main__":
-    parser = NmapParser(output_dir="nmap_results")
-    
-    # Пример 1: Сканирование локального хоста (быстрое)
-    # В реальном пентесте замените на реальную цель
-    target = "127.0.0.1"
-    options = "-sV -p 22,80,443,3306,8080 --open"  # Быстрое сканирование
-    
-    print("[*] ВНИМАНИЕ: Запуск Nmap требует прав. Для сканирования некоторых портов может потребоваться sudo.")
-    print("[*] Используйте только на системах, на которые у вас есть разрешение!\n")
-    
-    # Запускаем сканирование
-    xml_file = parser.run_nmap_scan(target, options)
-    
-    if xml_file and os.path.exists(xml_file):
-        # Парсим результаты
-        results = parser.parse_nmap_xml(xml_file)
-        
-        if results:
-            # Выводим сводку
-            parser.print_summary()
-            
-            # Фильтруем открытые порты
-            open_ports = parser.filter_open_ports()
-            print(f"\n[+] Найдено открытых портов: {len(open_ports)}")
-            for op in open_ports:
-                print(f"    {op['host']}:{op['port']} - {op['service']} ({op['product']} {op['version']})")
-            
-            # Поиск конкретных сервисов
-            http_services = parser.find_service("http")
-            if http_services:
-                print(f"\n[+] Найдены HTTP-сервисы: {len(http_services)}")
-                for svc in http_services:
-                    print(f"    {svc['host']}:{svc['port']}")
-            
-            # Сохраняем в JSON
-            parser.save_to_json()
-    else:
-        print("\n[-] Сканирование не удалось или Nmap не установлен.")
-        print("[-] Для демонстрации парсинга можно использовать существующий XML-файл.")
-        print("[-] Пример: python script.py (и вручную вызвать parse_nmap_xml('file.xml'))")
+def parse_nmap_xml(path: str) -> list[dict]:
+    root = ET.parse(path).getroot()
+    rows = []
+    for host in root.findall("host"):
+        address = host.find("address").attrib.get("addr", "unknown")
+        for port in host.findall(".//port"):
+            service = port.find("service")
+            rows.append({
+                "host": address,
+                "port": int(port.attrib["portid"]),
+                "protocol": port.attrib.get("protocol"),
+                "service": service.attrib.get("name") if service is not None else "unknown",
+                "finding_status": "observation"
+            })
+    return rows
 ```
 
-**Объяснение кода:**
-1. `run_nmap_scan()` — запускает Nmap через subprocess с выводом в XML
-2. `parse_nmap_xml()` — парсит XML, извлекает информацию о хостах, портах, сервисах
-3. `filter_open_ports()` — фильтрует только открытые порты
-4. `find_service()` — ищет конкретные сервисы (например, все HTTP)
-5. `print_summary()` — красиво выводит результаты
-6. `save_to_json()` — сохраняет результаты в JSON для дальнейшей обработки
 
-**Запуск:**
+### Минимальная структура сдачи
+
+```text
+security_qa_helper/
+├── safeguards/
+├── reports/
+├── tests/
+└── README.md
+```
+
+### Команды проверки
+
 ```bash
-python lesson_44_nmap.py
+python -m pytest tests/
+python -m security_qa_helper --help
 ```
 
 ## Примеры вывода
 
-Пример успешного выполнения скрипта для `127.0.0.1`:
+```text
+$ pytest tests/test_safeguards.py
+1 passed in 0.05s
 
+$ python -m security_qa_helper --target https://olddev.slider-ai.ru --dry-run
+{"target":"https://olddev.slider-ai.ru","dry_run":true,"secrets_masked":true,"status":"observation"}
 ```
-[*] ВНИМАНИЕ: Запуск Nmap требует прав. Для сканирования некоторых портов может потребоваться sudo.
-[*] Используйте только на системах, на которые у вас есть разрешение!
-
-[+] Запуск Nmap сканирования: 127.0.0.1
-    Команда: nmap -sV -p 22,80,443,3306,8080 --open -oX nmap_results/scan_127.0.0.1_20260429_120000.xml
-
-[+] Сканирование завершено успешно
-    Результаты сохранены: nmap_results/scan_127.0.0.1_20260429_120000.xml
-
-[+] Парсинг результатов: nmap_results/scan_127.0.0.1_20260429_120000.xml
-    Найдено хостов: 1
-    Всего портов: 5
-
-============================================================
-СВОДКА ПО СКАНИРОВАНИЮ NMAP
-============================================================
-
-Тип сканирования: syn
-Протокол: tcp
-
---- Хост #1 ---
-Статус: up
-IP: 127.0.0.1 (ipv4)
-Имена: localhost
-
-Открытые порты (3):
-  22/tcp: ssh (OpenSSH 8.6)
-  80/tcp: http (nginx 1.18.0)
-  443/tcp: ssl/http (nginx 1.18.0)
-
-============================================================
-
-[+] Найдено открытых портов: 3
-    127.0.0.1:22 - ssh (OpenSSH 8.6)
-    127.0.0.1:80 - http (nginx 1.18.0)
-    127.0.0.1:443 - ssl/http (nginx 1.18.0)
-
-[+] Результаты сохранены в JSON: nmap_results/nmap_results.json
-```
-
-## Частые ошибки
-
-1. **`FileNotFoundError: [Errno 2] No such file or directory: 'nmap'`** — Nmap не установлен. Установите: `brew install nmap` (macOS) или `sudo apt install nmap` (Linux).
-2. **`subprocess.TimeoutExpired`** — Сканирование заняло больше часа (таймаут по умолчанию). Уменьшите количество портов или увеличьте таймаут в `subprocess.run(timeout=...)`.
-3. **`xml.etree.ElementTree.ParseError`** — Поврежденный XML-файл. Возможно, Nmap не завершил работу корректно. Проверьте файл вручную.
-4. **Неправильный порядок аргументов Nmap** — Команда должна формироваться так: `cmd = ['nmap'] + options.split() + [target, '-oX', output_path]`. Убедитесь, что `-oX` идет после цели.
-
-## Вопросы на понимание
-
-1. **Почему для автоматизации Nmap лучше использовать вывод в XML (-oX), а не обычный текстовый вывод?**
-   <details>
-   <summary>Ответ</summary>
-   XML имеет строгую структуру, которую легко парсить программно. Текстовый вывод может меняться между версиями Nmap, что сломает парсер. XML предоставляет все данные (скрипты, timing и т.д.) в машиночитаемом виде.
-   </details>
-
-2. **В чем разница между `subprocess.run()` и `os.system()`?**
-   <details>
-   <summary>Ответ</summary>
-   `subprocess.run()` — это современный и рекомендуемый способ запуска процессов. Он позволяет捕捉 вывод (stdout/stderr), устанавливать таймауты, и более безопасен с точки зрения специально сформированных команд (если использовать список аргументов вместо строки).
-   </details>
-
-3. **Зачем нужен метод `find_service()` в классе `NmapParser`?**
-   <details>
-   <summary>Ответ</summary>
-   Он позволяет быстро найти конкретные сервисы (например, все HTTP или SSH) среди всех просканированных портов. Это полезно, когда нужно сузить область атаки только на определенные службы.
-   </details>
-
-## Задачи для самостоятельного выполнения
-
-1. **Парсинг существующего XML:** Напишите скрипт, который парсит уже существующий XML-файл Nmap без запуска сканирования. Протестируйте на реальном выводе Nmap.
-
-2. **Поиск уязвимостей:** Расширьте парсер для извлечения результатов NSE-скриптов, которые находят уязвимости (например, `vuln-*`). Выводите список найденных уязвимостей.
-
-3. **Сравнение сканов:** Напишите функцию, которая сравнивает два XML-файла сканирования (например, до и после изменений в инфраструктуре) и выводит различия (новые порты, изменившиеся сервисы).
-
-4. **Экспорт в CSV:** Добавьте метод для экспорта результатов в CSV-файл (удобно для Excel). Формат: IP, Port, Protocol, Service, Product, Version, State.
-
-5. **Асинхронное сканирование:** Используйте `asyncio` и `asyncio.subprocess` для запуска нескольких Nmap сканирований параллельно (например, сканирование нескольких подсетей).
-
-6. **Интеграция с Vulners:** Добавьте использование Nmap скрипта `vulners` (требует установки скрипта) для поиска CVE по версиям сервисов. Парсите результаты и выводите список CVE.
-
-7. **Генерация отчета:** Создайте HTML-отчет на основе результатов сканирования. Используйте простые строки HTML или шаблонизатор (например, Jinja2). Отчет должен включать: таблицу хостов, портов, сервисов, найденных уязвимостей.
 
 ## Адаптация под macOS (M2, 8GB)
 
-При выполнении заданий на компьютере Mac с процессором M2 и 8GB оперативной памяти учитывайте следующие особенности:
+- Используйте `.venv` и PyCharm interpreter из SDET-курса.
+- Устанавливайте зависимости через `python -m pip install ...` внутри venv.
+- Не запускайте тяжелые scan/wordlist процессы локально без необходимости.
+- Для lab-only техник используйте cloud lab или легкую ARM64 VM.
 
-- Для установки библиотек используйте `pip3 install <package>`, а не `pip install`.
-- На M2 можно использовать `asyncio`, он поддерживает ARM.
-- На 8GB RAM проект может быть тяжелым, используйте легковесные библиотеки.
-- Для работы с aiohttp в будущих уроках используйте `connector = aiohttp.TCPConnector(ssl=False)` вместо передачи `ssl=False` напрямую в `get()`.
+## Частые ошибки
+
+1. Писать script, который по умолчанию атакует любой target.
+2. Не тестировать safety guard.
+3. Сохранять cookies/tokens в output.
+4. Называть candidate finding подтвержденной уязвимостью.
+5. Подменять security process “интересной техникой”.
+
+## Вопросы на понимание
+
+1. Какой SDET-навык переносится в этот helper?
+2. Какой unsafe action должен быть заблокирован тестом?
+3. Почему output инструмента не равен finding?
+4. Какие поля нужны в sanitized evidence?
+5. Как этот helper будет использоваться в retest?
+
+## Задачи для самостоятельного выполнения
+
+1. Добавьте pytest-тест на отказ от target вне allowlist.
+2. Добавьте README-раздел `Scope and stop conditions`.
+3. Сохраните output в Markdown или JSON.
+4. Проведите self-review по `TOOLING_POLICY.md`.
+5. Опишите, как helper попадет в финальный отчет как automation appendix.
 
 ## Практика на Slider AI
 
@@ -481,19 +130,19 @@ IP: 127.0.0.1 (ipv4)
 
 **Ограничения безопасности:** соблюдать `education/slider_ai_scope.md`; не выполнять DoS/load-тесты, brute force, destructive payloads, изменение чужих данных, извлечение секретов и действия вне согласованного scope.
 
-**Уровень прогрессии:** Parsing nmap
+**Уровень прогрессии:** Parsing nmap safely
 
 ### Минимум
 
-Возьмите учебный XML nmap из лаборатории, не сканируя Slider AI.
+Покажите safety guard: helper должен отказаться от действия, если target/action не входит в безопасный scope.
 
 ### Практика Slider AI
 
-Напишите парсер, который превращает результат одного HTTPS-порта в Markdown observation.
+Используйте учебный XML из lab; по Slider AI парсите только заранее согласованный single-port вывод, если он уже получен законно.
 
 ### Углубление после изучения следующих уроков
 
-После согласованного nmap-safe запуска примените парсер к реальному разрешенному выводу.
+Добавьте результат в `education/security_process/SECURITY_AUTOMATION_ARCHITECTURE.md` или в свой локальный automation appendix: что проверяется, какие ограничения стоят, какой output попадает в отчет.
 
 ### Артефакт сдачи
 

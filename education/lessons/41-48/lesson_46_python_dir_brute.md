@@ -1,449 +1,124 @@
-# Занятие 46: Directory bruteforce — скрипт поиска директорий (как dirsearch)
+# Занятие 46: URL inventory helper вместо directory brute force
 
 ## Учебная рамка
 
-**Входные требования:** Минимальные навыки процедурного Python: переменные, функции, циклы, списки, словари, запуск `.py` из терминала.
+**Входные требования:** Завершен SDET Python QA Automation Apprenticeship или освоены pytest/API/UI/DB basics; студент умеет запускать Python из терминала и читать traceback.
 
-**Результат занятия:** Студент запускает или дорабатывает Python-скрипт, понимает поток выполнения и проверяет результат на безопасной цели.
+**Результат занятия:** проверка заранее известных URL, allowlist и 1 rps вместо перебора по умолчанию.
 
-**Безопасная цель:** `127.0.0.1`, локальный тестовый HTTP-сервер, учебная VM `192.168.100.20` или заранее разрешенная лаборатория.
+**Наследуемая SDET-компетенция:** security automation engineering: тестируемый Python-код, allowlist, rate limit, structured output и review.
 
-**Среда выполнения:** Основной путь — macOS native, браузер, DevTools, Homebrew и Python. Kali Linux ARM64 VM, UTM или cloud lab используются только если это явно требуется задачей или вынесено в углубление.
+**Security QA-компетенция:** создание безопасных security QA helpers с отказом от опасных действий по умолчанию.
 
-**Обязательный путь новичка:** Запустить базовый скрипт, изменить один параметр, добавить один понятный вывод и проверить результат.
+**Связь с книгами:** «Легкий способ выучить Python 3 еще глубже» — CLI/файлы/текст; «Объектно-ориентированный Python» — классы и исключения; «Паттерны разработки на Python» — service boundaries; «Black Hat Python» — только lab-only идеи и defensive interpretation.
 
-**Углубление:** Добавить обработку ошибок, CLI-аргументы, сохранение результатов или ограничение скорости без усложнения основной логики.
+**Процессный артефакт:** `education/security_process/SECURITY_AUTOMATION_ARCHITECTURE.md`: helper, тесты, allowlist, output contract.
 
-**Минимальная проверка успеха:** Скрипт запускается без traceback, результат воспроизводим, студент может объяснить основные функции и входные данные.
+**Безопасная цель:** `127.0.0.1`, локальный тестовый HTTP-сервер, заранее подготовленный lab-файл или `https://olddev.slider-ai.ru` только в безопасном scope из `education/slider_ai_scope.md`.
 
-**Эталонный вывод:** В отчете есть команда запуска, фрагмент вывода, измененный параметр и короткое объяснение работы скрипта.
+**Среда выполнения:** macOS native, PyCharm/terminal, Python 3.12+, `.venv`, pytest. Kali/cloud lab используется только для lab-only техник, явно вынесенных в углубление.
 
-**Критерии сдачи:** Зачет: базовый запуск и небольшая доработка. Отлично: добавлена безопасная обработка ошибок и понятный README-фрагмент.
+**Обязательный путь новичка:** Реализовать минимальный безопасный helper, добавить отказ от небезопасного target/action и один pytest-тест этого отказа.
+
+**Углубление:** Добавить Pydantic/typed output, Markdown/JSON report, CI-like команду, code review checklist и интеграцию с process template.
+
+**Минимальная проверка успеха:** Helper запускается без traceback, опасное действие блокируется, output не содержит секретов, pytest-тесты проходят.
+
+**Эталонный вывод:** Команда запуска, один sanitized JSON/Markdown фрагмент, результат pytest и короткое объяснение safety guard.
+
+**Критерии сдачи:** Зачет: безопасный helper + тест отказа + artifact. Отлично: typed output, README, review checklist и automation appendix для отчета.
 
 ## Теория
 
-**Directory bruteforce (перебор директорий и файлов)** — это техника поиска скрытых файлов и папок на веб-сервере путем перебора возможных путей. Это один из этапов разведки веб-приложений.
+Directory brute force не является безопасным дефолтом для продуктового стенда. Security-aware SDET сначала строит inventory из видимых URL, проверяет статусы аккуратно и только потом планирует small wordlist run через approval.
 
-**Зачем нужно:**
-- Поиск административных панелей (/admin, /administrator)
-- Поиск файлов конфигурации (/config.php, /.env)
-- Поиск резервных копий (/backup.zip, /db.sql)
-- Поиск тестовых/отладочных страниц
-- Обнаружение скрытых API эндпоинтов
+Security automation в этом курсе наследует SDET-подход:
 
-**Инструменты:**
-- `dirsearch` (Python)
-- `gobuster` (Go)
-- `ffuf` (Go, очень быстрый)
-- `wfuzz` (Python)
-
-**Библиотеки:**
-- `aiohttp` или `httpx` — для асинхронных HTTP-запросов
-- `asyncio` — для асинхронности
-
-**Установка:**
-```bash
-pip3 install aiohttp
-```
-
-**Примечание для macOS (M2):** aiohttp полностью поддерживает архитектуру ARM64, проблем с установкой на M2 Mac не должно быть.
+1. Сначала определяется риск и scope.
+2. Затем пишется минимальный helper с безопасными дефолтами.
+3. Опасное поведение блокируется тестами.
+4. Output становится evidence, а не “сырым логом”.
+5. Tool output не является finding без ручной валидации.
 
 ## Практическое занятие
 
-Напишем асинхронный скрипт для перебора директорий, аналогичный dirsearch.
-
 ```python
-import asyncio
-import aiohttp
-import argparse
-import json
 import time
-from datetime import datetime
-from urllib.parse import urljoin, urlparse
-from typing import List, Dict, Set
+import requests
 
-class DirectoryBruteforcer:
-    """Перебор директорий и файлов на веб-сервере"""
-    
-    def __init__(
-        self,
-        target_url: str,
-        wordlist: str = None,
-        extensions: List[str] = None,
-        threads: int = 50,
-        timeout: int = 10,
-        exclude_codes: List[int] = None,
-        include_codes: List[int] = None
-    ):
-        """
-        Инициализация
-        :param target_url: целевой URL
-        :param wordlist: путь к словарю
-        :param extensions: список расширений (например, ['php', 'html', 'txt'])
-        :param threads: количество потоков
-        :param timeout: таймаут запроса
-        :param exclude_codes: коды ответа для исключения (например, [404])
-        :param include_codes: коды ответа для включения (если указано, другие игнорируются)
-        """
-        self.target_url = target_url.rstrip('/') if target_url else ""
-        self.wordlist_path = wordlist
-        self.extensions = extensions or []
-        self.threads = threads
-        self.timeout = timeout
-        self.exclude_codes = exclude_codes or [404]
-        self.include_codes = include_codes
-        
-        self.found_paths: List[Dict] = []
-        self.tested_count = 0
-        self.start_time = None
-        
-        # Встроенный мини-словарь
-        self.builtin_words = [
-            'admin', 'administrator', 'login', 'logout', 'register', 'signup',
-            'dashboard', 'panel', 'cp', 'control', 'manage', 'manager',
-            'backup', 'backups', 'old', 'new', 'test', 'dev', 'staging', 'prod',
-            'api', 'api/v1', 'api/v2', 'api/v3', 'rest', 'soap', 'graphql',
-            'config', 'configuration', 'settings', 'setup', 'install', 'installer',
-            'db', 'database', 'sql', 'mysql', 'mongo', 'redis',
-            'logs', 'log', 'debug', 'info', 'status', 'health', 'metrics',
-            'assets', 'static', 'css', 'js', 'images', 'img', 'uploads', 'files',
-            'upload', 'file', 'download', 'downloads', 'media', 'video', 'audio',
-            'docs', 'doc', 'documentation', 'help', 'support', 'faq',
-            'robots.txt', 'sitemap.xml', 'favicon.ico', '.htaccess', '.env',
-            'web.config', 'phpinfo.php', 'info.php', 'test.php', 'phpinfo',
-            'console', 'shell', 'cmd', 'terminal', 'root', 'home',
-            'user', 'users', 'profile', 'account', 'accounts',
-            'mail', 'email', 'smtp', 'pop3', 'imap',
-            'cgi-bin', 'cgi', 'bin', 'sbin', 'usr', 'var', 'etc',
-            'src', 'source', 'code', 'git', '.git', 'svn', '.svn', 'cvs',
-            'backup.zip', 'backup.tar.gz', 'db.sql', 'dump.sql',
-            'private', 'secret', 'hidden', 'secure', 'security',
-            'wp-admin', 'wp-login.php', 'wp-config.php', 'wordpress',
-            'joomla', 'drupal', 'magento', 'shop', 'store',
-            'app', 'application', 'services', 'service', 'healthcheck'
-        ]
-    
-    def generate_paths(self, word: str) -> List[str]:
-        """
-        Генерация путей из слова (с учетом расширений)
-        :param word: слово из словаря
-        :return: список путей
-        """
-        paths = [word]
-        
-        # Если слово уже содержит точку (файл), не добавляем расширения
-        if '.' in word:
-            return paths
-        
-        # Добавляем расширения
-        for ext in self.extensions:
-            paths.append(f"{word}.{ext}")
-        
-        return paths
-    
-    async def check_path(self, session: aiohttp.ClientSession, path: str):
-        """
-        Проверка одного пути
-        :param session: aiohttp сессия
-        :param path: путь для проверки
-        """
-        url = urljoin(self.target_url + '/', path)
-        
-        try:
-            async with session.get(url, timeout=self.timeout, allow_redirects=False) as response:
-                status = response.status
-                self.tested_count += 1
-                
-                # Проверяем, нужно ли включать этот код ответа
-                if self.include_codes and status not in self.include_codes:
-                    return
-                
-                # Проверяем, нужно ли исключать этот код ответа
-                if status in self.exclude_codes:
-                    return
-                
-                # Получаем информацию о ответе
-                content_length = response.headers.get('Content-Length', '0')
-                content_type = response.headers.get('Content-Type', 'unknown')
-                redirect_location = None
-                
-                if status in [301, 302, 303, 307, 308]:
-                    redirect_location = response.headers.get('Location')
-                
-                result = {
-                    'url': url,
-                    'status': status,
-                    'content_length': content_length,
-                    'content_type': content_type,
-                    'redirect': redirect_location,
-                    'path': path
-                }
-                
-                self.found_paths.append(result)
-                
-                # Красивый вывод
-                status_color = ""
-                if status == 200:
-                    status_color = "[200]"  # Можно добавить цвета
-                elif status == 301 or status == 302:
-                    status_color = f"[{status} -> {redirect_location}]"
-                elif status == 403:
-                    status_color = "[403]"
-                else:
-                    status_color = f"[{status}]"
-                
-                print(f"{status_color:15} {url:50} {content_length:10} {content_type[:30]}")
-                
-        except aiohttp.ClientError as e:
-            self.tested_count += 1
-            # Игнорируем ошибки соединения
-            pass
-        except asyncio.TimeoutError:
-            self.tested_count += 1
-            print(f"[TIMEOUT]        {url}")
-        except Exception as e:
-            self.tested_count += 1
-            pass
-    
-    async def run_bruteforce(self):
-        """Основной метод запуска перебора"""
-        print(f"\n{'='*70}")
-        print(f"Directory Bruteforce")
-        print(f"Цель: {self.target_url}")
-        print(f"{'='*70}\n")
-        
-        # Загружаем словарь
-        if self.wordlist_path:
-            try:
-                with open(self.wordlist_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    words = [line.strip() for line in f if line.strip() and not line.startswith('#')]
-                print(f"[+] Загружено слов из файла: {len(words)}")
-            except FileNotFoundError:
-                print(f"[-] Файл словаря не найден: {self.wordlist_path}")
-                print(f"[-] Используем встроенный словарь ({len(self.builtin_words)} слов)")
-                words = self.builtin_words
-        else:
-            print(f"[+] Используем встроенный словарь ({len(self.builtin_words)} слов)")
-            words = self.builtin_words
-        
-        # Генерируем все пути (с учетом расширений)
-        all_paths = []
-        for word in words:
-            all_paths.extend(self.generate_paths(word))
-        
-        print(f"[+] Всего путей для проверки: {len(all_paths)}")
-        if self.extensions:
-            print(f"[+] Расширения: {', '.join(self.extensions)}")
-        print(f"[+] Потоков: {self.threads}")
-        print(f"\n{'='*70}")
-        print(f"{'Статус':15} {'URL':50} {'Размер':10} {'Тип'}")
-        print(f"{'='*70}")
-        
-        self.start_time = time.time()
-        
-        # Создаем сессию
-        connector = aiohttp.TCPConnector(ssl=False, limit=self.threads)
-        timeout = aiohttp.ClientTimeout(total=self.timeout)
-        
-        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
-            # Семафор для ограничения одновременных запросов
-            semaphore = asyncio.Semaphore(self.threads)
-            
-            async def bounded_check(path):
-                async with semaphore:
-                    await self.check_path(session, path)
-            
-            # Запускаем все проверки
-            await asyncio.gather(*[bounded_check(path) for path in all_paths])
-        
-        elapsed = time.time() - self.start_time
-        
-        print(f"\n{'='*70}")
-        print(f"Сканирование завершено за {elapsed:.2f} секунд")
-        print(f"Проверено путей: {self.tested_count}")
-        print(f"Найдено путей: {len(self.found_paths)}")
-        print(f"Скорость: {self.tested_count / elapsed:.2f} запросов/сек")
-        print(f"{'='*70}\n")
-    
-    def save_results(self, output_file: str = None):
-        """Сохранение результатов"""
-        if output_file is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            parsed = urlparse(self.target_url)
-            domain = parsed.netloc or parsed.path
-            output_file = f"dir_brute_{domain}_{timestamp}.json"
-        
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump({
-                'target': self.target_url,
-                'scan_time': datetime.now().isoformat(),
-                'tested_count': self.tested_count,
-                'found_count': len(self.found_paths),
-                'results': self.found_paths
-            }, f, indent=2, ensure_ascii=False)
-        
-        print(f"[+] Результаты сохранены: {output_file}")
-        
-        # Сохраняем только найденные URL
-        txt_file = output_file.replace('.json', '.txt')
-        with open(txt_file, 'w', encoding='utf-8') as f:
-            for result in self.found_paths:
-                f.write(f"{result['url']}\n")
-        print(f"[+] Список URL сохранен: {txt_file}")
+ALLOWED_HOST = "https://olddev.slider-ai.ru"
 
-async def main():
-    """Точка входа"""
-    parser = argparse.ArgumentParser(description='Directory Bruteforce (аналог dirsearch)')
-    parser.add_argument('url', help='Целевой URL (например, http://example.com)')
-    parser.add_argument('-w', '--wordlist', help='Путь к словарю')
-    parser.add_argument('-e', '--extensions', help='Расширения через запятую (например, php,html,txt)')
-    parser.add_argument('-t', '--threads', type=int, default=50, help='Количество потоков (по умолчанию: 50)')
-    parser.add_argument('-o', '--output', help='Файл для сохранения результатов')
-    parser.add_argument('-x', '--exclude-codes', help='Коды для исключения (например, 404,500)')
-    parser.add_argument('-i', '--include-codes', help='Коды для включения (например, 200,301,403)')
-    
-    args = parser.parse_args()
-    
-    # Парсим расширения
-    extensions = []
-    if args.extensions:
-        extensions = [ext.strip() for ext in args.extensions.split(',')]
-    
-    # Парсим коды ответов
-    exclude_codes = [404]
-    if args.exclude_codes:
-        exclude_codes = [int(code.strip()) for code in args.exclude_codes.split(',')]
-    
-    include_codes = None
-    if args.include_codes:
-        include_codes = [int(code.strip()) for code in args.include_codes.split(',')]
-    
-    bruteforcer = DirectoryBruteforcer(
-        target_url=args.url,
-        wordlist=args.wordlist,
-        extensions=extensions,
-        threads=args.threads,
-        exclude_codes=exclude_codes,
-        include_codes=include_codes
-    )
-    
-    await bruteforcer.run_bruteforce()
-    bruteforcer.save_results(args.output)
 
-if __name__ == "__main__":
-    asyncio.run(main())
+def check_known_urls(paths: list[str]) -> list[dict]:
+    results = []
+    for path in paths:
+        if not path.startswith("/"):
+            raise ValueError("Path must start with /")
+        url = ALLOWED_HOST + path
+        response = requests.get(url, timeout=5, headers={"User-Agent": "SliderAI-SecurityQA-Learning"})
+        results.append({"url": url, "status_code": response.status_code, "status": "observation"})
+        time.sleep(1)
+    return results
 ```
 
-**Объяснение кода:**
-1. Генерирует пути из словаря, добавляя расширения (если указаны)
-2. Асинхронно проверяет каждый путь через aiohttp
-3. Фильтрует ответы по кодам (исключает 404 по умолчанию)
-4. Выводит красивый прогресс с информацией о найденных путях
-5. Сохраняет результаты в JSON и текстовый файл
 
-**Запуск:**
+### Минимальная структура сдачи
+
+```text
+security_qa_helper/
+├── safeguards/
+├── reports/
+├── tests/
+└── README.md
+```
+
+### Команды проверки
+
 ```bash
-# Базовый запуск
-python lesson_46_dir_brute.py http://example.com
-
-# Со словарём и расширениями
-python lesson_46_dir_brute.py http://example.com -w wordlist.txt -e php,html,txt,js,css
-
-# С фильтрацией кодов
-python lesson_46_dir_brute.py http://example.com -i 200,301,302,403
-
-# Больше потоков
-python lesson_46_dir_brute.py http://example.com -t 100
+python -m pytest tests/
+python -m security_qa_helper --help
 ```
-
-**Где взять словари:**
-- `/usr/share/wordlists/dirbuster/` (Kali Linux)
-- `/usr/share/wordlists/dirb/` (Kali Linux)
-- SecLists: https://github.com/danielmiessler/SecLists/tree/master/Discovery/Web-Content
 
 ## Примеры вывода
 
-Пример успешного выполнения скрипта для `http://example.com`:
+```text
+$ pytest tests/test_safeguards.py
+1 passed in 0.05s
 
+$ python -m security_qa_helper --target https://olddev.slider-ai.ru --dry-run
+{"target":"https://olddev.slider-ai.ru","dry_run":true,"secrets_masked":true,"status":"observation"}
 ```
-======================================================================
-Directory Bruteforce
-Цель: http://example.com
-======================================================================
-
-[+] Используем встроенный словарь (50 слов)
-[+] Всего путей для проверки: 50
-[+] Расширения: php, html, txt, js, css
-[+] Потоков: 50
-
-======================================================================
-Статус          URL                                                Размер       Тип
-======================================================================
-[200]          http://example.com/admin                            1234        text/html
-[403]          http://example.com/backup                          987         text/html
-[301 -> http://example.com/admin/] http://example.com/admin/      567         text/html
-[200]          http://example.com/robots.txt                      432         text/plain
-[404]          http://example.com/test                            0            (not shown)
-
-======================================================================
-Сканирование завершено за 1.23 секунд
-Проверено путей: 50
-Найдено путей: 4
-Скорость: 40.65 запросов/сек
-======================================================================
-```
-
-## Частые ошибки
-
-1. **`aiohttp.ClientConnectorCertificateError`** — Ошибка SSL. Убедитесь, что используете `connector = aiohttp.TCPConnector(ssl=False)` вместо `ssl=False` в `session.get()`.
-2. **Ложноположительные срабатывания (200 на несуществующие пути)** — Сайт может иметь кастомную 404 страницу, которая возвращает код 200. Используйте анализ длины контента или хэша.
-3. **`asyncio.exceptions.TimeoutError`** — Превышен таймаут. Увеличьте параметр `timeout` или уменьшите количество потоков.
-4. **Слишком медленно на M2 8GB** — Уменьшите количество потоков до 20-30. Большое количество одновременных запросов может исчерпать память.
-
-## Вопросы на понимание
-
-1. **Почему для directory bruteforce лучше использовать асинхронный подход, а не инструменты типа dirsearch/gobuster?**
-   <details>
-   <summary>Ответ</summary>
-   Написание своего инструмента позволяет лучше понять процесс, кастомизировать логику под конкретную задачу и добавить специфические проверки, которые могут отсутствовать в готовых инструментах.
-   </details>
-
-2. **Зачем нужна проверка кодов ответа (exclude/include codes)?**
-   <details>
-   <summary>Ответ</summary>
-   Разные веб-серверы и приложения по-разному обрабатывают несуществующие пути. Некоторые возвращают 404, некоторые 403 (доступ запрещен), а некоторые 200 с кастомной страницей. Фильтрация помогает убрать шум.
-   </details>
-
-3. **В чем разница между `allow_redirects=False` и его отсутствием в контексте перебора?**
-   <details>
-   <summary>Ответ</summary>
-   При `allow_redirects=False` мы видим факт редиректа (код 301/302) и можем зафиксировать, что путь существует, но перенаправляет. Если следовать редиректам, мы можем получить финальный путь, но потеряем информацию о промежуточном.
-   </details>
-
-## Задачи для самостоятельного выполнения
-
-1. **Recursive bruteforce:** Добавьте возможность рекурсивного перебора. Если найдена директория (например, `/admin/`), продолжить перебор внутри неё (`/admin/config`, `/admin/users` и т.д.).
-
-2. **Response diffing:** Добавьте анализ ответов для уменьшения ложноположительных срабатываний. Сравните ответы с 404 ошибкой (кастомная страница 404 может возвращать 200). Используйте длину контента, хэш контента или ключевые слова.
-
-3. **Authentication:** Добавьте поддержку аутентификации: Basic Auth, Cookie, Headers (для доступа к защищенным областям).
-
-4. **Proxy support:** Добавьте возможность отправки запросов через прокси (SOCKS5/HTTP). Полезно для анонимности или обхода блокировок.
-
-5. **Extensions from response:** Добавьте автоопределение расширений на основе технологий сайта (например, если видим PHP-заголовки, добавляем .php в перебор).
-
-6. **Backup file detection:** Создайте отдельную функцию для поиска файлов резервных копий. Например, для `config.php` искать `config.php.bak`, `config.php~`, `config.php.old`, `config.php.2024` и т.д.
-
-7. **Integration с Burp Suite:** Добавьте возможность отправки найденных путей в Burp Suite (через Burp API или просто сохранение в формате, понятном Burp).
 
 ## Адаптация под macOS (M2, 8GB)
 
-При выполнении заданий на компьютере Mac с процессором M2 и 8GB оперативной памяти учитывайте следующие особенности:
+- Используйте `.venv` и PyCharm interpreter из SDET-курса.
+- Устанавливайте зависимости через `python -m pip install ...` внутри venv.
+- Не запускайте тяжелые scan/wordlist процессы локально без необходимости.
+- Для lab-only техник используйте cloud lab или легкую ARM64 VM.
 
-- Для установки библиотек используйте `pip3 install <package>`, а не `pip install`.
-- На M2 можно использовать `asyncio`, он поддерживает ARM.
-- На 8GB RAM проект может быть тяжелым, используйте легковесные библиотеки.
-- Для aiohttp: `connector = aiohttp.TCPConnector(ssl=False)` вместо `ssl=False` в get()
+## Частые ошибки
+
+1. Писать script, который по умолчанию атакует любой target.
+2. Не тестировать safety guard.
+3. Сохранять cookies/tokens в output.
+4. Называть candidate finding подтвержденной уязвимостью.
+5. Подменять security process “интересной техникой”.
+
+## Вопросы на понимание
+
+1. Какой SDET-навык переносится в этот helper?
+2. Какой unsafe action должен быть заблокирован тестом?
+3. Почему output инструмента не равен finding?
+4. Какие поля нужны в sanitized evidence?
+5. Как этот helper будет использоваться в retest?
+
+## Задачи для самостоятельного выполнения
+
+1. Добавьте pytest-тест на отказ от target вне allowlist.
+2. Добавьте README-раздел `Scope and stop conditions`.
+3. Сохраните output в Markdown или JSON.
+4. Проведите self-review по `TOOLING_POLICY.md`.
+5. Опишите, как helper попадет в финальный отчет как automation appendix.
 
 ## Практика на Slider AI
 
@@ -453,19 +128,19 @@ Directory Bruteforce
 
 **Ограничения безопасности:** соблюдать `education/slider_ai_scope.md`; не выполнять DoS/load-тесты, brute force, destructive payloads, изменение чужих данных, извлечение секретов и действия вне согласованного scope.
 
-**Уровень прогрессии:** Directory script boundaries
+**Уровень прогрессии:** URL inventory
 
 ### Минимум
 
-Добавьте allowlist домена и дефолтный rate limit 1 rps в учебный скрипт.
+Покажите safety guard: helper должен отказаться от действия, если target/action не входит в безопасный scope.
 
 ### Практика Slider AI
 
-На Slider AI не запускайте перебор; проверьте только один явно известный URL из навигации.
+Проверьте 3-5 URL, уже видимых из навигации; не запускайте wordlist без отдельного разрешения.
 
 ### Углубление после изучения следующих уроков
 
-После отдельного разрешения выполните small wordlist dry-run и остановитесь при первых 5xx.
+Добавьте результат в `education/security_process/SECURITY_AUTOMATION_ARCHITECTURE.md` или в свой локальный automation appendix: что проверяется, какие ограничения стоят, какой output попадает в отчет.
 
 ### Артефакт сдачи
 

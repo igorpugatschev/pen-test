@@ -1,269 +1,126 @@
-# Занятие 42: Python requests — HTTP-запросы, парсинг ответов
+# Занятие 42: HTTP inventory client
 
 ## Учебная рамка
 
-**Входные требования:** Минимальные навыки процедурного Python: переменные, функции, циклы, списки, словари, запуск `.py` из терминала.
+**Входные требования:** Завершен SDET Python QA Automation Apprenticeship или освоены pytest/API/UI/DB basics; студент умеет запускать Python из терминала и читать traceback.
 
-**Результат занятия:** Студент запускает или дорабатывает Python-скрипт, понимает поток выполнения и проверяет результат на безопасной цели.
+**Результат занятия:** безопасный HTTP HEAD/GET helper с timeout, headers allowlist и sanitized output.
 
-**Безопасная цель:** `127.0.0.1`, локальный тестовый HTTP-сервер, учебная VM `192.168.100.20` или заранее разрешенная лаборатория.
+**Наследуемая SDET-компетенция:** security automation engineering: тестируемый Python-код, allowlist, rate limit, structured output и review.
 
-**Среда выполнения:** Основной путь — macOS native, браузер, DevTools, Homebrew и Python. Kali Linux ARM64 VM, UTM или cloud lab используются только если это явно требуется задачей или вынесено в углубление.
+**Security QA-компетенция:** создание безопасных security QA helpers с отказом от опасных действий по умолчанию.
 
-**Обязательный путь новичка:** Запустить базовый скрипт, изменить один параметр, добавить один понятный вывод и проверить результат.
+**Связь с книгами:** «Легкий способ выучить Python 3 еще глубже» — CLI/файлы/текст; «Объектно-ориентированный Python» — классы и исключения; «Паттерны разработки на Python» — service boundaries; «Black Hat Python» — только lab-only идеи и defensive interpretation.
 
-**Углубление:** Добавить обработку ошибок, CLI-аргументы, сохранение результатов или ограничение скорости без усложнения основной логики.
+**Процессный артефакт:** `education/security_process/SECURITY_AUTOMATION_ARCHITECTURE.md`: helper, тесты, allowlist, output contract.
 
-**Минимальная проверка успеха:** Скрипт запускается без traceback, результат воспроизводим, студент может объяснить основные функции и входные данные.
+**Безопасная цель:** `127.0.0.1`, локальный тестовый HTTP-сервер, заранее подготовленный lab-файл или `https://olddev.slider-ai.ru` только в безопасном scope из `education/slider_ai_scope.md`.
 
-**Эталонный вывод:** В отчете есть команда запуска, фрагмент вывода, измененный параметр и короткое объяснение работы скрипта.
+**Среда выполнения:** macOS native, PyCharm/terminal, Python 3.12+, `.venv`, pytest. Kali/cloud lab используется только для lab-only техник, явно вынесенных в углубление.
 
-**Критерии сдачи:** Зачет: базовый запуск и небольшая доработка. Отлично: добавлена безопасная обработка ошибок и понятный README-фрагмент.
+**Обязательный путь новичка:** Реализовать минимальный безопасный helper, добавить отказ от небезопасного target/action и один pytest-тест этого отказа.
+
+**Углубление:** Добавить Pydantic/typed output, Markdown/JSON report, CI-like команду, code review checklist и интеграцию с process template.
+
+**Минимальная проверка успеха:** Helper запускается без traceback, опасное действие блокируется, output не содержит секретов, pytest-тесты проходят.
+
+**Эталонный вывод:** Команда запуска, один sanitized JSON/Markdown фрагмент, результат pytest и короткое объяснение safety guard.
+
+**Критерии сдачи:** Зачет: безопасный helper + тест отказа + artifact. Отлично: typed output, README, review checklist и automation appendix для отчета.
 
 ## Теория
 
-Библиотека `requests` — это самая популярная библиотека Python для работы с HTTP-запросами. Она предоставляет простой и интуитивно понятный интерфейс для отправки HTTP-запросов и обработки ответов.
+HTTP helper продолжает SDET-навык API-клиента: запросы должны быть явными, ограниченными, воспроизводимыми и безопасными для отчета. По умолчанию собираются только status code, redirect и выбранные headers без cookies/tokens.
 
-**Зачем нужно:**
-- Взаимодействие с веб-приложениями при тестировании на проникновение
-- Отправка специально сформированных запросов для проверки уязвимостей
-- Парсинг веб-страниц и API-ответов
-- Автоматизация веб-атак (брутфорс, сканирование директорий и т.д.)
+Security automation в этом курсе наследует SDET-подход:
 
-**Основные возможности:**
-- GET, POST, PUT, DELETE, HEAD, OPTIONS запросы
-- Работа с заголовками, куки, параметрами URL
-- Обработка редиректов и сессий
-- Работа с SSL-сертификатами
-- Парсинг JSON-ответов
-
-**Установка:**
-```bash
-pip3 install requests
-```
+1. Сначала определяется риск и scope.
+2. Затем пишется минимальный helper с безопасными дефолтами.
+3. Опасное поведение блокируется тестами.
+4. Output становится evidence, а не “сырым логом”.
+5. Tool output не является finding без ручной валидации.
 
 ## Практическое занятие
 
-Напишем скрипт, который отправляет различные HTTP-запросы и анализирует ответы сервера.
-
 ```python
+from urllib.parse import urlparse
 import requests
-import json
-import urllib3
-from urllib.parse import urljoin
 
-# Отключаем предупреждения о небезопасных SSL-сертификатах
-urllib3.disable_warnings()
+ALLOWED_HOSTS = {"olddev.slider-ai.ru"}
+SAFE_HEADERS = {"content-type", "server", "location", "strict-transport-security", "x-frame-options"}
 
-def http_request_explorer(target_url):
-    """
-    Исследование HTTP-ответов с помощью библиотеки requests
-    :param target_url: целевой URL
-    """
-    print(f"[+] Исследование цели: {target_url}\n")
-    
-    # Создаем сессию для сохранения куки и заголовков
-    session = requests.Session()
-    
-    # Настраиваем заголовки (имитируем браузер)
-    session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-    })
-    
-    try:
-        # 1. GET-запрос
-        print("[1] Выполняем GET-запрос...")
-        response = session.get(target_url, timeout=10, verify=False)
-        
-        print(f"    Код ответа: {response.status_code}")
-        print(f"    Размер контента: {len(response.content)} байт")
-        print(f"    Тип контента: {response.headers.get('Content-Type', 'не указан')}")
-        print(f"    Сервер: {response.headers.get('Server', 'не указан')}")
-        
-        # Анализ куки
-        if response.cookies:
-            print(f"    Куки: {list(response.cookies.keys())}")
-        
-        # 2. Получение заголовков (HEAD-запрос)
-        print("\n[2] Выполняем HEAD-запрос для получения только заголовков...")
-        head_response = session.head(target_url, timeout=10)
-        print("    Заголовки ответа:")
-        for key, value in head_response.headers.items():
-            print(f"      {key}: {value}")
-        
-        # 3. POST-запрос с данными
-        print("\n[3] Выполняем POST-запрос с данными...")
-        post_data = {
-            'username': 'admin',
-            'password': 'password123',
-            'submit': 'Login'
-        }
-        # Попробуем отправить на тестовый эндпоинт (если есть)
-        login_url = urljoin(target_url, '/login')
-        try:
-            post_response = session.post(login_url, data=post_data, timeout=10, allow_redirects=False)
-            print(f"    Код ответа: {post_response.status_code}")
-            if post_response.status_code in [301, 302, 303, 307, 308]:
-                print(f"    Редирект на: {post_response.headers.get('Location')}")
-        except requests.exceptions.RequestException as e:
-            print(f"    Ошибка POST-запроса: {e}")
-        
-        # 4. Парсинг JSON-ответа (если API)
-        print("\n[4] Проверяем, является ли ответ JSON...")
-        try:
-            json_data = response.json()
-            print(f"    Ответ содержит JSON: {json.dumps(json_data, indent=2)[:200]}...")
-        except json.JSONDecodeError:
-            print("    Ответ не является JSON, это HTML-страница")
-            # Показываем первые 200 символов HTML
-            print(f"    Первые 200 символов: {response.text[:200]}...")
-        
-        # 5. Проверка интересных заголовков безопасности
-        print("\n[5] Проверка заголовков безопасности...")
-        security_headers = [
-            'Strict-Transport-Security',
-            'Content-Security-Policy',
-            'X-Frame-Options',
-            'X-Content-Type-Options',
-            'X-XSS-Protection'
-        ]
-        for header in security_headers:
-            if header in response.headers:
-                print(f"    [+] {header}: {response.headers[header]}")
-            else:
-                print(f"    [-] {header}: НЕ УСТАНОВЛЕН")
-        
-        # 6. Информация о редиректах
-        if len(response.history) > 0:
-            print(f"\n[6] История редиректов ({len(response.history)}):")
-            for i, resp in enumerate(response.history):
-                print(f"    {i+1}. {resp.url} -> {resp.status_code}")
-        
-    except requests.exceptions.Timeout:
-        print("[-] Ошибка: Превышено время ожидания (timeout)")
-    except requests.exceptions.ConnectionError:
-        print("[-] Ошибка: Не удалось подключиться к серверу")
-    except requests.exceptions.RequestException as e:
-        print(f"[-] Ошибка запроса: {e}")
-    except Exception as e:
-        print(f"[-] Неожиданная ошибка: {e}")
 
-if __name__ == "__main__":
-    # Тестовый URL (можно заменить на реальную цель)
-    target = "http://httpbin.org/get"
-    http_request_explorer(target)
+def ensure_allowed_url(url: str) -> None:
+    host = urlparse(url).hostname
+    if host not in ALLOWED_HOSTS:
+        raise ValueError(f"Target is not allowed: {host}")
+
+
+def collect_http_inventory(url: str) -> dict:
+    ensure_allowed_url(url)
+    response = requests.head(url, timeout=5, allow_redirects=False, headers={"User-Agent": "SliderAI-SecurityQA-Learning"})
+    headers = {k.lower(): v for k, v in response.headers.items() if k.lower() in SAFE_HEADERS}
+    return {"url": url, "status_code": response.status_code, "headers": headers, "secrets_masked": True}
 ```
 
-**Объяснение кода:**
-1. Используем `Session()` для сохранения состояния между запросами (куки, заголовки)
-2. Настраиваем User-Agent, чтобы запросы выглядели как от браузера
-3. Выполняем разные типы запросов: GET, HEAD, POST
-4. Анализируем коды ответов, заголовки, куки
-5. Проверяем наличие JSON в ответе
-6. Проверяем заголовки безопасности (важно для пентеста)
-7. Обрабатываем редиректы и ошибки
 
-**Запуск:**
+### Минимальная структура сдачи
+
+```text
+security_qa_helper/
+├── safeguards/
+├── reports/
+├── tests/
+└── README.md
+```
+
+### Команды проверки
+
 ```bash
-python lesson_42_requests.py
+python -m pytest tests/
+python -m security_qa_helper --help
 ```
 
 ## Примеры вывода
 
-Пример успешного выполнения скрипта для `http://httpbin.org/get`:
+```text
+$ pytest tests/test_safeguards.py
+1 passed in 0.05s
 
+$ python -m security_qa_helper --target https://olddev.slider-ai.ru --dry-run
+{"target":"https://olddev.slider-ai.ru","dry_run":true,"secrets_masked":true,"status":"observation"}
 ```
-[+] Исследование цели: http://httpbin.org/get
-
-[1] Выполняем GET-запрос...
-    Код ответа: 200
-    Размер контента: 306 байт
-    Тип контента: application/json
-    Сервер: gunicorn/19.9.0
-    Куки: ['_ga', '_gid']
-
-[2] Выполняем HEAD-запрос для получения только заголовков...
-    Заголовки ответа:
-      Content-Type: application/json
-      Content-Length: 306
-      Server: gunicorn/19.9.0
-      ...
-
-[4] Проверяем, является ли ответ JSON...
-    Ответ содержит JSON: {
-  "args": {},
-  "headers": {
-    "Accept": "text/html,application/xhtml+...",
-    "Host": "httpbin.org"
-  },
-  ...
-
-[5] Проверка заголовков безопасности...
-    [+] Strict-Transport-Security: max-age=15724800; includeSubDomains
-    [-] Content-Security-Policy: НЕ УСТАНОВЛЕН
-    [+] X-Frame-Options: DENY
-```
-
-## Частые ошибки
-
-1. **`requests.exceptions.SSLError`** — Ошибка SSL-сертификата. Решение: добавить `verify=False` в запрос или исправить сертификат.
-2. **`urllib3.disable_warnings()` не работает** — В новых версиях нужно явно импортировать `import urllib3` перед вызовом. Убедитесь, что используете правильный синтаксис:
-   ```python
-   import urllib3
-   urllib3.disable_warnings()
-   ```
-3. **`requests.exceptions.Timeout`** — Превышено время ожидания. Увеличьте параметр `timeout` или проверьте доступность цели.
-4. **`NameError: name 'urllib3' is not defined`** — Забыли импортировать библиотеку. Добавьте `import urllib3` перед использованием.
-
-## Вопросы на понимание
-
-1. **В чем разница между `requests.get()` и `session.get()`?**
-   <details>
-   <summary>Ответ</summary>
-   `requests.get()` создает новый запрос каждый раз. `session.get()` использует сессию, которая сохраняет куки, заголовки и другие параметры между запросами, что важно для сохранения состояния (например, после авторизации).
-   </details>
-
-2. **Зачем нужен параметр `verify=False` и чем он опасен?**
-   <details>
-   <summary>Ответ</summary>
-   `verify=False` отключает проверку SSL-сертификата. Это опасно, так как делает запрос уязвимым к MITM-атакам (подмене сертификата). Используйте только для тестирования на известных целях.
-   </details>
-
-3. **Чем отличается `allow_redirects=False` от отсутствия этого параметра?**
-   <details>
-   <summary>Ответ</summary>
-   По умолчанию `requests` следует редиректам (коды 301, 302 и т.д.). При `allow_redirects=False` библиотека не будет переходить по редиректам, а вернет ответ с кодом 3xx и заголовком Location.
-   </details>
-
-## Задачи для самостоятельного выполнения
-
-1. **Базовая аутентификация:** Добавьте поддержку HTTP Basic Auth в скрипт. Используйте параметр `auth=(username, password)` в запросах.
-
-2. **Работа с прокси:** Добавьте возможность отправки запросов через прокси-сервер (SOCKS/HTTP). Используйте параметр `proxies` в запросах.
-
-3. **Парсинг HTML:** Используйте библиотеку `beautifulsoup4` для парсинга HTML-страницы. Извлеките все ссылки (`<a href="...">`) и формы (`<form>`).
-
-4. **Проверка уязвимостей:** Напишите функцию, которая проверяет наличие распространенных уязвимостей:
-   - Отсутствие заголовков безопасности (реализовано выше)
-   - Информация о сервере (версия в заголовке Server)
-   - Наличие административных панелей (попробуйте /admin, /phpmyadmin и т.д.)
-
-5. **Rate limiting:** Добавьте задержку между запросами (модуль `time`) и реализуйте простой механизм повторных попыток при получении кода 429 (Too Many Requests).
-
-6. **Сохранение ответов:** Добавьте возможность сохранения HTML-ответов в файлы для последующего анализа. Создайте структуру папок по URL.
-
-7. **Fuzzer параметров:** Напишите функцию, которая подставляет различные значения в GET-параметры и анализирует изменения в ответе (размер, код ответа).
 
 ## Адаптация под macOS (M2, 8GB)
 
-При выполнении заданий на компьютере Mac с процессором M2 и 8GB оперативной памяти учитывайте следующие особенности:
+- Используйте `.venv` и PyCharm interpreter из SDET-курса.
+- Устанавливайте зависимости через `python -m pip install ...` внутри venv.
+- Не запускайте тяжелые scan/wordlist процессы локально без необходимости.
+- Для lab-only техник используйте cloud lab или легкую ARM64 VM.
 
-- Для установки библиотек используйте `pip3 install <package>`, а не `pip install`.
-- На M2 можно использовать `asyncio`, он поддерживает ARM.
-- На 8GB RAM проект может быть тяжелым, используйте легковесные библиотеки.
-- Для работы с aiohttp в будущих уроках используйте `connector = aiohttp.TCPConnector(ssl=False)` вместо передачи `ssl=False` напрямую в `get()`.
+## Частые ошибки
+
+1. Писать script, который по умолчанию атакует любой target.
+2. Не тестировать safety guard.
+3. Сохранять cookies/tokens в output.
+4. Называть candidate finding подтвержденной уязвимостью.
+5. Подменять security process “интересной техникой”.
+
+## Вопросы на понимание
+
+1. Какой SDET-навык переносится в этот helper?
+2. Какой unsafe action должен быть заблокирован тестом?
+3. Почему output инструмента не равен finding?
+4. Какие поля нужны в sanitized evidence?
+5. Как этот helper будет использоваться в retest?
+
+## Задачи для самостоятельного выполнения
+
+1. Добавьте pytest-тест на отказ от target вне allowlist.
+2. Добавьте README-раздел `Scope and stop conditions`.
+3. Сохраните output в Markdown или JSON.
+4. Проведите self-review по `TOOLING_POLICY.md`.
+5. Опишите, как helper попадет в финальный отчет как automation appendix.
 
 ## Практика на Slider AI
 
@@ -273,19 +130,19 @@ python lesson_42_requests.py
 
 **Ограничения безопасности:** соблюдать `education/slider_ai_scope.md`; не выполнять DoS/load-тесты, brute force, destructive payloads, изменение чужих данных, извлечение секретов и действия вне согласованного scope.
 
-**Уровень прогрессии:** Python requests
+**Уровень прогрессии:** HTTP inventory
 
 ### Минимум
 
-Напишите скрипт, который делает один GET/HEAD к Slider AI и печатает status code и выбранные headers.
+Покажите safety guard: helper должен отказаться от действия, если target/action не входит в безопасный scope.
 
 ### Практика Slider AI
 
-Добавьте timeout, user-agent `SliderAI-QA-Learning`, обработку ошибок и сохранение sanitized JSON.
+Сделайте один `HEAD` к `https://olddev.slider-ai.ru`, сохраните только status/headers без cookies и токенов.
 
 ### Углубление после изучения следующих уроков
 
-После урока 46 расширьте скрипт до анализа списка заранее известных URL.
+Добавьте результат в `education/security_process/SECURITY_AUTOMATION_ARCHITECTURE.md` или в свой локальный automation appendix: что проверяется, какие ограничения стоят, какой output попадает в отчет.
 
 ### Артефакт сдачи
 

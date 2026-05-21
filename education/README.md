@@ -1,15 +1,40 @@
-# Education Materials
+# Pen-Test Learning Program
 
-Учебные материалы для курса по пентесту (72 урока).
+Учебные материалы для курса по безопасному тестированию на проникновение как продолжению `SDET Python QA Automation Apprenticeship`.
+
+Цель курса — не просто научить отдельным приемам пентеста, а перевести SDET из роли инженера функционального качества в роль **Security-aware SDET / Product Security QA**: специалиста, который отвечает за качество и безопасность продукта, умеет планировать security-проверки, работать в согласованном scope, собирать evidence, автоматизировать безопасные проверки, оформлять findings и сопровождать remediation/retest.
+
+Практический контур курса — тестовый стенд Slider AI `https://olddev.slider-ai.ru` в рамках `education/slider_ai_scope.md`. Все intrusive-техники остаются только в учебных лабораториях, CTF/сертификационных окружениях или выполняются после отдельного письменного разрешения.
 
 ## Структура
 
 ```
 education/
 ├── lessons/           # Уроки по блокам (01-08, 09-16, 17-28, 29-40, 41-48, 49-60, 61-72)
+├── security_process/  # Шаблоны процесса Security QA: strategy, RoE, test plan, evidence, findings, retest
 ├── tools/             # Вспомогательные скрипты проверки и исправления
-└── pentest_learning_program.md  # Полная программа курса
+├── book_usage_map.md  # Карта использования 5 книг в блоках курса
+└── pentest_learning_program.md  # Полная программа курса как SDET -> Security QA transition
 ```
+
+## Связь с SDET-курсом
+
+Предыдущий курс `SDET Python QA Automation Apprenticeship` дал базу: Python, pytest, Playwright, API-клиенты, Pydantic-модели, DB verification, Allure/CI, PyCharm, test strategy, test plan, evidence и сопровождение автотестового фреймворка.
+
+Этот курс использует ту же инженерную дисциплину, но переносит ее в безопасность:
+- test design превращается в abuse cases и security test cases;
+- API/UI/DB evidence превращается в security evidence;
+- bug report дополняется security finding, CVSS/QA severity и remediation plan;
+- automation framework развивается в safe security automation helpers;
+- release checklist дополняется security regression и retest.
+
+## Основные источники
+
+- «Легкий способ выучить Python 3 еще глубже» — CLI, файлы, текстовая обработка, SQL-мышление, самостоятельные Python-задачи.
+- «Объектно-ориентированный Python, 4-е издание» — классы, исключения, коллекции, тестируемый код и поддерживаемые security helpers.
+- «Паттерны разработки на Python» — service layer, repository, dependency inversion, архитектура безопасных инструментов.
+- «PyCharm. Профессиональная работа на Python 2024» — IDE workflow, debugger, HTTP Client, Git/VCS, DB tools, inspections, profiler, Markdown evidence.
+- «Black Hat Python. Программирование для хакеров и пентестеров» — источник идей для lab-only и defensive security automation; unsafe-темы изучаются через boundaries, detection и reporting.
 
 ## Блоки уроков
 
@@ -66,15 +91,15 @@ education/
 - Урок 39: Практика с инструментами
 - Урок 40: Создание отчетов
 
-### 41-48: Python для пентеста (8 уроков)
-- Урок 41: Сокеты в Python
-- Урок 42: Библиотека Requests
-- Урок 43: Создание PoC эксплойтов
-- Урок 44: Автоматизация Nmap
-- Урок 45: Парсинг поддоменов
-- Урок 46: Brute force директорий
-- Урок 47: Парсер CVE
-- Урок 48: Итоговый проект на Python
+### 41-48: Security automation engineering (8 уроков)
+- Урок 41: Безопасные сетевые helpers на Python
+- Урок 42: HTTP inventory через requests/httpx
+- Урок 43: PoC как контролируемый verification artifact
+- Урок 44: Парсинг Nmap XML без запуска scan по продукту
+- Урок 45: Subdomain discovery boundaries и passive inventory
+- Урок 46: URL inventory вместо directory brute force по умолчанию
+- Урок 47: CVE/version mapping с confidence и ручной проверкой
+- Урок 48: Итоговый Security QA helper с allowlist, tests и report output
 
 ### 49-60: Практика на площадках (12 уроков)
 - Урок 49: Введение в TryHackMe
@@ -90,7 +115,7 @@ education/
 - Урок 59: Полный пентест (симуляция)
 - Урок 60: Подготовка к EJPT
 
-### 61-72: Методология и сертификация (12 уроков)
+### 61-72: Security ownership, методология и сертификация (12 уроков)
 - Урок 61: PTES - стандарт пентеста
 - Урок 62: OWASP Testing Guide
 - Урок 63: Написание отчетов
@@ -102,7 +127,17 @@ education/
 - Урок 69: Основы OSCP
 - Урок 70: Атаки на Active Directory
 - Урок 71: Post-Exploitation
-- Урок 72: Финальный проект
+- Урок 72: Финальный Security QA assessment Slider AI
+
+## Сквозной процесс Security QA
+
+Каждый урок должен оставлять не только технический результат, но и процессный след:
+- `scope/RoE`: что разрешено и что запрещено;
+- `test plan`: что проверяется, почему и какими stop conditions;
+- `evidence`: sanitized доказательства без секретов;
+- `finding/observation`: результат в профессиональном формате;
+- `remediation/retest`: что исправить и как перепроверить;
+- `automation appendix`: если проверка автоматизирована, код должен иметь allowlist, timeout, rate limit, тесты и понятный output.
 
 ## Проверка уроков
 

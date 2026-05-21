@@ -1,259 +1,188 @@
-# Занятие 72. Итоговый проект: пентест легальной цели, отчет
+# Занятие 72. Финальный Security QA assessment Slider AI
 
 ## Учебная рамка
 
-**Входные требования:** Понимание полного цикла пентеста, базовые навыки отчетности и опыт работы с учебными лабораториями.
+**Входные требования:** Завершены предыдущие блоки курса; студент понимает SDET-процесс, OWASP/WSTG, PTES, CVSS/QA severity, evidence handling, safe automation и ограничения Slider AI scope.
 
-**Результат занятия:** Студент применяет методологию, оформляет артефакт профессионального уровня и отделяет факты от предположений.
+**Результат занятия:** Студент проводит безопасную всестороннюю проверку `olddev.slider-ai.ru` как Security-aware SDET: планирует scope, выполняет безопасные проверки, оформляет findings/observations, готовит remediation backlog, retest plan и automation appendix.
 
-**Безопасная цель:** Учебный scope, подписанный RoE, собственная лаборатория или платформа с явным разрешением. Реальные организации только с письменным согласием.
+**Наследуемая SDET-компетенция:** security ownership: стратегия, RoE, risk scoring, remediation, retest и коммуникация с командой.
 
-**Среда выполнения:** Основной путь — macOS native, браузер, DevTools, Homebrew и Python. Kali Linux ARM64 VM, UTM или cloud lab используются только если это явно требуется задачей или вынесено в углубление.
+**Security QA-компетенция:** планирование и сопровождение полного security assessment: findings, risk, remediation, retest.
 
-**Обязательный путь новичка:** Заполнить шаблон документа/чек-листа по учебному кейсу и связать каждую находку с доказательством.
+**Связь с книгами:** PTES/OWASP/CVSS как методология; «PyCharm. Профессиональная работа на Python 2024» — Git/VCS, Markdown evidence, debugger/HTTP Client; «Паттерны разработки на Python» — architecture appendix для safe helpers; «Black Hat Python» — только lab-only/detection interpretation.
 
-**Углубление:** Добавить приоритизацию рисков, executive summary, ограничения тестирования и план повторной проверки.
+**Процессный артефакт:** `RULES_OF_ENGAGEMENT.md`, `SECURITY_TEST_STRATEGY.md`, `SECURITY_TEST_PLAN.md`, `SECURITY_FINDING_TEMPLATE.md`, `REMEDIATION_BACKLOG.md`, `RETEST_PLAN.md` и `SECURITY_AUTOMATION_ARCHITECTURE.md`.
 
-**Минимальная проверка успеха:** Документ содержит scope, методологию, доказательства, ограничения и понятные рекомендации.
+**Безопасная цель:** Только `https://olddev.slider-ai.ru` в рамках `education/slider_ai_scope.md`, либо учебные lab/CTF цели с явным разрешением. Production и любые другие домены исключены.
 
-**Эталонный вывод:** Сданный артефакт: отчет, чек-лист, RoE, матрица рисков или презентация с проверяемыми доказательствами.
+**Среда выполнения:** macOS native, PyCharm/terminal, браузер, DevTools, Burp/ZAP passive, Python helpers из блока 41-48. Kali/cloud lab используется только для lab-only техник и не переносится на Slider AI без отдельного письменного разрешения.
 
-**Критерии сдачи:** Зачет: полный артефакт по шаблону. Отлично: ясная бизнес-интерпретация, приоритизация и план remediation.
+**Обязательный путь новичка:** Собрать scope, test plan, безопасные manual checks, sanitized evidence index, 1-3 observations/findings и retest plan.
+
+**Углубление:** Добавить threat model, CVSS/QA severity rationale, automation appendix, remediation backlog с owners/priorities и executive summary для команды.
+
+**Минимальная проверка успеха:** Финальный пакет содержит scope/RoE, методологию, ограничения, evidence, findings/observations, remediation и retest; все действия остаются в безопасном scope.
+
+**Эталонный вывод:** Сданный пакет: report, evidence index, triage table, remediation backlog, retest plan, automation appendix и короткая защита результата.
+
+**Критерии сдачи:** Зачет: полный безопасный assessment package. Отлично: ясная бизнес-интерпретация, приоритизация, automation appendix, plan for security regression и готовность к обсуждению с командой.
 
 ## Теория
 
-Итоговый проект — самостоятельное проведение пентеста реальной (или легальной учебной) цели с написанием полноценного отчета.
+Финальный проект закрепляет новую роль: SDET отвечает не только за функциональное качество, но и за проверяемую безопасность продукта. Это не “разовая атака”, а управляемый security QA process.
 
-### Выбор цели для пентеста
+### Что меняется относительно обычного пентеста
 
-Важно: тестировать можно только системы, на которые у вас есть разрешение (письменное согласие).
+1. **Scope first:** SDET работает внутри продукта и обязан соблюдать границы стенда, данных и ролей.
+2. **Evidence discipline:** любое доказательство должно быть sanitized и воспроизводимым.
+3. **Risk-based thinking:** observation не равен finding; tool output не равен подтвержденной уязвимости.
+4. **Automation with guardrails:** helpers должны иметь allowlist, timeout, rate limit, tests и понятный output.
+5. **Remediation ownership:** задача не заканчивается отчетом; нужен backlog, owner, priority и retest.
 
-**Легальные цели:**
-1. **Собственные проекты**: ваши сайты, серверы, лаборатории
-2. **Учебные платформы**: TryHackMe (с их разрешения), Hack The Box (Starting Point), VulnHub VMs
-3. **Bug Bounty программы**: HackerOne, Bugcrowd (только в рамках их scope)
-4. **Учебные организации**: если у вас есть разрешение от администрации
+### Итоговые артефакты
 
-**Запрещено:**
-- Тестирование сайтов без разрешения (незаконно!)
-- Сканирование правительственных ресурсов
-- Атаки на инфраструктуру работодателя без письменного согласия
-
-### Подготовка к пентесту
-
-1. **Получение разрешения (RoE)**
-   - Подписанный контракт или письмо-согласие
-   - Четко определенный scope (IP, домены, приложения)
-   - Правила (разрешенные методы, время тестирования)
-   - Контакты для эскалации
-
-2. **Подготовка рабочей станции**
-   - Kali Linux с обновленными инструментами
-   - Все необходимые скрипты и словари
-   - Настроенный VPN (если требуется)
-   - Место для сохранения доказательств
-
-3. **План тестирования**
-   - Методология (PTES, OWASP)
-   - Таймлайн (сколько времени на каждый этап)
-   - Чек-листы (OWASP, CIS)
-
-### Этапы пентеста (по PTES)
-
-1. **Pre-engagement**: Финализация RoE, подготовка
-2. **Intelligence Gathering**: Сбор информации о цели
-3. **Threat Modeling**: Определение активов и векторов атак
-4. **Vulnerability Analysis**: Сканирование и ручная проверка
-5. **Exploitation**: Эксплуатация уязвимостей
-6. **Post-Exploitation**: Повышение привилегий, латеральное движение
-7. **Reporting**: Написание отчета
-
-### Структура итогового отчета
-
-1. **Титульный лист**: Название, заказчик, исполнитель, даты
-2. **Executive Summary**: Для руководства (бизнес-риски)
-3. **Introduction**: Цели, scope, методология
-4. **Information Gathering**: Что нашли на этапе разведки
-5. **Vulnerabilities Found**: Детальное описание каждой уязвимости
-   - Название, CVSS, серьезность
-   - Описание, доказательство (PoC), влияние
-   - Рекомендации по устранению
-6. **Attack Path**: Как вы прошли от начального доступа до критического влияния
-7. **Risk Assessment**: Оценка уровня безопасности
-8. **Recommendations**: Приоритизированный план устранения
-9. **Appendices**: Скриншоты, логи, списки портов, raw data
+| Артефакт | Назначение |
+|---|---|
+| Rules of Engagement | Границы, запреты, contacts, stop conditions |
+| Security Test Strategy | Риски, слои проверки, entry/exit criteria |
+| Security Test Plan | Конкретные проверки, tools, safety limits |
+| Threat Model | Entry points, abuse cases, expected controls |
+| Evidence Index | Где лежат sanitized доказательства |
+| Findings/Observations | Профессиональное описание результатов |
+| Vulnerability Triage | Confidence, impact, severity, next action |
+| Remediation Backlog | Что исправлять, кому и в каком порядке |
+| Retest Plan | Как подтвердить исправление |
+| Automation Appendix | Какие safe helpers использовались и какие guards есть |
 
 ## Практическое занятие
 
-### Выбор цели и подготовка
+### Шаг 1. Scope и RoE
 
-**Вариант 1: Slider AI olddev или cloud lab (рекомендуется для начала)**
-- Для рабочего проекта используйте только `https://olddev.slider-ai.ru` в рамках `education/slider_ai_scope.md`.
-- Для сертификационной практики выберите TryHackMe/HTB/PortSwigger lab.
-- Напишите RoE: цель, исключения, лимиты, stop conditions, допустимые инструменты.
-
-**Вариант 2: TryHackMe Room/Path**
-- Выберите комнату или весь путь (например, "Offensive Pentesting")
-- Пройдите его как реальный пентест
-- Собирайте доказательства на каждом этапе
-
-**Вариант 3: Собственная лаборатория (углубление)**
-- Используйте Kali ARM64 VM и легкую ARM64-цель либо облачные VM.
-- Не планируйте несколько тяжелых Windows/Kali VM на MacBook Air M2 8GB.
-- Проведите пентест всей сети только если среда изолирована и ресурсов достаточно.
-
-### Пример структуры итогового отчета
+Заполните `education/security_process/RULES_OF_ENGAGEMENT.md` для своего финального assessment:
 
 ```markdown
-# Отчет о тестировании на проникновение
-
-## Титульный лист
-**Подготовлено для:** [Цель/Заказчик]  
-**Подготовлено:** [Ваше имя]  
-**Даты проведения:** [дата начала] – [дата окончания]  
-**Версия:** 1.0  
-
-## Оглавление
-1. Executive Summary
-2. Introduction
-3. Methodology
-4. Executive Summary
-5. Findings
-6. Attack Path
-7. Risk Assessment
-8. Recommendations
-9. Appendices
-
-## 1. Executive Summary
-[Резюме для руководства: 1-2 страницы, акцент на бизнес-рисках]
-
-## 2. Introduction
-### Цели тестирования
-- Оценка защищенности [цель]
-- Выявление уязвимостей, которые могут привести к компрометации данных
-- Проверка соответствия стандартам (если применимо)
-
-### Область тестирования (Scope)
-- IP-адреса: [список]
-- Домены: [список]
-- Исключено: [список]
-
-### Методология
-Использована методология PTES (Penetration Testing Execution Standard).
-
-## 3. Information Gathering
-### Пассивный сбор
-- Поиск в Google: [результаты]
-- Shodan: [найденные сервисы]
-- DNS enumeration: [найденные поддомены]
-
-### Активный сбор
-- Nmap scan: [открытые порты]
-- Service enumeration: [версии сервисов]
-
-## 4. Vulnerabilities Found
-### Уязвимость #1: SQL Injection в форме поиска
-- **CVSS:** 9.1 (Critical)
-- **Description:** [описание]
-- **PoC:** [доказательство]
-- **Impact:** [влияние]
-- **Remediation:** [рекомендации]
-
-[Повторить для всех найденных уязвимостей]
-
-## 5. Attack Path
-Описание пути атакующего: от начального доступа до получения контроля над доменом.
-[Схема сети + описание шагов]
-
-## 6. Risk Assessment
-| Серьезность | Количество | Риск для бизнеса |
-|-------------|------------|------------------|
-| Critical    | 2          | Немедленное устранение |
-| High        | 4          | Устранить в течение 30 дней |
-| Medium      | 5          | Устранить в течение 90 дней |
-| Low         | 3          | Устранить при плановом обновлении |
-
-**Общая оценка:** Неудовлетворительно
-
-## 7. Recommendations
-1. [Критическая уязвимость 1] — устранить немедленно
-2. [Критическая уязвимость 2] — устранить немедленно
-3. [Высокая уязвимость 1] — устранить в течение 30 дней
-...
-
-## 8. Appendices
-- Appendix A: Полный вывод Nmap
-- Appendix B: Скриншоты
-- Appendix C: Список протестированных URL
-- Appendix D: Хеши уязвимостей (CVE)
-
-## Подпись
-_________________ / [Ваше имя] / Дата: _________
+Target: https://olddev.slider-ai.ru
+In scope: доступные QA функции стенда
+Out of scope: production, DoS/load, brute force, destructive payloads, secrets extraction
+Stop conditions: 5xx spike, account lockout, unexpected data modification, secrets in evidence
 ```
 
-### Практика: написание отчета
+### Шаг 2. Strategy и test plan
 
-Проведите пентест выбранной разрешенной цели (Slider AI olddev, TryHackMe room, HTB lab или локальная ARM64-лаборатория) и напишите полный отчет по структуре выше. Для Slider AI допускаются также `not reproducible` и `informational` наблюдения; не требуйте искусственно находить 5 уязвимостей.
+Заполните `SECURITY_TEST_STRATEGY.md` и `SECURITY_TEST_PLAN.md`:
 
+- какие функции Slider AI проверяются;
+- какие OWASP/WSTG категории применимы;
+- какие checks выполняются manual/passive;
+- какие checks требуют отдельного approval;
+- какие helpers из блока 41-48 можно использовать безопасно.
 
+### Шаг 3. Safe execution
+
+Минимальный набор безопасных проверок:
+
+1. HTTP/TLS/security headers через браузер, DevTools или безопасный helper.
+2. Auth/session UX: сообщения ошибок, cookie flags, logout behavior без brute force.
+3. Input handling через безопасные маркеры без script/SQL payload.
+4. Access control через собственные QA-роли и разрешенные данные.
+5. Public asset inventory без скачивания закрытого кода и без aggressive scan.
+6. Passive Burp/ZAP review без active scan.
+
+Каждый результат помечается статусом:
+
+```text
+finding / observation / not reproducible / not applicable / requires approval
+```
+
+### Шаг 4. Automation appendix
+
+Используйте только safe helpers из блока 41-48:
+
+```bash
+python -m security_qa_helper --target https://olddev.slider-ai.ru --check headers --output evidence/headers.md
+pytest tests/
+```
+
+В appendix укажите:
+
+- helper name;
+- allowlist;
+- timeout/rate limit;
+- what was collected;
+- what was not collected;
+- pytest result;
+- link to sanitized output.
+
+### Шаг 5. Findings, triage, remediation
+
+Для каждого результата заполните `SECURITY_FINDING_TEMPLATE.md`. Затем перенесите итог в:
+
+- `VULNERABILITY_TRIAGE.md`;
+- `REMEDIATION_BACKLOG.md`;
+- `RETEST_PLAN.md`.
+
+### Шаг 6. Executive summary
+
+Напишите 5-7 предложений для команды:
+
+- что проверялось;
+- какие ограничения были соблюдены;
+- сколько findings/observations получено;
+- какие top risks;
+- что нужно исправить первым;
+- когда и как делать retest.
 
 ## Примеры вывода
 
-Минимальный эталонный вывод для сдачи:
-
 ```text
-$ <команда из практики>
-<3-10 строк фактического вывода из разрешенной среды>
+$ pytest tests/
+8 passed in 0.42s
+
+$ python -m security_qa_helper --target https://olddev.slider-ai.ru --check headers --dry-run
+{"target":"https://olddev.slider-ai.ru","check":"headers","dry_run":true,"secrets_masked":true}
 ```
 
-В отчете студент указывает среду выполнения, безопасную цель, команду или ручные шаги и коротко объясняет, какая строка подтверждает результат.
+Пример triage строки:
 
-
-
+```markdown
+| SEC-001 | Missing security header | observation | Medium QA | Header evidence | add header, retest with helper |
+```
 
 ## Адаптация под macOS (M2, 8GB)
 
-- Для macOS native используйте Homebrew или официальный installer: `brew install <tool>`; для явно помеченной Kali/Linux-среды допустим `apt`.
-- Kali/Linux VM запускайте только как углубление и выделяйте не более 3-4GB RAM на MacBook Air M2 (8GB)
-- Если нужна Kali/Linux VM на Apple Silicon, используйте ARM64-образ в UTM/VMware Fusion/Parallels; не используйте x86/x64 VM как базовый путь.
-- Docker работает нативно на M2: `docker pull <image>`
-- Для VPN используйте Tunnelblick (OpenVPN) или официальные клиенты
-
-
-## Задачи для самостоятельного выполнения
-
-1. **Полный пентест**: выберите разрешенную цель: Slider AI olddev, TryHackMe "OWASP Top 10", HTB lab или легкую ARM64-лабораторию. Проведите цикл по PTES и напишите отчет.
-
-2. **Critical Finding**: Найдите уязвимость критического уровня (CVSS 9.0+). Напишите для нее детальное описание: PoC, скриншоты, код для воспроизведения, подробные рекомендации.
-
-3. **Attack Path Visualization**: Нарисуйте схему атаки (в draw.io или руками). Покажите, как вы прошли от внешнего IP до получения админских прав. Включите в отчет.
-
-4. **Risk Assessment Matrix**: Создайте матрицу рисков: вероятность (низкая, средняя, высокая) vs влияние (низкое, среднее, высокое). Разместите все найденные уязвимости на матрице.
-
-5. **Presentation**: Подготовьте презентацию (5-10 слайдов) на основе вашего отчета. Представьте ее как будто перед советом директоров (акцент на бизнес-рисках, без технических деталей).
-
-### Адаптация для macOS (M2, 8GB RAM)
-
-Для итогового проекта на Mac с 8GB RAM:
-- Выбирайте легковесные цели (VulnHub VMs: Basic Pentesting 1, Kioptrix)
-- Используйте TryHackMe или HackTheBox (облачные цели)
-- Kali Linux в VM с минимальными ресурсами (2-3GB RAM)
-- Для написания отчета используйте легкие редакторы (Markdown, VS Code)
+- Основной путь: PyCharm, terminal, browser, DevTools, Burp/ZAP passive, Python `.venv`.
+- Не поднимайте тяжелую multi-VM инфраструктуру ради финального проекта.
+- Для lab-only техник используйте THM/HTB/PortSwigger/INE cloud окружения.
+- Все файлы отчета храните локально в `~/security-qa-workspace` или в согласованной папке проекта без секретов.
 
 ## Частые ошибки
 
-1. **Выбор нелегальной цели** — тестирование без разрешения незаконно и может привести к уголовной ответственности.
-2. **Плохой отчет** — итоговый проект оценивается по качеству отчета, а не по количеству взломанных машин.
-3. **Отсутствие доказательств** — без скриншотов и логов уязвимости не считаются подтвержденными.
-4. **Неправильный Scope** — слишком широкий scope приведет к нехватке времени.
+1. Начать с инструментов, а не со scope/RoE.
+2. Считать scanner output подтвержденной уязвимостью.
+3. Вкладывать в evidence cookies, tokens, персональные данные или чужие данные.
+4. Писать PoC без approval и stop conditions.
+5. Завершить отчетом без remediation backlog и retest plan.
+6. Не связать finding с продуктовым риском и owner.
 
 ## Вопросы на понимание
 
-1. Какие цели можно тестировать легально?
-2. Какие документы должны быть подписаны перед началом пентеста?
-3. Какова структура итогового отчета?
-4. Почему важно выбирать легковесные цели для Mac с 8GB RAM?
-5. Что такое RoE и зачем он нужен?
+1. Чем финальный проект Security-aware SDET отличается от CTF write-up?
+2. Почему observation и finding имеют разные критерии?
+3. Какие checks требуют отдельного письменного approval?
+4. Как доказать, что automation helper безопасен?
+5. Что должно попасть в remediation backlog?
+6. Как retest превращает finding обратно в контроль качества?
+
+## Задачи для самостоятельного выполнения
+
+1. Заполните RoE и test strategy для Slider AI.
+2. Создайте threat model по 3-5 entry points.
+3. Проведите безопасные manual/passive checks.
+4. Оформите 1-3 findings/observations с sanitized evidence.
+5. Подготовьте remediation backlog и retest plan.
+6. Добавьте automation appendix по helper из блока 41-48.
+7. Напишите executive summary для команды.
 
 ## Практика на Slider AI
 
@@ -263,24 +192,24 @@ $ <команда из практики>
 
 **Ограничения безопасности:** соблюдать `education/slider_ai_scope.md`; не выполнять DoS/load-тесты, brute force, destructive payloads, изменение чужих данных, извлечение секретов и действия вне согласованного scope.
 
-**Уровень прогрессии:** Final Slider AI assessment
+**Уровень прогрессии:** Final Security QA assessment
 
 ### Минимум
 
-Соберите все артефакты Slider AI в один индекс: scope, checklist, observations, findings, retest items.
+Соберите единый индекс артефактов: scope, test plan, checklist, observations, findings, retest items.
 
 ### Практика Slider AI
 
-Подготовьте финальный отчет по стенду `olddev.slider-ai.ru` с executive summary и technical findings.
+Подготовьте финальный отчет по `olddev.slider-ai.ru` с executive summary, technical findings/observations, evidence index, remediation backlog и retest plan.
 
 ### Углубление после изучения следующих уроков
 
-После обсуждения с командой добавьте remediation backlog и план повторной проверки.
+После обсуждения с командой добавьте security regression backlog: какие checks должны стать регулярной частью QA/SDET процесса.
 
 ### Артефакт сдачи
 
-Markdown-запись по шаблону из `education/slider_ai_scope.md`: урок, компонент Slider AI, шаги, фактический результат, доказательства без секретов, риск, рекомендация и статус.
+Markdown-пакет по шаблонам из `education/security_process/` и `education/slider_ai_scope.md`: scope, strategy, test plan, threat model, findings, triage, remediation, retest, automation appendix.
 
 ### Критерий готовности
 
-Задание выполнено только на `olddev.slider-ai.ru`, не выходит за scope, содержит проверяемый артефакт и явно отмечает `finding`, `informational`, `not reproducible`, `not applicable` или `requires approval`.
+Задание выполнено только на `olddev.slider-ai.ru`, не выходит за scope, содержит проверяемые sanitized артефакты и явно отмечает `finding`, `informational`, `not reproducible`, `not applicable` или `requires approval`.

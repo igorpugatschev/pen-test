@@ -169,6 +169,10 @@ for dir in "$LESSONS_DIR"/*/; do
         learning_fields=(
             "**Входные требования:**"
             "**Результат занятия:**"
+            "**Наследуемая SDET-компетенция:**"
+            "**Security QA-компетенция:**"
+            "**Связь с книгами:**"
+            "**Процессный артефакт:**"
             "**Безопасная цель:**"
             "**Среда выполнения:**"
             "**Обязательный путь новичка:**"
@@ -243,7 +247,38 @@ else
 fi
 
 echo ""
-echo "4. ПРОВЕРКА ИСПРАВЛЕНИЯ ОШИБОК ИЗ РЕВЬЮ"
+echo "4. ПРОВЕРКА КАРТЫ КНИГ И SECURITY PROCESS"
+echo "------------------------------------------"
+
+if [ ! -f "$EDUCATION_DIR/book_usage_map.md" ]; then
+    echo "  [ПРОБЛЕМА] отсутствует education/book_usage_map.md"
+    ((ERRORS++))
+fi
+
+process_docs=(
+    "RULES_OF_ENGAGEMENT.md"
+    "SECURITY_TEST_STRATEGY.md"
+    "SECURITY_TEST_PLAN.md"
+    "THREAT_MODEL.md"
+    "EVIDENCE_POLICY.md"
+    "TOOLING_POLICY.md"
+    "SECURITY_FINDING_TEMPLATE.md"
+    "VULNERABILITY_TRIAGE.md"
+    "REMEDIATION_BACKLOG.md"
+    "RETEST_PLAN.md"
+    "SECURITY_AUTOMATION_ARCHITECTURE.md"
+    "SECURITY_RELEASE_CHECKLIST.md"
+)
+
+for doc in "${process_docs[@]}"; do
+    if [ ! -f "$EDUCATION_DIR/security_process/$doc" ]; then
+        echo "  [ПРОБЛЕМА] отсутствует шаблон процесса: education/security_process/$doc"
+        ((ERRORS++))
+    fi
+done
+
+echo ""
+echo "5. ПРОВЕРКА ИСПРАВЛЕНИЯ ОШИБОК ИЗ РЕВЬЮ"
 echo "------------------------------------------"
 
 # Специфические проверки на основе ревью

