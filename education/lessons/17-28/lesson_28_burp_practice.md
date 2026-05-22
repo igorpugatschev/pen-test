@@ -12,6 +12,17 @@
 
 **Связь с книгами:** OWASP/WSTG как основной security reference; «PyCharm. Профессиональная работа на Python 2024» — DevTools/HTTP Client/evidence workflow.
 
+**Основной источник:** «PyCharm. Профессиональная работа на Python 2024» и `Black Hat Python` только для lab-only/defensive interpretation.
+
+**Дополнительные источники:** «Легкий способ выучить Python 3 еще глубже» для обработки запросов, текстов и простых проверочных данных.
+
+**Что берем из источника:** разделение lab payload и product-safe marker, HTTP evidence, перевод риска OWASP в security test case.
+
+**Как это превращается в SDET/Security QA навык:** проектировать безопасные проверки Slider AI через OWASP/WSTG без destructive payloads.
+
+**Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
+
+
 **Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
@@ -50,6 +61,36 @@ brew install --cask owasp-zap
 
 > **Для M2 8GB:** ZAP потребляет меньше ресурсов чем Burp Suite, что критично при ограниченной RAM.
 
+## Reading pack из книг курса
+
+Этот раздел не является заданием “пойди и найди теорию в книгах”. Книги использованы автором курса для подготовки лекции `Занятие 28. Burp Suite практика: Перехват, изменение параметров, атака`, а студент получает самодостаточное объяснение в разделах `Source-driven theory` и `Теория`.
+
+- `docs/socraticode/pycharm-professional-python-2024-pages/`
+- `docs/socraticode/black-hat-python-ru-pages/` только lab-only/defensive
+
+Конкретные страницы для этого блока: `pycharm-professional-python-2024-pages/page-338.md`-`page-369.md`; `black-hat-python-ru-pages/page-120.md`-`page-140.md` только lab-only.
+
+Что обязана объяснить лекция на основе этих книг:
+
+1. Термины и команды, которые прямо поддерживают тему урока.
+2. Инженерный принцип, который переносится из SDET в Security QA.
+3. Ограничение безопасности: что нельзя делать на Slider AI без approval.
+4. Пример, который превращается в evidence, helper, checklist или process artifact.
+
+Если книга описывает опасную технику, она переносится только в lab-only или defensive interpretation. Студент не должен обращаться к книгам, чтобы понять базовую теорию текущего урока.
+
+## Source-driven theory
+
+Этот урок опирается на книжные источники курса как на базу, а не как на факультативное чтение. Из источников берется практическая дисциплина: разделение lab payload и product-safe marker, HTTP evidence, перевод риска OWASP в security test case. Для SDET это важно потому, что security-проверка должна быть воспроизводимой, объяснимой и пригодной для отчета, а не превращаться в набор разрозненных команд.
+
+Книжный материал в уроке используется в трех шагах:
+
+1. Понять термин или технику на безопасном примере.
+2. Перевести идею в QA-действие: test case, observation, evidence, helper или process artifact.
+3. Отделить разрешенную практику от действий, которые требуют отдельного approval.
+
+Граница для Slider AI: учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence. Если нужная техника выходит за эту границу, результат урока оформляется как `requires approval`, lab-only practice или defensive recommendation.
+
 ## Теория
 
 Комплексное использование Burp Suite объединяет все изученные инструменты для проведения реального пентеста веб-приложения.
@@ -79,6 +120,17 @@ brew install --cask owasp-zap
 4. Анализировать разницу в ответах
 
 ---
+
+## Guided practice
+
+1. Сформулируйте риск урока как abuse case и как проверяемое ожидание защиты.
+2. Отработайте опасную технику только в lab, если урок этого требует.
+3. Для Slider AI выполните safe-marker или passive observation без извлечения данных и без destructive payload.
+4. Классифицируйте результат: `finding`, `observation`, `not reproducible`, `not applicable` или `requires approval`.
+
+### Эталон самостоятельной работы
+
+К концу guided practice у студента есть короткий Markdown-артефакт: цель проверки, выполненные шаги, sanitized evidence, интерпретация результата, границы применимости и следующий безопасный шаг.
 
 ## Практическое занятие
 
@@ -280,3 +332,19 @@ Markdown-запись по шаблону из `education/slider_ai_scope.md`: �
 ### Критерий готовности
 
 Задание выполнено только на `olddev.slider-ai.ru`, не выходит за scope, содержит проверяемый артефакт и явно отмечает `finding`, `informational`, `not reproducible`, `not applicable` или `requires approval`.
+
+## Rubric
+
+| Уровень | Что должно быть сдано |
+|---|---|
+| Зачет | Выполнен обязательный путь новичка, есть sanitized evidence, действия не выходят за scope |
+| Хорошо | Есть объяснение риска или процесса, аккуратные шаги воспроизведения и корректный статус результата |
+| Отлично | Результат связан с `OWASP Test Design for Slider AI`, remediation/retest или automation appendix |
+
+## Self-check
+
+1. Какая SDET-компетенция используется в уроке?
+2. Какая часть объяснения опирается на книги курса?
+3. Где проходит безопасная граница для Slider AI?
+4. Какой артефакт можно показать команде без раскрытия секретов?
+5. Что нужно вынести в углубление, lab-only или отдельный approval?

@@ -12,6 +12,17 @@
 
 **Связь с книгами:** OWASP/WSTG/PTES как методология инструментов; «PyCharm. Профессиональная работа на Python 2024» — Git, Markdown, отчетность и артефакты.
 
+**Основной источник:** «PyCharm. Профессиональная работа на Python 2024» и «Паттерны разработки на Python».
+
+**Дополнительные источники:** `Black Hat Python` только для понимания lab-only техник и defensive boundaries.
+
+**Что берем из источника:** tool governance, false-positive review, structured output, границы ручного/passive/low-rate режима.
+
+**Как это превращается в SDET/Security QA навык:** превратить инструменты в управляемый QA-процесс с approval, stop conditions и evidence policy.
+
+**Что нельзя переносить на Slider AI без отдельного разрешения:** не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения.
+
+
 **Процессный артефакт:** `TOOLING_POLICY.md` и finding/observation по шаблону.
 
 **Безопасная цель:** Только `192.168.100.20`, `target.local`, Metasploitable/VulnHub/THM/HTB/PortSwigger в рамках их правил. Не использовать домашний роутер как цель атаки.
@@ -28,6 +39,36 @@
 
 **Критерии сдачи:** Зачет: корректный запуск и интерпретация. Отлично: добавлены ограничения безопасности, rate limit или проверка false positive.
 
+## Reading pack из книг курса
+
+Этот раздел не является заданием “пойди и найди теорию в книгах”. Книги использованы автором курса для подготовки лекции `Урок 35: OWASP ZAP — альтернатива Burp Suite`, а студент получает самодостаточное объяснение в разделах `Source-driven theory` и `Теория`.
+
+- `docs/socraticode/pycharm-professional-python-2024-pages/`
+- `docs/socraticode/architecture-patterns-python-pages/`
+
+Конкретные страницы для этого блока: `pycharm-professional-python-2024-pages/page-178.md`-`page-209.md`; `architecture-patterns-python-pages/page-038.md`-`page-069.md`.
+
+Что обязана объяснить лекция на основе этих книг:
+
+1. Термины и команды, которые прямо поддерживают тему урока.
+2. Инженерный принцип, который переносится из SDET в Security QA.
+3. Ограничение безопасности: что нельзя делать на Slider AI без approval.
+4. Пример, который превращается в evidence, helper, checklist или process artifact.
+
+Если книга описывает опасную технику, она переносится только в lab-only или defensive interpretation. Студент не должен обращаться к книгам, чтобы понять базовую теорию текущего урока.
+
+## Source-driven theory
+
+Этот урок опирается на книжные источники курса как на базу, а не как на факультативное чтение. Из источников берется практическая дисциплина: tool governance, false-positive review, structured output, границы ручного/passive/low-rate режима. Для SDET это важно потому, что security-проверка должна быть воспроизводимой, объяснимой и пригодной для отчета, а не превращаться в набор разрозненных команд.
+
+Книжный материал в уроке используется в трех шагах:
+
+1. Понять термин или технику на безопасном примере.
+2. Перевести идею в QA-действие: test case, observation, evidence, helper или process artifact.
+3. Отделить разрешенную практику от действий, которые требуют отдельного approval.
+
+Граница для Slider AI: не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения. Если нужная техника выходит за эту границу, результат урока оформляется как `requires approval`, lab-only practice или defensive recommendation.
+
 ## Теория
 
 OWASP ZAP (Zed Attack Proxy) — бесплатный инструмент для тестирования веб-приложений на проникновение. Альтернатива Burp Suite Community/Pro. Полностью open-source.
@@ -39,6 +80,17 @@ OWASP ZAP (Zed Attack Proxy) — бесплатный инструмент дл�
 - Поиск уязвимостей (Passive + Active Scan)
 - REST API для автоматизации
 - Поддержка скриптов (Zest)
+
+## Guided practice
+
+1. Опишите режим инструмента: manual, passive, low-rate, lab-only или forbidden.
+2. Заполните tool approval card до запуска любой инструментальной проверки.
+3. Выполните только безопасный режим или оформите `requires approval`, если проверка выходит за scope.
+4. Проведите false-positive review и приложите только sanitized output.
+
+### Эталон самостоятельной работы
+
+К концу guided practice у студента есть короткий Markdown-артефакт: цель проверки, выполненные шаги, sanitized evidence, интерпретация результата, границы применимости и следующий безопасный шаг.
 
 ## Практическое занятие
 
@@ -82,19 +134,19 @@ pip install zapcli
 docker run -t owasp/zap2docker-stable zap-cli status
 
 # Использование zap-cli
-zap-cli open-url http://example.com
+zap-cli open-url http://127.0.0.1:8080
 # Пример вывода:
-# Opened URL: http://example.com
+# Opened URL: http://127.0.0.1:8080
 
-zap-cli spider http://example.com
+zap-cli spider http://127.0.0.1:8080
 # Пример вывода:
-# Spider started at: http://example.com
+# Spider started at: http://127.0.0.1:8080
 # Spider progress: 100%
 # Spider completed
 
-zap-cli active-scan http://example.com
+# lab-only/approval: zap-cli active-scan http://127.0.0.1:8080
 # Пример вывода:
-# Active scan started for: http://example.com
+# Active scan started for: http://127.0.0.1:8080
 # Scan progress: 100%
 # Scan completed
 
@@ -103,30 +155,30 @@ zap-cli alerts -l High
 # [{'id': '10003', 'name': 'X-Frame-Options header scanner', ...}]
 ```
 
-### Использование Proxy (ручной режим)
+### Использование Proxy (ручной/passive режим)
 1. Настройте браузер на прокси ZAP (8080)
 2. Откройте целевой сайт
 3. В ZAP вы увидите весь трафик в History
-4. Выберите запрос -> правой кнопкой -> Attack -> Fuzz
-5. Подставьте payloads для тестирования
+4. Для обязательного пути используйте только History и Passive Scan.
+5. Fuzz/Active Scan выполняются только в DVWA/PortSwigger/local lab или после отдельного approval.
 
 Пример увиденного трафика в ZAP:
 ```
 History tab:
-GET http://example.com/ 200 OK 1234 bytes
-POST http://example.com/login 200 OK 456 bytes
+GET http://127.0.0.1:8080/ 200 OK 1234 bytes
+POST http://127.0.0.1:8080/login 200 OK 456 bytes
 ```
 
-### Fuzzer
+### Fuzzer (lab-only/approval)
 1. Откройте History -> выберите запрос
 2. Right-click -> Attack -> Fuzz
 3. Выделите параметр -> Add -> выберите словарь
-4. Start Fuzzer
-5. Анализируйте ответы
+4. Start Fuzzer только в lab или после approval.
+5. Анализируйте ответы как candidate evidence; не считайте scanner output подтвержденной уязвимостью.
 
 Пример результатов Fuzzer:
 ```
-URL: http://example.com/login
+URL: http://127.0.0.1:8080/login
 Parameter: username
 Payload: admin -> Response: 200 OK (Login successful)
 Payload: test -> Response: 401 Unauthorized
@@ -138,11 +190,11 @@ Payload: test -> Response: 401 Unauthorized
 
 ```bash
 # API вызовы
-zap-cli passive-scan -r http://example.com
+zap-cli passive-scan -r http://127.0.0.1:8080
 # Пример вывода:
-# Passive scan completed for: http://example.com
+# Passive scan completed for: http://127.0.0.1:8080
 
-zap-cli active-scan -r http://example.com
+# lab-only/approval: zap-cli active-scan -r http://127.0.0.1:8080
 # Пример вывода:
 # Active scan progress: 100%
 # Scan completed
@@ -151,11 +203,15 @@ zap-cli active-scan -r http://example.com
 
 ## Примеры вывода
 
-Минимальный эталонный вывод для сдачи:
+Минимальный эталонный артефакт для сдачи:
 
-```text
-$ <команда из практики>
-<3-10 строк фактического вывода из разрешенной среды>
+```markdown
+Environment: macOS native / Kali ARM64 VM / cloud lab / Slider AI olddev
+Target: <разрешенная учебная цель или https://olddev.slider-ai.ru>
+Action: <выполненная безопасная команда или ручной шаг>
+Evidence: <санитизированный фрагмент вывода, скриншота или HTTP history>
+Result status: finding / observation / not reproducible / not applicable / requires approval
+Next step: <retest, remediation, approval request или lab-only follow-up>
 ```
 
 В отчете студент указывает среду выполнения, безопасную цель, команду или ручные шаги и коротко объясняет, какая строка подтверждает результат.
@@ -176,11 +232,11 @@ $ <команда из практики>
 
 1. Запустите DVWA на уровне Low. Настройте браузер на прокси ZAP. Попробуйте выполнить SQL Injection, перехватывая запросы в ZAP.
 
-2. Используйте Spider (паук) в ZAP для обхода сайта `testphp.vulnweb.com`. Сколько уникальных URL удалось найти?
+2. Используйте Spider (паук) в ZAP для обхода сайта `локальный DVWA/bWAPP или PortSwigger lab`. Сколько уникальных URL удалось найти?
 
-3. Запустите Active Scan против DVWA. Какие уязвимости обнаружил ZAP? Сравните с результатами ручного тестирования.
+3. Запустите Active Scan только против DVWA/PortSwigger/local lab. Какие candidate findings обнаружил ZAP? Сравните с результатами ручного тестирования и отметьте false positives.
 
-4. Используйте Fuzzer ZAP для подбора директорий на `testphp.vulnweb.com/admin/`. Используйте словарь `/usr/share/wordlists/dirb/common.txt`. Какие пути нашлись?
+4. Используйте Fuzzer ZAP для подбора директорий на `локальный DVWA/bWAPP или PortSwigger lab/admin/`. Используйте словарь `/usr/share/wordlists/dirb/common.txt`. Какие пути нашлись?
 
 5. Настройте ZAP в headless режиме (через `zap-cli`). Напишите Python-скрипт, который запускает сканирование через `zap-cli` и сохраняет алерты в JSON.
 
@@ -233,3 +289,19 @@ Markdown-запись по шаблону из `education/slider_ai_scope.md`: �
 ### Критерий готовности
 
 Задание выполнено только на `olddev.slider-ai.ru`, не выходит за scope, содержит проверяемый артефакт и явно отмечает `finding`, `informational`, `not reproducible`, `not applicable` или `requires approval`.
+
+## Rubric
+
+| Уровень | Что должно быть сдано |
+|---|---|
+| Зачет | Выполнен обязательный путь новичка, есть sanitized evidence, действия не выходят за scope |
+| Хорошо | Есть объяснение риска или процесса, аккуратные шаги воспроизведения и корректный статус результата |
+| Отлично | Результат связан с `Tool Governance Report`, remediation/retest или automation appendix |
+
+## Self-check
+
+1. Какая SDET-компетенция используется в уроке?
+2. Какая часть объяснения опирается на книги курса?
+3. Где проходит безопасная граница для Slider AI?
+4. Какой артефакт можно показать команде без раскрытия секретов?
+5. Что нужно вынести в углубление, lab-only или отдельный approval?

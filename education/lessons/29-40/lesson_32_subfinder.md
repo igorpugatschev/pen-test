@@ -12,6 +12,17 @@
 
 **Связь с книгами:** OWASP/WSTG/PTES как методология инструментов; «PyCharm. Профессиональная работа на Python 2024» — Git, Markdown, отчетность и артефакты.
 
+**Основной источник:** «PyCharm. Профессиональная работа на Python 2024» и «Паттерны разработки на Python».
+
+**Дополнительные источники:** `Black Hat Python` только для понимания lab-only техник и defensive boundaries.
+
+**Что берем из источника:** tool governance, false-positive review, structured output, границы ручного/passive/low-rate режима.
+
+**Как это превращается в SDET/Security QA навык:** превратить инструменты в управляемый QA-процесс с approval, stop conditions и evidence policy.
+
+**Что нельзя переносить на Slider AI без отдельного разрешения:** не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения.
+
+
 **Процессный артефакт:** `TOOLING_POLICY.md` и finding/observation по шаблону.
 
 **Безопасная цель:** Только `192.168.100.20`, `target.local`, Metasploitable/VulnHub/THM/HTB/PortSwigger в рамках их правил. Не использовать домашний роутер как цель атаки.
@@ -28,6 +39,36 @@
 
 **Критерии сдачи:** Зачет: корректный запуск и интерпретация. Отлично: добавлены ограничения безопасности, rate limit или проверка false positive.
 
+## Reading pack из книг курса
+
+Этот раздел не является заданием “пойди и найди теорию в книгах”. Книги использованы автором курса для подготовки лекции `Урок 32: Subfinder — быстрая разведка поддоменов`, а студент получает самодостаточное объяснение в разделах `Source-driven theory` и `Теория`.
+
+- `docs/socraticode/pycharm-professional-python-2024-pages/`
+- `docs/socraticode/architecture-patterns-python-pages/`
+
+Конкретные страницы для этого блока: `pycharm-professional-python-2024-pages/page-178.md`-`page-209.md`; `architecture-patterns-python-pages/page-038.md`-`page-069.md`.
+
+Что обязана объяснить лекция на основе этих книг:
+
+1. Термины и команды, которые прямо поддерживают тему урока.
+2. Инженерный принцип, который переносится из SDET в Security QA.
+3. Ограничение безопасности: что нельзя делать на Slider AI без approval.
+4. Пример, который превращается в evidence, helper, checklist или process artifact.
+
+Если книга описывает опасную технику, она переносится только в lab-only или defensive interpretation. Студент не должен обращаться к книгам, чтобы понять базовую теорию текущего урока.
+
+## Source-driven theory
+
+Этот урок опирается на книжные источники курса как на базу, а не как на факультативное чтение. Из источников берется практическая дисциплина: tool governance, false-positive review, structured output, границы ручного/passive/low-rate режима. Для SDET это важно потому, что security-проверка должна быть воспроизводимой, объяснимой и пригодной для отчета, а не превращаться в набор разрозненных команд.
+
+Книжный материал в уроке используется в трех шагах:
+
+1. Понять термин или технику на безопасном примере.
+2. Перевести идею в QA-действие: test case, observation, evidence, helper или process artifact.
+3. Отделить разрешенную практику от действий, которые требуют отдельного approval.
+
+Граница для Slider AI: не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения. Если нужная техника выходит за эту границу, результат урока оформляется как `requires approval`, lab-only practice или defensive recommendation.
+
 ## Теория
 
 Subfinder — быстрый и простой инструмент для пассивного поиска поддоменов, разработанный проектом ProjectDiscovery (теми же, что сделали Nuclei). Работает быстрее Amass, но использует только пассивные источники.
@@ -37,6 +78,17 @@ Subfinder — быстрый и простой инструмент для па�
 - Поддержка множества источников (VirusTotal, Censys, Chaos, Shodan и др.)
 - Простота использования
 - Интеграция с другими инструментами ProjectDiscovery
+
+## Guided practice
+
+1. Опишите режим инструмента: manual, passive, low-rate, lab-only или forbidden.
+2. Заполните tool approval card до запуска любой инструментальной проверки.
+3. Выполните только безопасный режим или оформите `requires approval`, если проверка выходит за scope.
+4. Проведите false-positive review и приложите только sanitized output.
+
+### Эталон самостоятельной работы
+
+К концу guided practice у студента есть короткий Markdown-артефакт: цель проверки, выполненные шаги, sanitized evidence, интерпретация результата, границы применимости и следующий безопасный шаг.
 
 ## Практическое занятие
 
@@ -79,49 +131,49 @@ cat ~/.config/subfinder/config.yaml
 ### Базовое использование
 ```bash
 # Простой поиск поддоменов
-subfinder -d example.com
+subfinder -d example.test
 # Пример вывода:
-# www.example.com
-# mail.example.com
-# ftp.example.com
-# admin.example.com
+# www.example.test
+# mail.example.test
+# ftp.example.test
+# admin.example.test
 
 # Сохранение в файл
-subfinder -d example.com -o results.txt
+subfinder -d example.test -o results.txt
 
 # Вывод в формате JSON
-subfinder -d example.com -o results.json -oJ
+subfinder -d example.test -o results.json -oJ
 # Пример вывода (JSON):
-# {"host":"www.example.com","source":"Virustotal"}
-# {"host":"mail.example.com","source":"Censys"}
+# {"host":"www.example.test","source":"Virustotal"}
+# {"host":"mail.example.test","source":"Censys"}
 ```
 
 ### Настройка источников
 ```bash
 # Использовать только конкретные источники
-subfinder -d example.com -sources virustotal,censys
+subfinder -d example.test -sources virustotal,censys
 
 # Исключить источники
-subfinder -d example.com -exclude virustotal
+subfinder -d example.test -exclude virustotal
 
 # Рекурсивный поиск (искать поддомены у найденных поддоменов)
-subfinder -d example.com -recursive
+subfinder -d example.test -recursive
 ```
 
 ### Интеграция с другими инструментами
 ```bash
 # Передать результаты в httpx (проверка живых хостов)
-subfinder -d example.com | httpx -o live_hosts.txt
+# approval-required active validation: subfinder -d example.test | httpx -o live_hosts.txt
 
 # Передать в Nuclei для поиска уязвимостей
-subfinder -d example.com | httpx | nuclei -t vulnerabilities/
+# requires approval: subfinder -d example.test | httpx | nuclei -t vulnerabilities/
 
 # Комбинация с Amass
-amass enum -passive -d example.com | subfinder -d example.com | sort -u > all_subdomains.txt
+amass enum -passive -d example.test | subfinder -d example.test | sort -u > all_subdomains.txt
 # Пример вывода (результат в файле):
-# admin.example.com
-# api.example.com
-# www.example.com
+# admin.example.test
+# api.example.test
+# www.example.test
 ```
 
 ### Конфигурация API ключей
@@ -156,11 +208,15 @@ subfinder -config
 
 ## Примеры вывода
 
-Минимальный эталонный вывод для сдачи:
+Минимальный эталонный артефакт для сдачи:
 
-```text
-$ <команда из практики>
-<3-10 строк фактического вывода из разрешенной среды>
+```markdown
+Environment: macOS native / Kali ARM64 VM / cloud lab / Slider AI olddev
+Target: <разрешенная учебная цель или https://olddev.slider-ai.ru>
+Action: <выполненная безопасная команда или ручной шаг>
+Evidence: <санитизированный фрагмент вывода, скриншота или HTTP history>
+Result status: finding / observation / not reproducible / not applicable / requires approval
+Next step: <retest, remediation, approval request или lab-only follow-up>
 ```
 
 В отчете студент указывает среду выполнения, безопасную цель, команду или ручные шаги и коротко объясняет, какая строка подтверждает результат.
@@ -179,15 +235,15 @@ $ <команда из практики>
 
 ## Задачи для самостоятельного выполнения
 
-1. Сравните скорость работы Subfinder и Amass (passive) для домена `scanme.nmap.org`. Какой инструмент быстрее и почему?
+1. Сравните Subfinder и Amass на уровне режима работы: какие источники использует passive mode, какие API-ключи нужны, какие запросы не отправляются к целевому приложению.
 
-2. Настройте хотя бы один API ключ (например, VirusTotal бесплатный). Запустите Subfinder с этим ключом. Изменилось ли количество найденных поддоменов?
+2. Настройте хотя бы один API ключ в локальном конфиге, но не сохраняйте его в evidence. Если нет разрешенного домена, сдайте sanitized конфиг и approval note.
 
-3. Выполните рекурсивный поиск для домена `example.com`. Сколько уровней поддоменов удалось обнаружить?
+3. Не выполняйте recursive search без расширенного scope. Подготовьте команду и объясните, почему recursive mode может выйти за границы `olddev.slider-ai.ru`.
 
-4. Объедините результаты Subfinder и Amass в один файл, удалите дубликаты (`sort -u`). Сколько уникальных поддоменов получилось?
+4. Объедините только заранее подготовленные lab-файлы Subfinder и Amass, удалите дубликаты (`sort -u`) и оформите output как учебный artifact.
 
-5. Используйте связку `subfinder | httpx` для проверки живых веб-серверов. Сколько хостов отвечают на порту 80/443?
+5. Для связки `subfinder | httpx` заполните approval card. Без расширенного scope не запускайте active validation.
 
 ## Частые ошибки
 
@@ -238,3 +294,19 @@ Markdown-запись по шаблону из `education/slider_ai_scope.md`: �
 ### Критерий готовности
 
 Задание выполнено только на `olddev.slider-ai.ru`, не выходит за scope, содержит проверяемый артефакт и явно отмечает `finding`, `informational`, `not reproducible`, `not applicable` или `requires approval`.
+
+## Rubric
+
+| Уровень | Что должно быть сдано |
+|---|---|
+| Зачет | Выполнен обязательный путь новичка, есть sanitized evidence, действия не выходят за scope |
+| Хорошо | Есть объяснение риска или процесса, аккуратные шаги воспроизведения и корректный статус результата |
+| Отлично | Результат связан с `Tool Governance Report`, remediation/retest или automation appendix |
+
+## Self-check
+
+1. Какая SDET-компетенция используется в уроке?
+2. Какая часть объяснения опирается на книги курса?
+3. Где проходит безопасная граница для Slider AI?
+4. Какой артефакт можно показать команде без раскрытия секретов?
+5. Что нужно вынести в углубление, lab-only или отдельный approval?

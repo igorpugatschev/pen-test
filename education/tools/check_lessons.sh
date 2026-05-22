@@ -278,6 +278,15 @@ for doc in "${process_docs[@]}"; do
 done
 
 echo ""
+echo "4b. ПРОВЕРКА САМОДОСТАТОЧНОСТИ КУРСА"
+echo "------------------------------------------"
+
+if ! python3 "$EDUCATION_DIR/tools/check_course_completeness.py"; then
+    echo "  [ПРОБЛЕМА] курс не соответствует self-contained модели"
+    ((ERRORS++))
+fi
+
+echo ""
 echo "5. ПРОВЕРКА ИСПРАВЛЕНИЯ ОШИБОК ИЗ РЕВЬЮ"
 echo "------------------------------------------"
 
