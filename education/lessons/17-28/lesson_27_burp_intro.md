@@ -315,7 +315,7 @@ brew install --cask burp-suite
 GET /vulnerabilities/sqli/?id=1 HTTP/1.1
 Host: localhost
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
-Cookie: PHPSESSID=abc123; security=low
+Cookie: <redacted-demo-session>; security=low
 Connection: close
 
 HTTP/1.1 200 OK
@@ -330,7 +330,7 @@ Content-Length: 1234
 Request:
 GET /vulnerabilities/sqli/?id=1' OR '1'='1 HTTP/1.1
 Host: localhost
-Cookie: PHPSESSID=abc123; security=low
+Cookie: <redacted-demo-session>; security=low
 
 Response:
 HTTP/1.1 200 OK
@@ -393,7 +393,7 @@ security find-certificate -c "PortSwigger CA"
 
 ## Задачи для самостоятельного выполнения
 
-1. **Настройка Burp**: Установите Burp Suite Community Edition. Настройте браузер Firefox на работу через прокси `127.0.0.1:8081`, если `8080` занят локальной лабораторией. Сделайте скриншот окна Burp с вкладкой Proxy, где видно, что прокси запущен.
+1. **Настройка Burp**: Установите Burp Suite Community Edition. Настройте браузер Firefox на работу через прокси `127.0.0.1:8080`. Если `8080` действительно занят, создайте новый Burp listener на `127.0.0.1:8084`; не используйте `8081-8083`, потому что они зарезервированы под DVWA, bWAPP и WebGoat. Сделайте скриншот окна Burp с вкладкой Proxy, где видно, что прокси запущен.
 
 2. **Перехват и модификация**: Используя Burp Proxy, перехватите запрос к DVWA или PortSwigger lab. В Repeater замените значение параметра на безопасный маркер `qa-marker-lesson-27`, сравните ответы и сохраните sanitized evidence.
 

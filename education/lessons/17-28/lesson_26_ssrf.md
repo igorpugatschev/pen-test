@@ -201,20 +201,27 @@ url=http://127.0.0.1:8888/admin
 
 Если сервер вернул содержимое `/admin` — SSRF сработал.
 
-**Шаг 3: Сканирование портов**
-Используйте Burp Intruder для перебора портов:
+**Шаг 3: Port exposure reasoning без перебора**
+Не используйте Intruder для перебора портов в обязательном пути. Разберите статический lab transcript и объясните, почему даже один SSRF endpoint может раскрыть внутренние сервисы:
 ```
-url=http://127.0.0.1:§PORT§/admin
+Input URL: http://127.0.0.1:8888/admin
+Observed response: 200 OK, body contains "Internal Admin Panel - demo"
+Blocked URL: http://127.0.0.1:6379/
+Observed response: blocked by allowlist
 ```
-Payloads только в локальной lab-сети: 22, 80, 443, 6379 (Redis), 9200 (Elasticsearch), 8888
 
-Смотрите на время ответа и содержимое.
+Вывод: проверка портов через SSRF относится к lab-only/approval. Для Slider AI это фиксируется как `requires approval`, а не выполняется.
 
-**Шаг 4: Использование Burp Collaborator**
-1. В Burp откройте **Burp → Collaborator**
-2. Нажмите **Copy to clipboard** (получите уникальный domain)
-3. Отправьте SSRF запрос: `url=http://ВАШ_DOMAIN.collaborator.net`
-4. Нажмите **Poll now** в Collaborator — должен прийти DNS + HTTP запрос
+**Шаг 4: Blind SSRF как lab-only/OAST**
+В базовом пути blind SSRF изучается по transcript:
+
+```text
+OAST request: DNS lookup for <lab-token>.oast.example
+HTTP callback: GET / from lab network
+Decision: blind SSRF candidate, product testing requires written approval
+```
+
+Burp Collaborator или другой OAST-сервис используйте только в специально разрешенной lab/cloud среде.
 
 ### Практика: Обход фильтров
 
@@ -233,16 +240,17 @@ url=http://127.1/admin        # сокращенный формат
 
 ### Примеры вывода
 
-**Burp Collaborator — полученные запросы:**
+**Blind SSRF transcript — полученные запросы:**
 ```
-DNS lookup for abc123.oastify.com from 1.2.3.4
-HTTP GET http://abc123.oastify.com/ from 1.2.3.4
+DNS lookup for <lab-token>.oast.example from lab resolver
+HTTP GET http://<lab-token>.oast.example/ from lab egress
 ```
 
-**SSRF — сканирование портов через Intruder:**
+**SSRF — reasoning transcript без Intruder:**
 ```
-Payload: http://127.0.0.1:22/admin   → Timeout/Error (SSH)
-Payload: http://127.0.0.1:8888/admin → 200 OK (mock HTTP)
+Input: http://127.0.0.1:8888/admin → 200 OK (mock HTTP)
+Input: http://127.0.0.1:6379/      → blocked by allowlist
+Decision: internal access risk exists; port probing is lab-only/approval
 Payload: http://127.0.0.1:443/admin  → Timeout/Error (HTTPS)
 Payload: http://127.0.0.1:6379/admin → lab-only Redis signal
 ```
@@ -260,9 +268,9 @@ http://127.0.0.1:8888/admin
 ### Частые ошибки
 
 1. **Забыть про внутренние сервисы** — Redis, Elasticsearch, Admin панели часто не защищены
-2. **Игнорировать Blind SSRF** — даже без ответа атака может сработать (DNS callbacks)
-3. **Не использовать Burp Collaborator** — для проверки Blind SSRF это критично
-4. **Блокировка URL-схем** — иногда `file://`, `gopher://` тоже работают
+2. **Игнорировать Blind SSRF** — даже без ответа атака может сработать, но проверяется только в lab/OAST с разрешением
+3. **Запускать OAST по продукту без approval** — для Slider AI это недопустимо без письменного разрешения
+4. **Блокировка URL-схем** — `file://`, `dict://`, `gopher://` рассматриваются как lab-only threat model, не как базовая практика
 
 ### Вопросы на понимание
 
@@ -274,8 +282,9 @@ http://127.0.0.1:8888/admin
 ### Адаптация под macOS (M2)
 
 ```bash
-# Использование curl для тестирования SSRF локально
-curl -s "http://127.0.0.1:8081/check-url?url=http://127.0.0.1:9000/latest/meta-data/"
+# Встроенный transcript вместо несуществующего DVWA endpoint:
+# SSRF demo app, если он создан отдельно, должен слушать 127.0.0.1:8084/check-url.
+# Без такого приложения используйте transcript из урока, а не curl к DVWA.
 
 # Python сервер для имитации внутреннего сервиса
 cat > /tmp/internal_service.py << 'EOF'
@@ -287,8 +296,8 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b"Internal Admin Panel - Access Granted")
         
-print("Internal service on 0.0.0.0:8888")
-HTTPServer(('0.0.0.0', 8888), Handler).serve_forever()
+print("Internal service on 127.0.0.1:8888")
+HTTPServer(('127.0.0.1', 8888), Handler).serve_forever()
 EOF
 python3 /tmp/internal_service.py &
 ```
@@ -310,20 +319,23 @@ python3 /tmp/internal_service.py &
 
 1. **SSRF mock lab**: поднимите локальный internal service на `127.0.0.1:8888` и покажите, как SSRF-модель должна была бы обращаться к нему в deliberately vulnerable lab.
 
-2. **SSRF через URL-схемы**: Попробуйте использовать схемы, отличные от http://:
-   - `file:///etc/passwd`
-   - `dict://localhost:11211/` (memcached)
-   - `gopher://localhost:25/` (SMTP)
-   
-   Опишите, какие схемы заблокированы, какие работают.
+2. **SSRF через URL-схемы как threat model**: заполните таблицу без выполнения payload по Slider AI:
+
+   | Scheme | Почему опасно | Где изучать механику |
+   |---|---|---|
+   | `file://` | попытка чтения локальных файлов | local deliberately vulnerable lab |
+   | `dict://` | обращение к внутренним TCP-сервисам | cloud lab |
+   | `gopher://` | crafting raw TCP requests | advanced lab-only |
+
+   В mandatory path отметьте ожидаемое защитное поведение: allowlist `http/https`, block private IP ranges, block redirects to private addresses.
 
 3. **Обход через redirect**: Научитесь обходить фильтры через redirect. Создайте простой скрипт `redirect.php`:
    ```php
    <?php header("Location: http://127.0.0.1:8888/admin"); ?>
    ```
-   Используйте: `url=http://yourserver.com/redirect.php`. Сработал ли обход?
+   Используйте только локальную lab-модель: `url=http://127.0.0.1:8084/redirect-to-internal`. Сработал ли обход в transcript?
 
-4. **Blind SSRF с Collaborator**: В Burp Suite откройте Collaborator, получите уникальный domain. Используйте его в SSRF-пейлоаде. Покажите в отчете: пришел ли DNS-запрос в Collaborator, пришел ли HTTP-запрос.
+4. **Blind SSRF с OAST**: по встроенному transcript объясните, чем DNS callback отличается от HTTP callback. Реальный Collaborator/OAST используйте только в cloud lab или по written approval.
 
 5. **Cloud SSRF mock**: используйте только mock endpoint `http://127.0.0.1:9000/latest/meta-data/`. Реальные cloud metadata endpoints не вызываются в этом курсе без отдельной cloud lab и written approval.
 

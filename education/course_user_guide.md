@@ -384,6 +384,88 @@ How to use in retest:
 
 Automation appendix показывает, что Python helper является частью SDET ownership: его можно ревьюить, тестировать, повторять и безопасно использовать для regression.
 
+### WSTG / OWASP Safe Checklist
+
+```markdown
+# WSTG / OWASP Safe Checklist
+
+Area:
+Check:
+Safe method:
+Environment: macOS native | local lab | cloud lab | Slider AI olddev
+Target:
+Expected secure behavior:
+Evidence to collect:
+Forbidden actions:
+Approval needed for:
+Status: observation | finding | not applicable | not reproducible | requires approval
+Retest idea:
+```
+
+Минимальная карта для Slider AI olddev:
+
+| Area | Safe baseline | Approval-required / lab-only |
+|---|---|---|
+| Information gathering | headers, visible routes, robots, public metadata | aggressive crawling, directory brute force |
+| Configuration | security headers, cookie flags, error messages | active scanner templates |
+| Authentication | UX, lockout policy observation, logout behavior | brute force, password spraying |
+| Session management | cookie attributes, expiration observation | token replay outside own session |
+| Authorization | role matrix with own QA accounts | ID enumeration, tenant boundary probing without approval |
+| Input validation | harmless marker strings | SQL/XSS/command/path payload exploitation |
+| File handling | type/size UI expectations | malware upload, path traversal payloads |
+| API security | contract/schema observation, status codes | fuzzing, mass assignment probing without approval |
+| Error handling | sanitized error observation | forcing stack traces with destructive payloads |
+| Logging/monitoring | expected events checklist | log tampering, alert flooding |
+
+### Role Matrix And Tenant Boundary Notes
+
+```markdown
+# Role Matrix And Tenant Boundary Notes
+
+Feature:
+Roles available:
+Tenant or workspace boundary:
+Own test accounts used:
+
+| Action | Anonymous | Viewer | Editor | Owner/Admin | Expected result | Evidence | Status |
+|---|---|---|---|---|---|---|---|
+| View own resource | no | yes | yes | yes | allowed for authenticated own scope | screenshot/header only | observation |
+| Edit own resource | no | no | yes | yes | only editor/admin | sanitized UI observation | observation |
+| Access another tenant/resource | no | no | no | no | blocked | do not enumerate IDs | requires approval if not test-owned |
+```
+
+Role matrix проверяет authorization как продуктовый контроль. Для Slider AI нельзя перебирать чужие ID или tenant identifiers; используйте только собственные QA-аккаунты и заранее известные тестовые данные.
+
+### Evidence Index
+
+```markdown
+# Evidence Index
+
+| ID | Lesson/check | Area | Environment | Target | Action | Evidence summary | Sanitized | Status | Linked finding |
+|---|---|---|---|---|---|---|---|---|---|
+| E-001 | 72/final | headers | macOS native | https://olddev.slider-ai.ru | DevTools headers review | security headers observed | yes | observation | F-001 |
+```
+
+Evidence Index нужен, чтобы отчет был проверяемым. Он не хранит cookies, tokens, passwords, PII, private data и полные sensitive responses; он хранит ссылку на sanitized snippet или краткое описание.
+
+### Executive Summary
+
+```markdown
+# Executive Summary
+
+Scope:
+Period:
+Method:
+Coverage:
+Top risks:
+What was not tested:
+Business impact:
+Recommended next actions:
+Retest expectation:
+```
+
+Executive Summary пишется для команды продукта. В нем не должно быть payload-подробностей, секретов и длинных логов; только решение: что проверено, какие риски важны, что исправлять первым и как подтвердить исправление.
+
 ## 11. Индекс финального assessment package
 
 Финальный проект не требует отдельных шаблонных файлов в репозитории курса. Студент собирает рабочий Markdown-пакет в своей учебной папке, копируя встроенные шаблоны из этой инструкции.

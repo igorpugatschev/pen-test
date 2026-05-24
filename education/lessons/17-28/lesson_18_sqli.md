@@ -311,8 +311,8 @@ docker pull vulnerables/web-dvwa
 # Запуск DVWA
 docker run --rm -it -p 8081:80 vulnerables/web-dvwa
 
-# rockyou.txt нужно скачать вручную на macOS
-curl -L https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt -o rockyou.txt
+# В этом уроке внешние словари не нужны.
+# Для любых примеров используйте только встроенные учебные значения из лекции.
 ```
 
 ---
@@ -373,7 +373,13 @@ Sanitization: secrets and personal data excluded
 
 4. **Попытка на уровне Medium**: Переключите DVWA на уровень **Medium** и снова зайдите в SQL Injection. Попробуйте те же пейлоады. Используйте инструмент **Burp Suite** (или DevTools браузера), чтобы посмотреть, как отправляется запрос. Чем уровень Medium отличается от Low?
 
-5. **Взлом хешей**: Возьмите хеш пароля пользователя admin (из задачи 1) и попробуйте подобрать пароль через онлайн-сервис crackstation.net или hashcat. Укажите, какой пароль соответствует хешу.
+5. **Password storage risk без внешних сервисов**: по встроенной mock hash table определите тип хеша и риск хранения. Реальные или учебные хеши не отправляйте во внешние сервисы и не сохраняйте в отчет полностью.
+
+   | Hash prefix | Algorithm candidate | Safe conclusion |
+   |---|---|---|
+   | `5f4dcc3b...` | MD5-like | weak unsalted hash, требует owner review |
+   | `5baa61e4...` | SHA1-like | weak legacy hash, нужен migration plan |
+   | `$2y$10$...` | bcrypt-like | проверить cost factor и policy |
 
 ## Практика на Slider AI
 

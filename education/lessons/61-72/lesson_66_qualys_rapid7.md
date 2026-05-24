@@ -253,13 +253,13 @@ Sanitization: secrets and personal data excluded
 
 1. **Initial setup model**: по встроенной модели урока составьте чек-лист первичной настройки vulnerability management platform: assets, credentials, scan profile, risk policy, export, retest.
 
-2. **Сравнение с open-source**: Сравните коммерческие сканеры (Qualys/Rapid7) с open-source альтернативами (OpenVAS, Nuclei, Trivy). Создайте таблицу плюсов и минусов. Когда имеет смысл использовать open-source, а когда коммерческий продукт?
+2. **Сравнение с open-source по встроенной матрице**: заполните таблицу плюсов и минусов на основе модели урока, не устанавливая продукты и не запрашивая trial-доступ. Критерии: asset inventory, authenticated scan, ticketing, API, false-positive workflow, retest, cost model.
 
 3. **Report Comparison**: сравните два встроенных формата отчета: executive summary и technical finding. Объясните, какие поля нужны руководителю, а какие инженеру для remediation.
 
 4. **API contract exploration**: без подключения к реальному vendor API опишите безопасный контракт интеграции: endpoint type, auth boundary, fields to collect, fields to redact, timeout, retry, error handling.
 
-5. **Vendor Selection**: Представьте, что вы CISO компании (5000 сотрудников, смешанная инфраструктура: on-premise + AWS + Azure). Напишите обоснование выбора между Qualys и Rapid7. Учтите: бюджет, требования безопасности, интеграции, удобство для команды.
+5. **Vendor Selection по встроенному профилю**: используйте учебный профиль организации из лекции и выберите подходящую модель платформы. Не ищите цены, trial или актуальные интерфейсы vendor: оценивайте decision factors, integration needs, ownership и risk workflow.
 
 ## Частые ошибки
 
@@ -271,7 +271,7 @@ Sanitization: secrets and personal data excluded
 ## Вопросы на понимание
 
 1. В чем разница между Qualys (SaaS) и Rapid7 (on-premise + cloud)?
-2. Как получить пробный доступ к Qualys или Rapid7?
+2. Почему trial-доступ и pricing не являются частью обязательной сдачи этого урока?
 3. Почему для macOS M2 с 8GB RAM не рекомендуется локальная установка Rapid7 InsightVM?
 4. Какие элементы модели vulnerability management platform важны для Security QA?
 5. Чем коммерческие сканеры отличаются от open-source (OpenVAS)?

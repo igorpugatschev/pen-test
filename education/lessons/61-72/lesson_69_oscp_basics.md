@@ -236,7 +236,7 @@ Kali ARM64 VM используется как углубление, когда �
 - Неделя 1: Linux Privilege Escalation
 - Неделя 2: Windows Privilege Escalation
 - Неделя 3: Pivoting и Lateral Movement
-- Неделя 4: Практика на VulnHub (5 VMs)
+- Неделя 4: встроенные lab case cards; внешние VM только optional при наличии ресурсов и правил площадки
 
 Месяц 3: Active Directory
 - Неделя 1: Теория AD, настройка лабы

@@ -177,65 +177,46 @@ Kali ARM64 VM используется как углубление, когда �
 
 ## Практическое занятие
 
-### Задача 1: Создание виртуальных машин
+### Задача 1: Встроенный network transcript
 
-1. Скачайте образы (выберите ARM-версии для M2):
-   - Kali Linux ARM64: https://www.kali.org/get-kali/
-   - Metasploitable3 (рекомендуется для M2): https://github.com/rapid7/metasploitable3
-   - Альтернатива: Ubuntu Server ARM64
+Сдача урока не требует скачивания VM-образов. Сначала разберите встроенный transcript и покажите, что вы понимаете сеть, адреса, ARP, route и HTTP-наблюдение.
 
-2. Создайте VM в UTM:
-   - **VM1**: Kali Linux (3GB RAM, 20+ GB диск)
-   - **VM2**: Metasploitable3 (512MB RAM, 8GB диск)
+```text
+Lab: isolated training network
+Host A: kali-lab, IP 192.168.100.10/24, role client
+Host B: target-lab, IP 192.168.100.20/24, role web service
 
-> **Примечание:** Metasploitable2 (x86_64) не запустится нативно на M2. Используйте Metasploitable3 или VulnHub образы с поддержкой ARM.
+$ ip addr show eth0
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500
+    inet 192.168.100.10/24 brd 192.168.100.255 scope global eth0
 
-### Задача 2: Настройка сети
+$ ip route
+192.168.100.0/24 dev eth0 proto kernel scope link src 192.168.100.10
 
-1. Для обеих VM настройте сетевой адаптер:
-   - Тип: **Isolated Network** (в UTM) или **Host-only**
-   - Имя сети: `pentest-lab` (одинаковое для обеих VM)
+$ ping -c 2 192.168.100.20
+64 bytes from 192.168.100.20: icmp_seq=1 ttl=64 time=0.8 ms
+64 bytes from 192.168.100.20: icmp_seq=2 ttl=64 time=0.7 ms
 
-2. Запустите VM1 (Kali) и настройте сеть:
-```bash
-# Проверьте имя интерфейса внутри Linux/Kali VM
-ip addr show
+$ ip neigh show
+192.168.100.20 dev eth0 lladdr 52:54:00:12:34:56 REACHABLE
 
-# Настройте IP (обычно интерфейс eth0)
-sudo ip addr add 192.168.100.10/24 dev eth0
-sudo ip link set eth0 up
-
-# Проверьте
-ip addr show eth0
+$ curl -I http://192.168.100.20
+HTTP/1.1 200 OK
+Server: training-web/1.0
+Content-Type: text/html
 ```
 
-3. Запустите VM2 (Metasploitable) и настройте сеть:
-```bash
-# В Metasploitable (логин/пароль зависит от версии)
-# Примечание: ifconfig считается устаревшим, используйте ip
-sudo ip addr add 192.168.100.20/24 dev eth0
-sudo ip link set eth0 up
-```
+Заполните таблицу:
 
-### Задача 3: Проверка связности
+| Наблюдение | Что доказывает | Что не доказывает |
+|---|---|---|
+| `inet 192.168.100.10/24` | у host A есть адрес в lab-сети | что host B безопасен |
+| `ip route` | сеть доступна напрямую через eth0 | что интернет-маршрут настроен |
+| `ping` | ICMP-связность между host A и host B | что web-приложение работает корректно |
+| `ip neigh` | ARP нашел MAC для host B | что сервисы host B неуязвимы |
+| `curl -I` | HTTP-порт отвечает заголовками | что приложение прошло security test |
 
-1. С Kali пропингуйте Metasploitable:
-```bash
-ping -c 4 192.168.100.20
-```
-
-2. С Metasploitable пропингуйте Kali:
-```bash
-ping -c 4 192.168.100.10
-```
-
-3. Проверьте ARP-таблицы на обеих машинах:
-```bash
-ip neigh show
-```
-Примечание: команда `arp -n` считается устаревшей, используйте `ip neigh`.
-
-### Задача 4: Проверка сети
+### Задача 2: Минимум на macOS native
 
 #### Минимум: мягкая проверка связности
 
@@ -275,25 +256,39 @@ ssh user@192.168.100.20
 curl http://192.168.100.20
 ```
 
-### Задача 5: Захват трафика
+### Задача 3: Углубление после обязательной сдачи
 
-1. На Kali запустите tcpdump:
+Если нужен hands-on с двумя машинами, используйте Kali Linux ARM64 VM в UTM/VMware Fusion/Parallels и вторую легкую ARM64 Linux VM или cloud lab. Это не является обязательным условием сдачи урока.
+
+Ограничения для MacBook Air M2 8GB:
+
+- суммарно не более 3-4GB RAM на VM;
+- 2 CPU на Kali ARM64 VM;
+- x86/x64 guest OS не использовать как базовый путь;
+- если лаборатория тяжелая, перенести в cloud lab.
+
+Минимальный VM-сценарий:
+
 ```bash
-sudo tcpdump -i eth0 -w capture.pcap
+# Kali/Linux VM, только isolated или host-only lab network
+ip addr show
+ip route
+ping -c 2 192.168.100.20
+ip neigh show
+curl -I http://192.168.100.20
 ```
 
-2. На Metasploitable выполните любой сетевой запрос (например, ping до Kali)
+Захват трафика выполняйте только в lab-сети:
 
-3. Остановите tcpdump (Ctrl+C) и проанализируйте файл в Wireshark:
 ```bash
-# Установка Wireshark в Kali/Linux:
-sudo apt install -y wireshark
+# Kali/Linux VM
+sudo tcpdump -i eth0 -c 20 -w lesson16-demo.pcap
 
-# Или на macOS (M2):
-# brew install --cask wireshark
-
-wireshark capture.pcap
+# macOS viewer, если Wireshark установлен официальным installer или Homebrew cask
+open lesson16-demo.pcap
 ```
+
+Артефакт углубления: 5-8 строк анализа pcap без credentials, tokens и чужих данных.
 
 ## Примеры вывода
 
@@ -331,7 +326,7 @@ Sanitization: secrets and personal data excluded
 2. **ifconfig vs ip**: Команда `ifconfig` устарела, используйте `ifconfig` на macOS или `ip addr` в Kali/Linux и `ip link`. В Metasploitable можете использовать обе, но старайтесь привыкать к `ip`.
 3. **Сетевые адаптеры UTM**: Isolated Network изолирует VM от внешнего мира. Если нужен интернет на VM — используйте Shared Network или Bridged.
 4. **Не забудьте про SSH**: В Metasploitable SSH часто запущен на порту 22, логин/пароль по умолчанию зависит от версии.
-5. **Architecture mismatch**: Metasploitable2 (x86_64) не запустится на M2 (ARM). Используйте Metasploitable3 или VulnHub ARM-образы.
+5. **Architecture mismatch**: x86_64 VM не является базовым путем на M2 (ARM). Для углубления используйте ARM64-образы или cloud lab, а обязательный путь закрывается встроенным transcript.
 
 ## Вопросы на понимание
 

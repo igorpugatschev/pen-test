@@ -332,7 +332,17 @@ Sanitization: secrets and personal data excluded
    }
    ```
 
-2. Выполните пассивный учебный поиск по общему запросу `product:"Apache"` и сохраните только количество результатов, без IP-адресов и без попыток подключения к найденным системам.
+2. Разберите встроенный mock search summary вместо live Shodan-запроса:
+
+   ```text
+   Query: product:"Apache"
+   Total results: 1240000
+   Top countries: US, DE, NL
+   Common ports: 80, 443, 8080
+   Decision: public exposure metadata, no connection to third-party hosts
+   ```
+
+   Live Shodan/Censys-запросы остаются углублением и не нужны для сдачи.
 
 3. Разберите на уровне теории, почему публично доступные базы данных опасны. Не открывайте найденные сервисы и не выполняйте подключение к ним.
 

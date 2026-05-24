@@ -250,6 +250,31 @@ OWASP WSTG нужно перевести в покрытие продукта. �
 
 Матрица считается заполненной, если по каждой строке есть `safe action`, `lab-only or approval boundary`, `evidence type` и `owner action`. Это делает урок самодостаточным: студенту не нужно искать WSTG mapping снаружи, чтобы понять, что именно покрывать.
 
+### Встроенная 20-пунктовая WSTG mini-map
+
+| # | Область | Safe check для olddev | Статус по умолчанию |
+|---|---|---|---|
+| 1 | Scope | target только `https://olddev.slider-ai.ru` | observation |
+| 2 | Info gathering | headers/visible routes | observation |
+| 3 | Fingerprinting | visible tech hints без scanner pressure | observation |
+| 4 | Config | cookie/security headers | observation |
+| 5 | Error handling | sanitized error messages | observation |
+| 6 | Auth login | UX and status behavior | observation |
+| 7 | Auth logout | session end behavior | observation |
+| 8 | Password policy | UI/help text only | observation |
+| 9 | Session cookies | HttpOnly/SameSite/Secure flags | observation |
+| 10 | Authorization | role matrix own QA accounts | observation/requires approval |
+| 11 | IDOR | no ID enumeration; request test dataset | requires approval |
+| 12 | API REST | one safe status/header check | observation |
+| 13 | OpenAPI | public contract present/absent | observation |
+| 14 | JWT/OIDC | no token storage; redacted claims only | observation |
+| 15 | CORS | ACAO/ACAC headers | observation |
+| 16 | GraphQL | endpoint presence only | requires approval for introspection |
+| 17 | Input validation | harmless marker strings | observation |
+| 18 | Upload | allowed type/size expectation | requires approval for upload tests |
+| 19 | SSRF/path/command/SSTI | threat model and lab-only mechanics | requires approval/lab-only |
+| 20 | Logging/monitoring | expected audit events checklist | observation |
+
 ### Практика: заполнение чек-листа
 
 1. Заполните минимум 6 строк checklist на основе безопасных наблюдений olddev.
@@ -299,13 +324,13 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **Сравнение OWASP Top 10 и Testing Guide**: Сопоставьте OWASP Top 10 2021 с разделами OWASP Testing Guide. Какие тесты покрывают каждый пункт Top 10?
+1. **Сравнение OWASP Top 10 и Testing Guide**: используйте встроенную 20-пунктовую mini-map выше и сопоставьте ее с OWASP Top 10 2021. Внешний WSTG документ не нужен для сдачи.
 
 2. **Кастомизация чек-листа**: Адаптируйте OWASP чек-лист для тестирования REST API. Добавьте специфичные для API проверки (JWT, rate limiting, versioning, GraphQL).
 
 3. **Автоматизация**: Напишите скрипт на Python, который генерирует OWASP чек-лист в формате Markdown на основе JSON-конфигурации.
 
-4. **Тестирование**: Протестируйте учебное приложение (bWAPP, WebGoat) по методологии OWASP Testing Guide. Заполните чек-лист минимум на 20 пунктов.
+4. **Тестирование**: заполните встроенный 20-пунктовый checklist для локального учебного приложения или Slider AI olddev safe observations. Payload mechanics оставьте lab-only/approval.
 
 5. **Report template**: Создайте шаблон отчета по результатам OWASP-тестирования, включающий разделы: Summary, Vulnerability Details (с CVSS), Remediation.
 

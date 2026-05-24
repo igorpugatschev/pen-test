@@ -182,12 +182,7 @@ Kali ARM64 VM используется как углубление, когда �
 ### Dirsearch
 
 ```bash
-# Установка
-git clone https://github.com/maurosoria/dirsearch.git
-cd dirsearch
-pip install -r requirements.txt
-
-# macOS (M2) — также можно через pip
+# macOS (M2) — установка через пакетный менеджер Python, без клонирования репозиториев
 pip3 install dirsearch
 
 # Базовый запуск

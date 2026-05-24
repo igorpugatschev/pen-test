@@ -31,7 +31,7 @@
 
 **Обязательный путь новичка:** Пройти указанную комнату или ее часть, записать команды, ошибки и выводы без копирования чужого решения.
 
-**Углубление:** После самостоятельной попытки разобрать официальный write-up, сравнить подходы и улучшить собственные заметки.
+**Углубление:** После обязательного пути разобрать встроенный текстовый разбор, сравнить подходы и улучшить собственные заметки.
 
 **Минимальная проверка успеха:** Есть подтверждение прохождения этапа, список команд, выводы и пометка, что работа велась внутри учебной платформы.
 
@@ -313,7 +313,7 @@ Sanitization: secrets and personal data excluded
 
 ## Адаптация под macOS (M2, 8GB)
 
-- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): скачайте .ovpn файл и откройте через Tunnelblick
+- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): если в углублении используется VPN, импортируйте выданный .ovpn файл в Tunnelblick
 - Виртуалки: используйте только при необходимости; для Apple Silicon выбирайте ARM64-образы в **UTM**, **VMware Fusion** или **Parallels**, а тяжелые лабы выносите в cloud lab
 - "На 8GB RAM выделяйте VM не более 3-4GB"
 - Docker работает нативно на M2: `docker pull <image>`
@@ -323,11 +323,11 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **Комната "Attacktive Directory"** (THM) — полный путь атаки на AD: от разведки до получения Domain Admin
-2. **Машина "Active"** (HTB Easy) — реальная машина с AD, Kerberoasting атака
-3. **Комната "BloodHound"** (THM) — установка и использование BloodHound для анализа AD
+1. **AD object worksheet**: по встроенной схеме опишите `Domain`, `User`, `Group`, `Computer`, `Service Principal Name`, `Kerberos ticket` и какой evidence для каждого безопасен.
+2. **Kerberoasting risk card**: заполните preconditions, business impact, detection signals и controls. Не выполняйте получение tickets в обязательном пути.
+3. **BloodHound-style reasoning**: по встроенному mini-graph определите risky path `Helpdesk -> Local Admin -> Server Admin`, но не собирайте реальные AD-данные.
 
-> **Совет:** Для MacBook Air M2 базовый путь AD-практики — THM/HTB/Pwnbox или другая готовая cloud lab. Локальная AD-лаборатория тяжелая для 8GB RAM и не должна быть обязательным условием прохождения урока.
+THM/HTB/Pwnbox или другая готовая cloud lab остаются углублением для AD hands-on. На MacBook Air M2 8GB локальная AD-ферма не является обязательной и не рекомендуется как базовый путь.
 
 ## Практика на Slider AI
 

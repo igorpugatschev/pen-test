@@ -31,7 +31,7 @@
 
 **Обязательный путь новичка:** Пройти указанную комнату или ее часть, записать команды, ошибки и выводы без копирования чужого решения.
 
-**Углубление:** После самостоятельной попытки разобрать официальный write-up, сравнить подходы и улучшить собственные заметки.
+**Углубление:** После обязательного пути разобрать встроенный текстовый разбор, сравнить подходы и улучшить собственные заметки.
 
 **Минимальная проверка успеха:** Есть подтверждение прохождения этапа, список команд, выводы и пометка, что работа велась внутри учебной платформы.
 
@@ -177,32 +177,32 @@ Kali ARM64 VM используется как углубление, когда �
 
 ## Практическое занятие
 
-### Написание отчета по машине Lame (HTB)
+### Написание отчета по встроенному lab case
 
 #### Executive Summary
 ```
-В ходе тестирования на проникновение целевой системы (10.10.10.3) были обнаружены критические уязвимости, позволяющие злоумышленнику получить полный контроль над сервером. Основная проблема — использование устаревшего ПО (vsftpd 2.3.4, Samba) с известными уязвимостями. Рекомендуется немедленное обновление ПО и закрытие доступа к неиспользуемым сервисам.
+В ходе учебного assessment целевой lab-системы `192.168.100.20` были обнаружены candidate observations: устаревшие сетевые сервисы и лишняя экспозиция портов. Урок учит структуре отчета; эксплуатация выполняется только в lab-only среде и не переносится на Slider AI.
 ```
 
-#### Finding 1: Backdoor in vsftpd 2.3.4
-- **Severity:** Critical (CVSS 10.0)
-- **Description:** Обнаружена версия vsftpd 2.3.4, содержащая встроенный бэкдор.
+#### Finding 1: Outdated FTP Service Candidate
+- **Severity:** High candidate, requires triage
+- **Description:** Обнаружен устаревший FTP-сервис в lab-среде. Версия требует подтверждения и проверки affected configuration.
 - **Proof of Concept:**
   ```bash
   nmap -sV -p 21 <target>
   # Результат: ftp vsftpd 2.3.4
   ```
-- **Impact:** Полный компромисс системы, удаленный доступ без аутентификации.
+- **Impact:** Потенциальный удаленный доступ при подтверждении affected version/configuration.
 - **Remediation:** Обновить vsftpd до актуальной версии или заменить на proftpd.
 
-#### Finding 2: Samba usermap_script Vulnerability
-- **Severity:** Critical (CVSS 9.8)
-- **Description:** Samba позволяет удаленное выполнение кода через уязвимость в usermap_script.
+#### Finding 2: SMB Remote Code Execution Candidate
+- **Severity:** Critical candidate, requires lab confirmation
+- **Description:** SMB-сервис в lab transcript совпадает с known-vulnerable pattern. Это не переносится на продукт без подтверждения и approval.
 - **Proof of Concept:**
   ```bash
-  use exploit/multi/samba/usermap_script
-  set RHOSTS <target>
-  exploit
+  # lab-only transcript, not product execution
+  search samba usermap
+  record affected version and owner action
   ```
 - **Impact:** Полный контроль над системой.
 - **Remediation:** Обновить Samba, применить патчи безопасности.
@@ -215,11 +215,11 @@ Kali ARM64 VM используется как углубление, когда �
 ### Шаблон отчета (Markdown)
 
 ```markdown
-# Penetration Testing Report
+# Security QA Lab Report
 
 ## Target Information
-- IP: 10.10.10.3
-- Hostname: Lame
+- IP: 192.168.100.20
+- Hostname: training-lab
 - Date: 2026-04-29
 
 ## Vulnerabilities Summary
@@ -284,7 +284,7 @@ Sanitization: secrets and personal data excluded
 
 ## Адаптация под macOS (M2, 8GB)
 
-- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): скачайте .ovpn файл и откройте через Tunnelblick
+- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): если в углублении используется VPN, импортируйте выданный .ovpn файл в Tunnelblick
 - Виртуалки: используйте только при необходимости; для Apple Silicon выбирайте ARM64-образы в **UTM**, **VMware Fusion** или **Parallels**, а тяжелые лабы выносите в cloud lab
 - "На 8GB RAM выделяйте VM не более 3-4GB"
 - Docker работает нативно на M2: `docker pull <image>`
@@ -294,11 +294,11 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **Написать отчет по машине "Blue"** (HTB) — EternalBlue, структура как выше
-2. **Написать отчет по TryHackMe комнате "Vulnversity"** — веб-уязвимости, Upload bypass
-3. **Изучить шаблоны:** SANS Pentest Report Template, OWASP Report Format
+1. **Написать отчет по встроенному Windows-like case**: SMB exposure, affected-version hypothesis, remediation, retest.
+2. **Написать отчет по встроенному web upload case**: unsafe upload hypothesis, allowed evidence, lab-only boundary, remediation.
+3. **Собрать report checklist**: executive summary, scope, evidence, findings/observations, limitations, remediation backlog, retest plan.
 
-> **Совет:** Отчет — это то, за что платят. Красивые скриншоты, четкие описания, понятные рекомендации. Практикуйтесь на каждой пройденной машине.
+> **Совет:** отчет ценен не “красивой атакой”, а тем, что команда может воспроизвести риск, исправить его и проверить исправление.
 
 ## Практика на Slider AI
 

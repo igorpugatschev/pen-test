@@ -31,7 +31,7 @@
 
 **Обязательный путь новичка:** Пройти указанную комнату или ее часть, записать команды, ошибки и выводы без копирования чужого решения.
 
-**Углубление:** После самостоятельной попытки разобрать официальный write-up, сравнить подходы и улучшить собственные заметки.
+**Углубление:** После обязательного пути разобрать встроенный текстовый разбор, сравнить подходы и улучшить собственные заметки.
 
 **Минимальная проверка успеха:** Есть подтверждение прохождения этапа, список команд, выводы и пометка, что работа велась внутри учебной платформы.
 
@@ -283,7 +283,7 @@ Sanitization: secrets and personal data excluded
 
 ## Адаптация под macOS (M2, 8GB)
 
-- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): скачайте .ovpn файл и откройте через Tunnelblick
+- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): если в углублении используется VPN, импортируйте выданный .ovpn файл в Tunnelblick
 - Виртуалки: используйте только при необходимости; для Apple Silicon выбирайте ARM64-образы в **UTM**, **VMware Fusion** или **Parallels**, а тяжелые лабы выносите в cloud lab
 - "На 8GB RAM выделяйте VM не более 3-4GB"
 - Docker работает нативно на M2: `docker pull <image>`
@@ -293,11 +293,11 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **Машина "Legacy"** (Easy) — Windows XP, MS08-067 (аналог EternalBlue для старых систем)
-2. **Машина "Nibbles"** (Easy) — веб-уязвимость в Nibbleblog CMS
-3. **Машина "Shocker"** (Easy) — Shellshock (CVE-2014-6271), уязвимость bash
+1. **Easy case card "Legacy service"**: по встроенному transcript определите, какие признаки legacy OS/service превращаются в candidate risk, а какие требуют owner confirmation.
+2. **Easy case card "CMS admin surface"**: составьте безопасный checklist: version exposure, auth, upload boundary, backup files, error messages.
+3. **Easy case card "CGI/Shellshock risk"**: объясните attack preconditions и заполните `requires approval` для любых intrusive payloads.
 
-> **Важно:** Записывайте каждый шаг в отчет. Это пригодится для сертификации eJPT и OSCP.
+Внешние Easy-машины разрешены только как углубление в легальной lab-среде. Для зачета достаточно встроенных case cards, отчета и sanitized evidence.
 
 ## Практика на Slider AI
 

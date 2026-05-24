@@ -181,7 +181,7 @@ Kali ARM64 VM используется как углубление, когда �
 
 **Шаг 1: Определение версий через заголовки**
 1. Откройте Burp Suite → Proxy
-2. Перехватите запрос к http://127.0.0.1:8080
+2. Перехватите запрос к http://127.0.0.1:8081 через Burp proxy `127.0.0.1:8080`
 3. Посмотрите заголовки ответа:
 
 Пример вывода:
@@ -189,7 +189,7 @@ Kali ARM64 VM используется как углубление, когда �
 HTTP/1.1 200 OK
 Server: Apache/2.4.25 (Debian)
 X-Powered-By: PHP/5.6.30
-Set-Cookie: PHPSESSID=abc123; path=/
+Set-Cookie: <redacted-demo-session>; path=/
 ```
 
 Версии:
@@ -260,8 +260,8 @@ jQuery 1.10.2
 
 ```bash
 # Сканирование уязвимостей в Docker-образах (работает на M2)
-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-  aquasec/trivy image vulnerables/web-dvwa
+brew install aquasecurity/trivy/trivy
+trivy image vulnerables/web-dvwa
 
 # Установка Wappalyzer CLI (через npm, работает на M2)
 npm install -g wappalyzer-cli
@@ -344,7 +344,7 @@ Sanitization: secrets and personal data excluded
 
 4. **CVE triage без внешнего поиска**: выберите один компонент из встроенной SBOM-таблицы и заполните triage: confidence, affected surface, owner action, false-positive checks, retest method.
 
-5. **Обновление компонентов**: Напишите, до каких версий нужно обновить компоненты DVWA (Apache, PHP, jQuery), чтобы устранить известные уязвимости. Укажите конкретные версии.
+5. **Owner action по обновлению компонентов**: по встроенной SBOM-таблице сформулируйте безопасную рекомендацию без внешнего поиска версий: `upgrade to currently supported baseline`, `remove unused component`, `pin and monitor dependency`, `confirm backported security fixes with owner`. Конкретные версии фиксирует владелец компонента в remediation backlog.
 
 ## Практика на Slider AI
 

@@ -333,9 +333,19 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. Сравните Subfinder и Amass на уровне режима работы: какие источники использует passive mode, какие API-ключи нужны, какие запросы не отправляются к целевому приложению.
+1. Сравните Subfinder и Amass на уровне режима работы по встроенной таблице урока: какие источники относятся к passive OSINT, какие запросы не отправляются к целевому приложению, какие риски false positives появляются.
 
-2. Настройте хотя бы один API ключ в локальном конфиге, но не сохраняйте его в evidence. Если нет разрешенного домена, сдайте sanitized конфиг и approval note.
+2. Заполните sanitized provider-config fixture без реальных ключей:
+
+   ```yaml
+   sources:
+     - name: example-passive-source
+       api_key: <redacted-not-required-for-course>
+       mode: passive
+       sends_requests_to_target: false
+   ```
+
+   Реальные provider accounts/keys не нужны для сдачи.
 
 3. Не выполняйте recursive search без расширенного scope. Подготовьте команду и объясните, почему recursive mode может выйти за границы `olddev.slider-ai.ru`.
 

@@ -208,14 +208,19 @@ Kali ARM64 VM используется как углубление, когда �
 - [ ] Gray Box (частичное знание)
 - [ ] White Box (полное знание, предоставление документации)
 
-### 4. Разрешенные методы
-- [ ] Сканирование портов и сервисов
-- [ ] Тестирование на уязвимости (vuln scanning)
-- [ ] Эксплуатация уязвимостей
-- [ ] Социальная инженерия (только если отдельно разрешена; в этом курсе не выполняется)
-- [ ] Физический доступ
-- [ ] DoS/DDoS атаки (НЕТ)
-- [ ] Brute-force паролей (ограниченно)
+### 4. Разрешенные методы для Slider AI olddev в этом курсе
+- [x] Manual/passive observation в браузере и DevTools
+- [x] Одиночные low-impact HTTP checks без изменения чужих данных
+- [x] Burp/ZAP passive/manual proxy review
+- [x] Security checklist, threat model, role matrix и sanitized evidence
+- [ ] Active scanning: только после отдельного written approval
+- [ ] Exploitation: запрещено на Slider AI, изучается только lab-only
+- [ ] Социальная инженерия: запрещено
+- [ ] Физический доступ: запрещено
+- [ ] DoS/DDoS/load/stress: запрещено
+- [ ] Brute force/password guessing: запрещено
+
+Общий PTES может включать intrusive techniques в коммерческом пентесте, но этот курс для Slider AI olddev использует безопасный Security QA scope. Любой шаг, который выходит за список разрешенных методов, получает статус `requires approval` или `lab-only`.
 
 ### 5. Ограничения
 - Запрет на доступ к системам, не входящим в scope

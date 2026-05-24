@@ -181,7 +181,7 @@ Kali ARM64 VM используется как углубление, когда �
 
 **Шаг 1: Проверка отладочной информации**
 1. Включите Burp Proxy
-2. Откройте http://127.0.0.1:8080/vulnerabilities/sqli/?id=1'
+2. Откройте http://127.0.0.1:8081/vulnerabilities/sqli/?id=1'
 3. Посмотрите ответ сервера
 
 Пример вывода (SQL ошибка раскрывает структуру запроса):
@@ -194,11 +194,11 @@ Full query: SELECT first_name, last_name FROM users WHERE user_id = '1''
 
 **Шаг 2: Поиск скрытых файлов и директорий**
 Попробуйте открыть:
-- http://127.0.0.1:8080/phpinfo.php
-- http://127.0.0.1:8080/info.php
-- http://127.0.0.1:8080/.git/
-- http://127.0.0.1:8080/config.php
-- http://127.0.0.1:8080/backup/
+- http://127.0.0.1:8081/phpinfo.php
+- http://127.0.0.1:8081/info.php
+- http://127.0.0.1:8081/.git/
+- http://127.0.0.1:8081/config.php
+- http://127.0.0.1:8081/backup/
 
 Пример ответа:
 ```
@@ -220,7 +220,7 @@ $db_pass = '';
 HTTP/1.1 200 OK
 Server: Apache/2.4.25 (Debian)
 X-Powered-By: PHP/5.6.30
-Set-Cookie: PHPSESSID=abc123; path=/
+Set-Cookie: <redacted-demo-session>; path=/
 ```
 
 **Отсутствуют заголовки:**
@@ -230,7 +230,7 @@ Set-Cookie: PHPSESSID=abc123; path=/
 - `Strict-Transport-Security` (для HTTPS)
 
 **Шаг 4: Проверка bWAPP**
-1. Откройте http://127.0.0.1:8080/robots.txt
+1. Откройте http://127.0.0.1:8081/robots.txt
 2. Посмотрите, какие пути закрыты от индексации
 3. Попробуйте открыть `/admin/`, `/docs/`, `/install.php`
 
@@ -270,11 +270,11 @@ brew install nmap
 nmap -sV -p 1-1000 localhost
 
 # lab-only: поиск конфигов через gobuster выполняется только на локальной deliberately vulnerable VM/container
-docker run -t orik/gobuster dir -u http://127.0.0.1:8080 -w /wordlist.txt
+gobuster dir -u http://127.0.0.1:8081 -w ./wordlist-lab.txt
 
 # Установка nikto для проверки конфигурации локального/lab веб-сервера
 brew install nikto
-nikto -h http://127.0.0.1:8080
+nikto -h http://127.0.0.1:8081
 ```
 
 ---
@@ -334,7 +334,7 @@ Sanitization: secrets and personal data excluded
 
 3. **Проверка заголовков**: Используя Burp Suite, проверьте заголовки ответов DVWA. Каких заголовков безопасности не хватает? Напишите, какие заголовки нужно добавить и с какими значениями.
 
-4. **Nikto scan**: Запустите `nikto -h http://127.0.0.1:8080` для проверки конфигурации веб-сервера. Опишите найденные проблемы (минимум 3). Сделайте скриншот вывода.
+4. **Nikto scan**: Запустите `nikto -h http://127.0.0.1:8081` только против локальной DVWA. Опишите найденные candidate observations (минимум 3), отдельно отметьте false positives и сохраните sanitized вывод.
 
 5. **Исправление конфигурации**: Напишите список (минимум 5 пунктов), что нужно исправить в конфигурации DVWA/bWAPP, чтобы устранить Security Misconfiguration.
 

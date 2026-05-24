@@ -177,33 +177,27 @@ Kali ARM64 VM используется как углубление, когда �
 
 ## Практическое занятие
 
-### Настройка лаборатории для подготовки
+### Встроенная eJPT simulation setup
 
-Для подготовки к eJPT вам понадобятся:
+Для обязательного пути не нужен внешний аккаунт. Используйте MacBook Air M2 как рабочую станцию для заметок, браузера, DevTools, Burp/ZAP passive, `nmap` в lab-only режиме и Python helpers.
 
-1. **MacBook Air M2 как рабочая станция**: заметки, браузер, VPN-клиент, Burp/ZAP, `nmap`, Python, Git.
-   - Kali Linux ARM64 VM используется как углубление, если нужен Kali-специфичный инструмент.
-   - TryHackMe AttackBox/HTB/Pwnbox предпочтительны для тяжелых лабораторий и Metasploit.
-2. **Cloud/готовые лаборатории** (предпочтительно для 8GB RAM):
-   - TryHackMe Jr Penetration Tester rooms
-   - Hack The Box Starting Point / Academy
-   - PortSwigger Academy для web-блока
+```markdown
+# eJPT Simulation Setup
 
-3. **VulnHub VMs** (цели для практики, только если есть подходящая ARM64/легкая конфигурация):
-   - **Basic Pentesting 1** — отлично для начала
-   - **Kioptrix Level 1** — классика
-   - **Metasploitable 2/3** — для сканирования и эксплуатации
-   - **Mr. Robot** — веб-приложения + привилегии
-   - **Stapler** — разнообразные векторы
-   - **SickOs 1.2** — веб + привилегии
+Workstation: macOS native
+Allowed local targets: localhost, deliberately vulnerable lab, synthetic transcript
+Cloud lab: optional only
+Forbidden on Slider AI: brute force, active exploitation, post-exploitation, secret extraction
+Core artifacts: skills matrix, simulated subnet worksheet, report, retest notes
+```
 
-4. **TryHackMe** (онлайн-платформа):
-   - Пройдите комнаты: "Intro to Researching", "Nmap", "Metasploit", "John the Ripper", "Hydra"
-   - Все комнаты с Hydra/Metasploit/John выполнять только внутри правил THM/HTB/INE, не переносить техники на Slider AI и реальные сервисы.
-   - Изучите "Penetration Testing" learning path
+Встроенный simulated subnet:
 
-5. **Hack The Box** (Starting Point machines):
-   - Meow, Fawn, Dancing, Redeemer, Tier 2 machines
+| Host | Signals | Student action | Boundary |
+|---|---|---|---|
+| `192.168.100.10` | 22/tcp SSH, 80/tcp HTTP | describe recon and service hypothesis | no brute force |
+| `192.168.100.20` | 445/tcp SMB, version hint | classify SMB risk and lab-only exploitation | no hash collection |
+| `192.168.100.30` | 8080/tcp web app | map OWASP checks and safe evidence | payloads lab-only |
 
 ### Практические лабы: Checklist
 
@@ -259,14 +253,14 @@ Kali ARM64 VM используется как углубление, когда �
 ## 7. Web Application Basics
 - [ ] SQL Injection: понимание, ручная эксплуатация, sqlmap
 - [ ] XSS: reflected, stored (базовый уровень)
-- [ ] Directory Traversal: чтение /etc/passwd
-- [ ] File Upload: загрузка PHP shell
+- [ ] Directory Traversal: риск чтения файлов; evidence только через demo-file/redacted marker
+- [ ] File Upload: upload boundary и web shell как lab-only threat model
 - [ ] LFI/RFI: базовое понимание
 
 ## 8. Password Attacks
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-- [ ] Brute-force: hydra (FTP, SSH, HTTP, SMB) — только THM/HTB/INE lab с лимитами
-- [ ] Wordlists: crunch, cewl, rockyou.txt; на macOS используйте локальный файл или `/opt/homebrew/share`; Kali/Linux system paths допустимы только в явно помеченной lab VM
+- [ ] Brute-force: hydra (FTP, SSH, HTTP, SMB) — только разрешенная lab/cloud lab с лимитами
+- [ ] Wordlists: маленькие учебные списки `users_lab/passwords_lab`; большие словари только lab-only и не применяются к Slider AI
 - [ ] Password spraying — знать как риск и анти-паттерн; не выполнять без отдельного письменного разрешения
 - [ ] John the Ripper: cracking hashes
 
@@ -344,7 +338,7 @@ Sanitization: secrets and personal data excluded
 1. **Недооценка времени** — 48 часов кажутся долгими, но новички часто тратят 16+ часов.
 2. **Игнорирование базы** — eJPT проверяет базовые навыки, не пытайтесь учить сложные эксплойты.
 3. **Плохая подготовка к pivoting** — многие заваливают латеральное движение, так как не практиковались.
-4. **Незнание бесплатных альтернатив** — TryHackMe Jr. Penetration Tester path покрывает большинство тем eJPT бесплатно.
+4. **Подмена матрицы навыков списком платформ** — внешние labs полезны, но сдача курса строится на встроенных evidence и gap analysis.
 
 ## Вопросы на понимание
 

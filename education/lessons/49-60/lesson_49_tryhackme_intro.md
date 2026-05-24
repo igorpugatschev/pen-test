@@ -31,7 +31,7 @@
 
 **Обязательный путь новичка:** Пройти указанную комнату или ее часть, записать команды, ошибки и выводы без копирования чужого решения.
 
-**Углубление:** После самостоятельной попытки разобрать официальный write-up, сравнить подходы и улучшить собственные заметки.
+**Углубление:** После обязательного пути разобрать встроенный текстовый разбор, сравнить подходы и улучшить собственные заметки.
 
 **Минимальная проверка успеха:** Есть подтверждение прохождения этапа, список команд, выводы и пометка, что работа велась внутри учебной платформы.
 
@@ -182,28 +182,38 @@ Kali ARM64 VM используется как углубление, когда �
 2. Если внешняя платформа доступна, используйте ее только как углубление. Для сдачи урока достаточно встроенного room transcript ниже.
 3. На MacBook Air M2 основной путь остается macOS native + browser + terminal; тяжелые labs переносите в cloud lab.
 
-### Прохождение комнат из трека "Complete Beginner"
+### Встроенный beginner transcript
 
-#### Комната: "Intro to Research"
-- Изучите поиск информации через поисковые системы
-- Найдите ответы на вопросы комнаты, используя Google и документацию
-- Практика: поиск CVE, чтение security advisories
+Вместо обязательной внешней комнаты используйте учебный transcript. Он показывает, какие навыки обычно тренируются в introductory lab, но не требует регистрации.
 
-#### Комната: "Linux Fundamentals 1"
-- Основные команды: `ls`, `cd`, `cat`, `pwd`, `whoami`
-- Работа с файлами: `touch`, `mkdir`, `rm`, `cp`, `mv`
-- Практика: выполните все задания в интерактивной оболочке
+```markdown
+# Beginner Lab Transcript
 
-#### Комната: "Nmap"
-- Синтаксис: `nmap -sV -sC -p- <target>`
-- Типы сканирования: TCP Connect, SYN Scan, UDP Scan
-- Практика: отсканируйте целевую машину, определите открытые порты и версии сервисов
+## Research
+Question: что означает CVE?
+Answer: публичный идентификатор известной уязвимости; сам по себе CVE не доказывает, что конкретная система уязвима.
 
-#### Комната: "Web Fundamentals"
-- Структура HTTP-запросов
-- Методы GET/POST
-- Заголовки User-Agent, Cookie
-- Практика: изучите страницу через браузер и DevTools
+## Linux Fundamentals
+Command: pwd
+Output: /home/student
+Command: whoami
+Output: student
+Command: ls -la
+Output: показывает права, владельца, размер и скрытые файлы
+
+## Nmap Awareness
+Allowed target: 192.168.100.20 in isolated lab
+Command: nmap -sV -sC 192.168.100.20
+Expected output: список открытых портов и service/version hints
+Forbidden on Slider AI: active scan without approval
+
+## Web Fundamentals
+Browser step: открыть DevTools -> Network
+Observation: метод, URL, status, selected headers
+Evidence rule: не сохранять cookies/tokens/full sensitive response
+```
+
+Задача студента: по transcript заполнить transfer note: какой навык переносится в Security QA, какой остается lab-only, какой evidence безопасен.
 
 
 ## Примеры вывода
@@ -236,17 +246,9 @@ Sanitization: secrets and personal data excluded
 
 Такой вывод считается эталонным не потому, что строки всегда будут идентичными, а потому что в нем есть все обязательные элементы профессионального evidence: среда, разрешенная цель, действие, наблюдение, интерпретация, sanitization и следующий безопасный шаг.
 
-## Форматы флагов
-
-- **TryHackMe**: `THM{...}`
-- **HackTheBox**: `HTB{...}`
-- **PortSwigger**: "Lab solved!" (без флагов)
-
-
-
 ## Адаптация под macOS (M2, 8GB)
 
-- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): скачайте .ovpn файл и откройте через Tunnelblick
+- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): если в углублении используется VPN, импортируйте выданный .ovpn файл в Tunnelblick
 - Виртуалки: используйте только при необходимости; для Apple Silicon выбирайте ARM64-образы в **UTM**, **VMware Fusion** или **Parallels**, а тяжелые лабы выносите в cloud lab
 - "На 8GB RAM выделяйте VM не более 3-4GB"
 - Docker работает нативно на M2: `docker pull <image>`
@@ -256,26 +258,24 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **Комната "Burp Suite Basics"** — изучите работу прокси-сервера, перехватывайте запросы
-2. **Комната "OWASP Top 10"** — ознакомьтесь с классификацией уязвимостей
-3. **Комната "Vulnversity"** — практика сканирования и эксплуатации веб-уязвимостей (первая полноценная атака)
-
-> **Совет:** Не спешите смотреть решения. Попробуйте использовать подсказки (hint) в самой комнате.
+1. **Beginner transfer note**: по встроенному transcript заполните 4 строки: skill, safe evidence, lab-only boundary, Slider AI transfer.
+2. **Burp/ZAP readiness**: объясните, чем proxy-наблюдение отличается от active scan.
+3. **OWASP readiness**: выберите 3 категории OWASP и запишите по одному безопасному olddev-наблюдению без payload.
 
 ## Частые ошибки
 
-1. **Проблема с VPN на macOS**: Tunnelblick иногда не подключается. Решение: скачайте свежий конфиг из раздела "Access", проверьте, что не запущен Parallels/VMware.
-2. **AttackBox не загружается**: Очистите кэш браузера, попробуйте другой браузер (Chrome/Safari).
-3. **Не находится флаг**: Формат флага TryHackMe: `THM{...}`. Ищите подсказки (нажмите кнопку "Hint" в комнате).
+1. **Думать, что CTF-флаг равен профессиональному результату** — в Security QA важнее evidence, triage и retest.
+2. **Переносить lab-сканирование на продукт** — active scan и exploitation остаются lab-only или требуют approval.
+3. **Сохранять лишний HTTP-контент** — для evidence достаточно выбранных строк без cookies/tokens/PII.
 
 ## Вопросы на понимание
 
-1. В чем разница между использованием AttackBox и VPN-подключением?
-   <details><summary>Ответ</summary>AttackBox — готовая ВМ в браузере, не требует локальной настройки. VPN — подключение вашей локальной Kali к сети THM.</details>
-2. Какой формат флагов используется на TryHackMe?
-   <details><summary>Ответ</summary>THM{...}</details>
-3. Зачем нужна кнопка "Spawn Machine" в заданиях?
-   <details><summary>Ответ</summary>Она запускает целевую машину, которую нужно атаковать. Обычно нужно подождать 1-2 минуты, пока машина загрузится.</details>
+1. Почему beginner lab навык нужно переводить в transfer note?
+   <details><summary>Ответ</summary>Потому что на продукт переносится не exploitation, а безопасная QA-практика: наблюдение, evidence, limitation и approval boundary.</details>
+2. Чем safe observation отличается от finding?
+   <details><summary>Ответ</summary>Observation фиксирует факт без доказанного влияния; finding требует воспроизводимости, scope, impact и remediation.</details>
+3. Почему active scan не является базовым путем для Slider AI?
+   <details><summary>Ответ</summary>Он может создать нагрузку, изменить состояние или отправить payload; поэтому нужен отдельный approval.</details>
 
 ## Практика на Slider AI
 
@@ -285,11 +285,11 @@ Sanitization: secrets and personal data excluded
 
 **Ограничения безопасности:** соблюдать правилами Slider AI olddev из пользовательской инструкции курса; не выполнять DoS/load-тесты, brute force, destructive payloads, изменение чужих данных, извлечение секретов и действия вне согласованного scope.
 
-**Уровень прогрессии:** Transfer from THM
+**Уровень прогрессии:** Lab-to-product transfer
 
 ### Минимум
 
-После комнаты THM выпишите 3 приема, которые безопасно применимы к Slider AI, и 3 запрещенных.
+По встроенному beginner transcript выпишите 3 приема, которые безопасно применимы к Slider AI, и 3 запрещенных.
 
 ### Практика Slider AI
 

@@ -312,7 +312,7 @@ Sanitization: secrets and personal data excluded
 
 3. **BloodHound awareness**: опишите, как граф прав помогает увидеть путь к Domain Admin. Сбор данных SharpHound/BloodHound выполняется только в AD lab/cloud lab с разрешением; для обязательного пути нарисуйте synthetic граф из 5 узлов: User → Group → Server → Local Admin → Domain Admin risk.
 
-4. **Mitigation Research**: Напишите рекомендации по защите от Kerberoasting, ASREPRoasting и DCSync. Что должны делать администраторы? Какие политики настроить? Какие инструменты мониторинга использовать?
+4. **Mitigation worksheet**: по встроенной таблице урока напишите рекомендации по защите от Kerberoasting, ASREPRoasting и DCSync: strong service-account passwords/gMSA, pre-auth enabled, least privilege for replication rights, monitoring of Kerberos/replication events, periodic access review.
 
 5. **DCSync detection**: Изучите, какие права и события связаны с DCSync. Напишите detection/remediation checklist, не описывая пошаговое получение хешей и не публикуя секреты.
 
@@ -320,16 +320,16 @@ Sanitization: secrets and personal data excluded
 
 1. **Неправильная настройка SharpHound** — запуск без прав администратора домена может привести к неполным данным.
 2. **Игнорирование латерального движения** — компрометация одной машины не означает доступ к AD. Нужно искать пути к Domain Admin.
-3. **Плохой подбор паролей** — для Kerberoasting и ASREPRoasting используйте актуальные словари (rockyou.txt, сгенерированные cewl).
-4. **Неправильное использование CrackMapExec** — запуск без указания правильных протоколов может привести к пропуску уязвимых хостов.
+3. **Фокус на cracking вместо controls** — обязательный путь урока не подбирает пароли и не публикует hashes; он фиксирует policy, monitoring и remediation.
+4. **Путаница инструмента и цели** — CrackMapExec/NetExec, SharpHound и аналогичные инструменты относятся к lab-only/approval; продуктовый артефакт курса — risk card и detection checklist.
 
 ## Вопросы на понимание
 
 1. В чем разница между Kerberoasting и ASREPRoasting?
 2. Что такое DCSync и какие права нужны для его выполнения?
-3. Как собрать данные для BloodHound с помощью SharpHound?
+3. Какие данные нужны BloodHound-style анализу и почему их сбор требует отдельного разрешения?
 4. Почему на Mac с 8GB RAM нельзя запускать локальные AD лабы?
-5. Как установить CrackMapExec и для чего он используется?
+5. Почему offensive AD tooling не должен запускаться в рабочей сети без RoE и written approval?
 
 ## Практика на Slider AI
 

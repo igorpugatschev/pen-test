@@ -31,7 +31,7 @@
 
 **Обязательный путь новичка:** Пройти указанную комнату или ее часть, записать команды, ошибки и выводы без копирования чужого решения.
 
-**Углубление:** После самостоятельной попытки разобрать официальный write-up, сравнить подходы и улучшить собственные заметки.
+**Углубление:** После обязательного пути разобрать встроенный текстовый разбор, сравнить подходы и улучшить собственные заметки.
 
 **Минимальная проверка успеха:** Есть подтверждение прохождения этапа, список команд, выводы и пометка, что работа велась внутри учебной платформы.
 
@@ -258,33 +258,38 @@ Sanitization: secrets and personal data excluded
 ## Частые ошибки
 
 1. **Неправильная настройка Burp Proxy**: В macOS часто забывают настроить доверие к CA-сертификату Burp. Без этого HTTPS-трафик не будет перехватываться (ошибка SSL).
-2. **Пропуск Lab description**: В PortSwigger Academy условия лабы содержат подсказки. Новички часто сразу лезут в Repeater, не прочитав теорию.
+2. **Пропуск условия lab transcript**: в этой лекции условия встроенных кейсов содержат threat model, expected behavior и safe boundary. Новички часто сразу идут в Repeater, не описав риск и критерий успеха.
 3. **Неправильный UNION SELECT**: Забывают, что количество столбцов в UNION должно совпадать. Используйте `ORDER BY` для определения количества столбцов перед UNION.
 
 
 
 ## Вопросы на понимание
 
-1. Почему PortSwigger Academy считается золотым стандартом для обучения веб-пентесту?
-   <details><summary>Ответ</summary>Лаборатории реалистичны, есть подробная теория перед каждой лабой, и автоматическая проверка решения без необходимости искать флаги.</details>
+1. Почему lab transcript в курсе должен превращаться в product QA checklist, а не в копирование payload?
+   <details><summary>Ответ</summary>Потому что продуктовая проверка отвечает за риск, scope, evidence и retest. Payload mechanics остаются lab-only, а в продукт переносится защитное ожидание и безопасный способ наблюдения.</details>
 2. В чем разница между Reflected XSS и Stored XSS с точки зрения эксплуатации?
    <details><summary>Ответ</summary>Reflected XSS требует, чтобы жертва перешла по специальной ссылке. Stored XSS сохраняется на сервере и срабатывает при посещении страницы любым пользователем.</details>
-3. Зачем нужен Burp Suite Intruder при тестировании на SQL-инъекции?
-   <details><summary>Ответ</summary>Intruder позволяет автоматизировать перебор (брутфорс) параметров, определение количества столбцов и типов данных через анализ ответов сервера.</details>
+3. Когда Burp Suite Intruder недопустим в продуктовой проверке?
+   <details><summary>Ответ</summary>Когда нет письменного approval, rate limit, stop condition и точного scope. Для Slider AI по умолчанию используются manual/passive проверки и безопасные markers.</details>
 
 
 
-## Форматы флагов
+## Встроенные web security lab transcripts
 
-- **TryHackMe**: `THM{...}`
-- **HackTheBox**: `HTB{...}`
-- **PortSwigger**: "Lab solved!" (без флагов)
+Флаги и внешние лабы не нужны для сдачи. Разберите три учебных transcript и перенесите их в checklist:
+
+| Case | Lab observation | Product-safe transfer |
+|---|---|---|
+| SQLi | `ORDER BY 3` меняет ответ в lab | проверить параметризацию через безопасный marker и code/owner review request |
+| XSS | marker отражается в HTML без encoding | проверить output encoding безопасной строкой `qa-marker-54` |
+| CSRF | state-changing POST без token в lab | проверить наличие CSRF/session controls без изменения чужих данных |
+| SSRF | URL fetch обращается к `127.0.0.1` в lab | отметить `requires approval` для OAST/private IP checks |
 
 
 
 ## Адаптация под macOS (M2, 8GB)
 
-- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): скачайте .ovpn файл и откройте через Tunnelblick
+- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): если в углублении используется VPN, импортируйте выданный .ovpn файл в Tunnelblick
 - Виртуалки: используйте только при необходимости; для Apple Silicon выбирайте ARM64-образы в **UTM**, **VMware Fusion** или **Parallels**, а тяжелые лабы выносите в cloud lab
 - "На 8GB RAM выделяйте VM не более 3-4GB"
 - Docker работает нативно на M2: `docker pull <image>`
@@ -294,11 +299,11 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **SQLi лабы (еще 3-4 штуки)** — лабораторные на тему blind SQLi, time-based SQLi
-2. **XSS лабы (еще 3-4 штуки)** — CSP bypass, XSS в атрибутах, фильтрация обхода
-3. **Дополнительно: Directory Traversal** — лабораторная на чтение `/etc/passwd` через уязвимость в путях к файлам
+1. **SQLi transcript** — разберите blind/time-based SQLi как lab-only механику и напишите product-safe detection boundary.
+2. **XSS transcript** — составьте 5 safe output-encoding checks без чтения cookie, token exfiltration и внешних callbacks.
+3. **Path traversal transcript** — объясните риск чтения файлов, но в evidence используйте только `demo-file.txt`/redacted marker; системные файлы не сохранять.
 
-> **Важно:** PortSwigger Academy — это золотой стандарт для веб-пентестеров. Проходите лабы систематически, не пропускайте теорию.
+Внешние web security labs полезны как углубление, но текущий урок сдается по встроенным transcripts, checklist и sanitized artifact.
 
 ## Практика на Slider AI
 
@@ -312,7 +317,7 @@ Sanitization: secrets and personal data excluded
 
 ### Минимум
 
-Выберите одну пройденную PortSwigger lab и выпишите защитное ожидание для Slider AI.
+Выберите один встроенный lab transcript из таблицы выше и выпишите защитное ожидание для Slider AI.
 
 ### Практика Slider AI
 

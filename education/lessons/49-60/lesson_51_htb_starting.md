@@ -31,7 +31,7 @@
 
 **Обязательный путь новичка:** Пройти указанную комнату или ее часть, записать команды, ошибки и выводы без копирования чужого решения.
 
-**Углубление:** После самостоятельной попытки разобрать официальный write-up, сравнить подходы и улучшить собственные заметки.
+**Углубление:** После обязательного пути разобрать встроенный текстовый разбор, сравнить подходы и улучшить собственные заметки.
 
 **Минимальная проверка успеха:** Есть подтверждение прохождения этапа, список команд, выводы и пометка, что работа велась внутри учебной платформы.
 
@@ -270,32 +270,40 @@ Sanitization: secrets and personal data excluded
 
 1. **Использование `sudo openvpn` на macOS M2**: OpenVPN клиент часто конфликтует с системой. Рекомендуется Tunnelblick или браузерный доступ PwnBox.
 2. **Сложности с SMB в macOS**: Команда `smbclient` может отсутствовать. Установите через `brew install samba` или используйте `smbutil` (нативная утилита macOS).
-3. **Забытое обновление HTB-клиента**: Старые версии VPN-файлов могут не подключаться. Всегда скачивайте свежий .ovpn файл из раздела Lab → Connection.
+3. **Путаница lab-доступа и зачета курса**: если внешний lab/VPN недоступен, сдавайте встроенные case cards; внешний доступ относится к углублению.
 
 
 
 ## Вопросы на понимание
 
-1. Почему Starting Point в HackTheBox называют "точкой входа" для новичков?
-   <details><summary>Ответ</summary>Машины Starting Point имеют подробные видео-инструкции и walkthrough, что позволяет понять методологию пентеста без фрустрации.</details>
-2. В чем разница между Tier 0 и Tier 1 в Starting Point?
-   <details><summary>Ответ</summary>Tier 0 — самые простые машины с видео-решениями (Meow, Fawn), Tier 1 — уже требуют самостоятельного поиска уязвимостей (Monaco, Arctic).</details>
-3. Почему не рекомендуется сразу переходить к машинам "Easy" без Starting Point?
-   <details><summary>Ответ</summary>Машины Easy не имеют подсказок и требуют понимания базовых инструментов (nmap, gobuster, metasploit), которые как раз даются в Starting Point.</details>
+1. Почему beginner case card начинается с scope и evidence, а не с exploit?
+   <details><summary>Ответ</summary>Потому что Security QA оценивает разрешенную цель, безопасный метод, доказательство и следующий шаг. Exploit без scope не является профессиональной проверкой.</details>
+2. В чем разница между transcript и live lab?
+   <details><summary>Ответ</summary>Transcript самодостаточен для обучения логике и отчетности; live lab добавляет практику среды, но не должен быть единственным источником теории.</details>
+3. Почему результат lab нужно переводить в remediation/retest?
+   <details><summary>Ответ</summary>Иначе студент получает CTF write-up, а не Security QA artifact, который помогает команде снизить риск.</details>
 
 
 
-## Форматы флагов
+## Встроенная Starting Point case card
 
-- **TryHackMe**: `THM{...}`
-- **HackTheBox**: `HTB{...}`
-- **PortSwigger**: "Lab solved!" (без флагов)
+Форматы флагов внешних платформ не нужны для сдачи. Разберите учебную карточку и оформите evidence как Security QA write-up:
+
+```markdown
+Case: Redis-like exposed service in lab
+Host: 192.168.100.20
+Observed service: tcp/6379 open, banner resembles Redis
+Safe action: identify exposure from lab transcript
+Forbidden transfer: no connection to unknown public Redis, no data extraction
+Security QA output: finding draft about unauthenticated datastore exposure
+Retest idea: service not reachable without auth or network allowlist
+```
 
 
 
 ## Адаптация под macOS (M2, 8GB)
 
-- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): скачайте .ovpn файл и откройте через Tunnelblick
+- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): если в углублении используется VPN, импортируйте выданный .ovpn файл в Tunnelblick
 - Виртуалки: используйте только при необходимости; для Apple Silicon выбирайте ARM64-образы в **UTM**, **VMware Fusion** или **Parallels**, а тяжелые лабы выносите в cloud lab
 - "На 8GB RAM выделяйте VM не более 3-4GB"
 - Docker работает нативно на M2: `docker pull <image>`
@@ -305,11 +313,11 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **Машина "Redeemer"** (Tier 0) — Redis, работа с базой данных
-2. **Машина "Arctic"** (Tier 1) — Adobe ColdFusion, эксплуатация веб-уязвимости
-3. **Машина "Bike"** (Tier 1) — Node.js, NoSQL-инъекция
+1. **Case card "Datastore exposure"**: по встроенной карточке выше оформите finding draft, remediation и retest criteria.
+2. **Case card "Legacy web component"**: составьте candidate observation для устаревшего web-компонента без эксплуатации.
+3. **Case card "NoSQL input handling"**: напишите negative test cases для API, где JSON-фильтр не должен превращаться в query operator.
 
-> **Совет:** Starting Point дает видео-решения. Смотрите их только после самостоятельной попытки или если застряли более чем на 30 минут.
+Внешние Starting Point машины можно проходить как углубление, если правила платформы явно разрешают практику. Они не являются условием сдачи этого урока.
 
 ## Практика на Slider AI
 

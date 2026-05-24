@@ -207,14 +207,14 @@ SSL Proxy: 127.0.0.1  Port: 8090
 ### Автоматическое сканирование
 ```bash
 # Через GUI:
-# 1. Введите URL в поле "Quick Start"
+# 1. Введите URL в поле ручного открытия цели ZAP
 # 2. Нажмите "Attack"
 
 # Через CLI (zap-cli)
 pip install zapcli
 
-# Или через Docker:
-docker run -t owasp/zap2docker-stable zap-cli status
+# Или через Docker, если нужен контейнерный ZAP:
+docker run -t -p 8090:8080 owasp/zap2docker-stable zap-cli status
 
 # Использование zap-cli
 zap-cli open-url http://127.0.0.1:8081
@@ -344,7 +344,7 @@ Sanitization: secrets and personal data excluded
 
 3. **Active Scan на "боевых" серверах** — активное сканирование может нагрузить сервер или вызвать подозрение, используйте только на разрешенных целях.
 
-4. **Docker-версия ZAP требует проброса портов** — при запуске через `docker run` убедитесь, что порт 8080 проброшен (`-p 8080:8080`).
+4. **Docker-версия ZAP требует проброса портов** — при запуске через `docker run` используйте host-порт `8090`, например `-p 8090:8080`, чтобы не конфликтовать с Burp proxy на `8080`.
 
 ## Вопросы на понимание
 

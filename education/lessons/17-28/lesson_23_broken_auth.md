@@ -240,7 +240,7 @@ Payload 7: password  [Status: 302, Length: 0] ← Успех!
 
 **Cookie в DevTools:**
 ```
-PHPSESSID: abc123def456
+Session cookie: <redacted-demo-session>
   Domain: localhost
   Path: /
   Expires: Session
@@ -252,13 +252,13 @@ PHPSESSID: abc123def456
 **Session Fixation — проверка:**
 ```bash
 # Передача сессии через URL
-http://127.0.0.1:8082/portal.php?PHPSESSID=attacker_session
+http://127.0.0.1:8082/portal.php?session=<tampered-demo-session>
 # Если сессия не меняется после входа — уязвимость
 ```
 
 ### Частые ошибки
 
-1. **Забыть про флаг HttpOnly** — cookie доступна через `document.cookie`
+1. **Забыть про флаг HttpOnly** — JavaScript не должен иметь доступ к session cookie; в evidence фиксируйте только наличие флага, не значение cookie
 2. **Сессия не меняется после входа** — классическая Session Fixation
 3. **Отсутствие задержки при брутфорсе** — приложение не блокирует попытки
 4. **Передача Session ID через URL** — сессия видна в логах, реферах
@@ -313,7 +313,7 @@ done
 
 2. **Защитный анализ**: Не подбирайте пароли других пользователей. Составьте checklist защит от перебора: rate limit, lockout, MFA, единые сообщения ошибок, monitoring event.
 
-3. **Session Fixation в bWAPP**: В bWAPP выберите уязвимость **Session Management** → **Session Fixation**. Изучите, как приложение обрабатывает сессии. Попробуйте передать PHPSESSID через URL: `http://127.0.0.1:8082/portal.php?PHPSESSID=12345`. Создается ли новая сессия или используется переданная? Сделайте скриншот.
+3. **Session Fixation в bWAPP**: В bWAPP выберите уязвимость **Session Management** → **Session Fixation**. Изучите, как приложение обрабатывает сессии. Используйте только demo-параметр `session=<tampered-demo-session>` в локальной lab. Создается ли новая сессия или используется переданная? Сделайте скриншот без значений cookie.
 
 4. **Анализ уровня Medium**: Переключите DVWA на уровень **Medium** и сравните поведение на 1-2 ручных неуспешных попытках. Если хотите использовать Intruder, оформите это как lab-only extension с лимитом и stop conditions.
 

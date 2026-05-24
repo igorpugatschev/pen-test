@@ -227,26 +227,15 @@ Kali ARM64 VM используется как углубление, когда �
 
 ### Инструменты для создания отчетов
 
-```bash
-# Serpico (автоматизация отчетов)
-git clone https://github.com/SerpicoProject/Serpico.git
-cd Serpico
-bundle install
-ruby serpico.rb
+Обязательная сдача выполняется в Markdown по шаблону этой лекции. Report platforms и конвертеры полезны в командах, но студенту не нужно устанавливать Serpico/WriteHat/Dradis или клонировать репозитории для зачета.
 
-# Dradis (collaboration и reporting)
-# Доступен в Kali: Applications -> 04 - Reporting Tools -> dradis
-
-# WriteHat (современный инструмент)
-git clone https://github.com/blacklanternsecurity/writehat.git
-cd writehat
-pip install -r requirements.txt
-python3 writehat.py
-
-# macOS (M2, Homebrew) — установка доп. инструментов
-brew install pandoc  # Для конвертации Markdown в PDF/Word
-brew install mactex  # Для создания LaTeX отчетов (опционально)
-```
+| Потребность | Достаточно Markdown | Когда нужен отдельный tool |
+|---|---|---|
+| Учебный отчет | да | не нужен |
+| Командное ревью findings | да, если findings мало | если нужен workflow approvals |
+| Шаблоны клиента/брендирование | иногда | если есть корпоративный формат |
+| Remediation/retest tracking | можно через backlog | если нужен lifecycle в системе |
+| Экспорт PDF/DOCX | optional | если просит команда |
 
 ### CVSS Калькулятор
 
@@ -309,9 +298,17 @@ Sanitization: secrets and personal data excluded
 
 1. Проведите пентест DVWA (уровень Low). Напишите отчет по шаблону выше. Минимум 3 findings (SQLi, XSS, Bruteforce).
 
-2. Используя онлайн калькулятор CVSS 3.1, оцените уязвимость "Remote Code Execution через небезопасную десериализацию". Какой балл?
+2. Используя встроенную CVSS metric table из урока, оцените учебную уязвимость "Remote Code Execution через небезопасную десериализацию":
 
-3. Установите Serpico или WriteHat. Создайте отчет через эти инструменты. Какие преимущества перед ручным написанием?
+   ```text
+   AV:N / AC:L / PR:N / UI:N / S:U / C:H / I:H / A:H
+   Expected vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+   Expected qualitative severity: Critical
+   ```
+
+   Онлайн-калькулятор можно использовать только для проверки в углублении, но он не нужен для сдачи.
+
+3. Заполните Markdown report skeleton из этой лекции. Serpico/WriteHat и другие report tools оставьте как optional tooling review, без установки в обязательном пути.
 
 4. Напишите Executive Summary (на русском) для отчета о пентесте интернет-магазина, где найдены SQL-инъекции и XSS. Текст должен быть понятен директору (без технических деталей).
 
@@ -335,7 +332,7 @@ Sanitization: secrets and personal data excluded
 
 3. Что должно быть в разделе "Proof of Concept" для SQL-инъекции?
 
-4. Как автоматизировать создание отчетов с помощью инструментов (Serpico, WriteHat)?
+4. Как стандартизировать отчет без внешнего report tooling: Markdown-шаблон, evidence index, finding IDs, remediation backlog и retest plan?
 
 ## Практика на Slider AI
 

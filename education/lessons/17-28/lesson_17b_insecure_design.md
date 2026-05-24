@@ -188,7 +188,7 @@ Kali ARM64 VM используется как углубление, когда �
 ```
 POST /vulnerabilities/csrf/ HTTP/1.1
 Host: localhost
-Cookie: PHPSESSID=abc123; security=low
+Cookie: <redacted-demo-session>; security=low
 Content-Type: application/x-www-form-urlencoded
 
 password_new=hacked&password_conf=hacked&Change=Change

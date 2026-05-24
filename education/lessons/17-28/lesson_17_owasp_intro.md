@@ -313,7 +313,21 @@ Sanitization: secrets and personal data excluded
 
 4. **Настройка уровней безопасности**: В DVWA переключите уровень безопасности с Low на Medium и снова откройте SQL Injection. Попробуйте ввести `1' OR '1'='1`. Что изменилось? Почему запрос больше не работает?
 
-5. **WebGoat первый урок**: В WebGoat пройдите введение (Introduction → WebGoat Introduction). Выполните задание "HTTP Basics". Сделайте скриншот успешного выполнения задания с зелёной галочкой.
+5. **HTTP Basics без внешней зависимости**: разберите встроенный transcript ниже и подпишите, где метод, путь, заголовок, cookie, статус и тело ответа. Если WebGoat уже установлен, скриншот успешного HTTP Basics можно приложить только как дополнительное evidence, но он не обязателен для сдачи.
+
+```text
+GET /WebGoat/lesson HTTP/1.1
+Host: 127.0.0.1:8083
+User-Agent: Firefox
+Accept: text/html
+Cookie: <redacted-demo-session>
+
+HTTP/1.1 200 OK
+Content-Type: text/html
+Set-Cookie: <redacted-demo-cookie>; HttpOnly; SameSite=Lax
+
+<html>training response</html>
+```
 
 ### Частые ошибки
 
@@ -339,8 +353,8 @@ docker pull webgoat/goatandwolf
 # Установка Burp Suite
 brew install --cask burp-suite
 
-# rockyou.txt на macOS нужно скачать вручную
-curl -L https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt -o ~/rockyou.txt
+# Для первых уроков используйте только встроенные мини-словари из лекций.
+# Большие внешние словари не нужны для сдачи и не применяются к Slider AI.
 ```
 
 ## Практика на Slider AI

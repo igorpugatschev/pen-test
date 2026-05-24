@@ -331,6 +331,16 @@ Sanitization: secrets and personal data excluded
 
 Сделайте один `HEAD` к `https://olddev.slider-ai.ru`, сохраните только status/headers без cookies и токенов.
 
+Дополните API Security worksheet:
+
+| Check | Safe action | Expected artifact |
+|---|---|---|
+| REST status | один `HEAD`/`GET` к разрешенной странице | status code, redirect, content-type |
+| OpenAPI presence | только проверить, существует ли публично видимый contract endpoint, без crawling | `present/absent/not applicable` |
+| JWT/OAuth/OIDC | не сохранять реальные tokens; разобрать только учебный JWT из лекции | claims table с `<redacted>` |
+| CORS | зафиксировать `Access-Control-Allow-Origin`, если есть | header observation, не finding без контекста |
+| GraphQL | не запускать introspection по olddev без approval | `requires approval` или `not observed` |
+
 ### Углубление после изучения следующих уроков
 
 Добавьте результат в локальный `automation appendix`: что проверяется, какие ограничения стоят, какой output попадает в отчет.

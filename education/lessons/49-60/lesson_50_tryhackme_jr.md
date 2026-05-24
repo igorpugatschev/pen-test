@@ -31,7 +31,7 @@
 
 **Обязательный путь новичка:** Пройти указанную комнату или ее часть, записать команды, ошибки и выводы без копирования чужого решения.
 
-**Углубление:** После самостоятельной попытки разобрать официальный write-up, сравнить подходы и улучшить собственные заметки.
+**Углубление:** После обязательного пути разобрать встроенный текстовый разбор, сравнить подходы и улучшить собственные заметки.
 
 **Минимальная проверка успеха:** Есть подтверждение прохождения этапа, список команд, выводы и пометка, что работа велась внутри учебной платформы.
 
@@ -177,7 +177,7 @@ Kali ARM64 VM используется как углубление, когда �
 
 ## Практическое занятие
 
-### Комната 1: "Metasploit: Introduction"
+### Встроенный lab transcript 1: Metasploit workflow awareness
 
 **Шаг 1. Запуск Metasploit**
 ```bash
@@ -189,12 +189,13 @@ msfconsole
 search type:exploit platform:linux
 ```
 
-**Шаг 3. Использование эксплойта**
+**Шаг 3. Использование эксплойта в lab-only transcript**
 ```bash
 use exploit/linux/samba/is_known_pipename
 set RHOSTS <target_ip>
 set RPORT 445
-exploit
+# lab-only transcript: run only in authorized lab
+run
 ```
 
 **Шаг 4. Работа с сессией**
@@ -202,7 +203,7 @@ exploit
 - `sessions -l` — список сессий
 - `sessions -i 1` — подключение к сессии
 
-### Комната 2: "SQL Injection"
+### Встроенный lab transcript 2: SQL Injection workflow awareness
 
 **Шаг 1. Обнаружение уязвимости**
 Тестируем параметры: `?id=1' OR 1=1--`
@@ -219,12 +220,12 @@ exploit
 ' UNION SELECT 1,2,3--
 ```
 
-**Шаг 4. Извлечение данных**
+**Шаг 4. Безопасное доказательство влияния в lab**
 ```sql
-' UNION SELECT database(), user(), version()--
+' UNION SELECT 'training_db','redacted_user','redacted_version'--
 ```
 
-Практика: пройдите комнату, найдите все скрытые таблицы и получите флаги.
+Практика: заполните transcript worksheet. Не ищите скрытые таблицы и не извлекайте данные в продуктовой среде; для Slider AI это `requires approval`.
 
 
 ## Примеры вывода
@@ -259,34 +260,26 @@ Sanitization: secrets and personal data excluded
 
 ## Частые ошибки
 
-1. **Забытый Tunnelblick**: На M2 часто пытаются использовать `sudo openvpn` вместо Tunnelblick. OpenVPN через brew может конфликтовать с системными настройками VPN на macOS.
-2. **Игнорирование фильтров комнат**: В комнатах TryHackMe есть подсказки (hints). Новички часто их игнорируют и тратят часы на то, что решается за 5 минут с подсказкой.
-3. **Неправильный формат флага**: Флаг должен быть скопирован точно, включая `THM{` и `}`. Лишний пробел или перенос строки делает флаг недействительным.
+1. **Запуск Metasploit вне lab** — exploitation framework используется только в разрешенной лаборатории.
+2. **Извлечение данных вместо proof-of-control** — для учебного SQLi достаточно redacted proof; секреты и пользовательские данные не извлекаются.
+3. **Путать lab success и продуктовый finding** — перенос в Slider AI требует scope, безопасных данных, impact и approval.
 
 
 
 ## Вопросы на понимание
 
-1. Почему в TryHackMe Jr Penetration Tester рекомендуется начинать с комнаты "Metasploit: Introduction"?
-   <details><summary>Ответ</summary>Эта комната дает базовые навыки работы с фреймворком Metasploit, который понадобится для большинства последующих атак на уязвимости.</details>
+1. Почему exploitation framework не используется как базовый путь на Slider AI?
+   <details><summary>Ответ</summary>Он отправляет атакующие действия и может изменить состояние. На продукте это возможно только после written approval и RoE.</details>
 2. В чем разница между активным и пассивным сканированием в контексте Jr Penetration Tester?
    <details><summary>Ответ</summary>Активное сканирование посылает пакеты к цели (nmap), пассивное — собирает информацию из открытых источников (Shodan, Google).</details>
-3. Зачем нужно делать заметки при прохождении комнат, даже если есть видео-решения?
-   <details><summary>Ответ</summary>Заметки формируют привычку документирования, которая критична при написании отчетов для сертификаций (EJPT, OSCP).</details>
-
-
-
-## Форматы флагов
-
-- **TryHackMe**: `THM{...}`
-- **HackTheBox**: `HTB{...}`
-- **PortSwigger**: "Lab solved!" (без флагов)
+3. Зачем нужен transcript worksheet?
+   <details><summary>Ответ</summary>Он отделяет технику lab-only от переносимого QA-навыка: scope, evidence, impact, limitation и retest.</details>
 
 
 
 ## Адаптация под macOS (M2, 8GB)
 
-- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): скачайте .ovpn файл и откройте через Tunnelblick
+- Для VPN используйте **Tunnelblick** (бесплатный OpenVPN клиент для macOS): если в углублении используется VPN, импортируйте выданный .ovpn файл в Tunnelblick
 - Виртуалки: используйте только при необходимости; для Apple Silicon выбирайте ARM64-образы в **UTM**, **VMware Fusion** или **Parallels**, а тяжелые лабы выносите в cloud lab
 - "На 8GB RAM выделяйте VM не более 3-4GB"
 - Docker работает нативно на M2: `docker pull <image>`
@@ -296,12 +289,11 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-# lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-1. **Комната "Hydra"** — атака брутфорсом на SSH/FTP (настройка hydra: `hydra -l user -P pass.txt ssh://<target>`)
-2. **Комната "Subnetting"** — понимание сетевой адресации (база для пентеста сетей)
-3. **Комната "Wireshark: The Basics"** — анализ сетевого трафика, фильтрация пакетов
+1. **Hydra awareness**: заполните approval card для brute-force инструмента и объясните, почему запуск по Slider AI запрещен без отдельного разрешения.
+2. **Subnetting worksheet**: рассчитайте network/broadcast/usable hosts для трех учебных сетей.
+3. **Wireshark worksheet**: по описанию sample packet определите protocol, source, destination, risk note.
 
-> **Важно:** В комнатах Jr Penetration Tester делайте заметки — это пригодится при написании отчетов в будущем.
+> **Важно:** В этом уроке сдача строится на transcript worksheet и transfer note, а не на флагах внешней платформы.
 
 ## Практика на Slider AI
 

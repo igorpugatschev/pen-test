@@ -301,18 +301,18 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **Сравнение сканеров**: Установите OpenVAS и выполните сканирование той же цели, что и Nessus (или наоборот). Сравните результаты: количество находок, ложноположительные срабатывания, удобство интерфейса.
+1. **Сравнение сканеров по встроенному report fixture**: разберите два sanitized отчета `Scanner A` и `Scanner B` из лекции. Сравните количество candidate findings, false positives, evidence quality и пригодность для remediation.
 
-2. **Credentialed Scan**: Настройте сканирование с учетными данными (Windows/Linux). Сравните результаты credentialed и non-credentialed сканирования. Что нового обнаружилось?
+2. **Credentialed Scan model**: заполните risk/benefit worksheet для credentialed scan: какие данные собираются, как хранятся credentials, какие stop conditions, какие поля нужно redacted в evidence. Реальные учетные данные не нужны.
 
-3. **Policy Tuning**: Создайте кастомную политику сканирования, отключив "шумные" проверки (например, DoS проверки). Запустите сканирование с этой политикой.
+3. **Policy Tuning**: по встроенной policy card отключите "шумные" проверки (например, DoS checks) и объясните, почему policy safe для QA-стенда. Запуск сканера не обязателен.
 
-4. **Web Application Scan**: Настройте сканирование веб-приложения (например, DVWA или Juice Shop) через Nessus/OpenVAS. Сравните результаты с ручным тестированием по OWASP Top 10.
+4. **Web Application Scan review**: сравните встроенный scanner output с ручным OWASP checklist: что сканер видит, что пропускает, где нужен manual verification.
 
-5. **False Positive Analysis**: Проанализируйте 5 уязвимостей из отчета сканера. Проверьте вручную (через nmap, nc, curl, браузер), являются ли они реальными. Напишите отчет с обоснованием.
+5. **False Positive Analysis**: проанализируйте 5 candidate findings из report fixture. Для каждого укажите confidence, manual verification plan, owner action и retest criteria. Никакие реальные цели не сканируются.
 
 ### Адаптация для macOS (M2, 8GB RAM)
-Nessus Home работает на macOS M2, включая версии с 8GB RAM. Скачайте версию для macOS с официальной страницы загрузки.
+На MacBook Air M2 8GB обязательный путь не требует Nessus/OpenVAS. Установка сканеров, если она нужна для работы, относится к optional/tooling review и выполняется только через официальный installer/Homebrew при достаточных ресурсах.
 
 ## Частые ошибки
 

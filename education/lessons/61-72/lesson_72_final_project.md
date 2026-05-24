@@ -198,6 +198,12 @@ Stop conditions: 5xx spike, account lockout, unexpected data modification, secre
 - какие checks требуют отдельного approval;
 - какие helpers из блока 41-48 можно использовать безопасно.
 
+Затем добавьте три обязательных process artifacts из пользовательской инструкции курса:
+
+- `Evidence Policy`: какие evidence разрешены, что redacted, где хранится пакет;
+- `Tooling Policy / Tooling Approval Card`: Burp, ZAP и Python helper в режиме `manual/passive/allowed` или `requires approval`;
+- `Threat Model`: 3-5 entry points, assets, actors, trust boundaries и abuse cases.
+
 ### Шаг 3. Safe execution
 
 Минимальный набор безопасных проверок:
@@ -208,6 +214,12 @@ Stop conditions: 5xx spike, account lockout, unexpected data modification, secre
 4. Access control через собственные QA-роли и разрешенные данные.
 5. Public asset inventory без скачивания закрытого кода и без aggressive scan.
 6. Passive Burp/ZAP review без active scan.
+
+После safe execution заполните:
+
+- `WSTG / OWASP Safe Checklist` минимум на 20 пунктов;
+- `Role Matrix And Tenant Boundary Notes` для доступных QA-ролей и собственных тестовых данных;
+- `Evidence Index`, где каждый snippet имеет ID, статус и redaction note.
 
 Каждый результат помечается статусом:
 

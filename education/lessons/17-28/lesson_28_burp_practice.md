@@ -239,8 +239,8 @@ Kali ARM64 VM используется как углубление, когда �
 1. Откройте XSS (Reflected), включите Intercept
 2. Введите `<script>alert(1)</script>`
 3. В Burp найдите пейлоад в параметре `name=`
-4. Измените на `<img src=x onerror=alert(document.cookie)>`
-5. Forward — увидите cookie в alert
+4. Измените на безопасный marker payload `<img src=x onerror=alert('qa-marker-28')>`
+5. Forward — увидите marker в alert. Cookie, token или session ID не выводите и не сохраняйте.
 
 ### Использование Comparer
 
@@ -259,7 +259,7 @@ Kali ARM64 VM используется как углубление, когда �
 
 **Target → Site Map — структура DVWA:**
 ```
-http://127.0.0.1:8080/
+http://127.0.0.1:8081/
 ├── index.php
 ├── login.php
 ├── logout.php
@@ -354,12 +354,12 @@ osascript -e 'tell application "Burp Suite Community Edition" to activate'
 
 3. **Анализ через Site Map**: В Burp Target → Site Map найдите все страницы DVWA, доступные без авторизации (до входа). Сделайте скриншот Site Map с фильтром "Show only unvisited items". Какие страницы доступны без логина?
 
-4. **Использование Decoder**: Перехватите запрос с cookie. Скопируйте значение PHPSESSID в Decoder. Выполните:
+4. **Использование Decoder**: используйте учебное значение `<redacted-demo-session>` или заранее подготовленный marker, а не реальную cookie. Выполните:
    - URL-decode
    - Base64-decode (если возможно)
    - Hex view
    
-   Сделайте скриншот Decoder с результатами. Похож ли PHPSESSID на зашифрованные данные?
+   Сделайте скриншот Decoder с результатами. Похож ли marker на зашифрованные данные? Реальные session cookies не сохраняйте.
 
 5. **Комплексная атака**: Объедините SQLi + Burp для получения всех данных из DVWA:
    - Используйте Repeater для поиска уязвимых параметров

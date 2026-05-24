@@ -209,10 +209,10 @@ token=rO0ABxoljlIxNjI1NjM4MjYzNDAyODNmMS4wLjQuMlRo
 ```
 GET /vulnerabilities/sqli/?id=1 HTTP/1.1
 Host: localhost
-Cookie: PHPSESSID=../../etc/passwd
+Cookie: session=<tampered-demo-value>
 ```
 
-Если приложение не проверяет формат сессии — это проблема целостности.
+В учебном evidence замените значение cookie на `<redacted-demo-cookie>` и фиксируйте только вывод: приложение должно отклонять поврежденный формат сессии. Path traversal-подобные значения не переносятся на Slider AI без approval.
 
 **Шаг 4: Dependency Confusion (теория + практика в браузере)**
 Откройте DVWA и посмотрите, откуда подгружаются ресурсы:
@@ -331,7 +331,7 @@ Sanitization: secrets and personal data excluded
            crossorigin="anonymous"></script>
    ```
 
-3. **Проверка cookie на целостность**: В DVWA посмотрите значение PHPSESSID в DevTools. Попробуйте изменить один символ в cookie и отправить запрос. Что произойдет? Проверяет ли сервер целостность сессии?
+3. **Проверка cookie на целостность**: В DVWA посмотрите только имя cookie и флаги в DevTools, значение не копируйте. В локальной lab можно заменить cookie на `<tampered-demo-value>` и отправить запрос. Что произойдет? Проверяет ли сервер целостность сессии?
 
 4. **Dependency Confusion lab без внешних источников**: используйте встроенную модель `company-lib` выше. Заполните policy: approved registry, version pinning, lockfile, CI check, owner action.
 
