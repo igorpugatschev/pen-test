@@ -1,139 +1,82 @@
 # Pen-Test Learning Program
 
-Программа обучения пентесту (penetration testing) из 72 уроков, адаптированная для MacBook Air M2 (8GB RAM).
+Самодостаточный курс повышения квалификации для SDET/QA-инженера, который переходит к роли **Security-aware SDET / Product Security QA**. Цель курса — научиться отвечать не только за функциональное качество продукта, но и за проверяемую безопасность: планировать security assessment, выполнять безопасные проверки, собирать evidence, оформлять findings, сопровождать remediation и проводить retest.
 
-## 📋 Содержание
+Курс является логическим продолжением SDET Python QA Automation Apprenticeship. Стартовые навыки студента: базовый Python, процедурное программирование, работа с тестами, API/UI evidence, Git и минимальный опыт командной строки Unix-систем.
 
-Программа рассчитана на **3 занятия в неделю по 1-2 часа** и охватывает полный путь от основ Linux до получения сертификации EJPT/OSCP.
+## Структура
 
-### Структура курса
+- Программа курса: [education/pentest_learning_program.md](education/pentest_learning_program.md)
+- Пользовательская инструкция: [education/course_user_guide.md](education/course_user_guide.md)
+- Лекции: [education/lessons](education/lessons)
 
-| Блок | Уроки | Тема |
-|------|-------|------|
-| [01-08](education/lessons/01-08/) | 1-8 | Linux основы |
-| [09-16](education/lessons/09-16/) | 9-16 | Сетевые технологии |
-| [17-28](education/lessons/17-28/) | 17-28 | OWASP Top 10 (A01-A10 + доп. категории) |
-| [29-40](education/lessons/29-40/) | 29-40 | Инструменты пентеста |
-| [41-48](education/lessons/41-48/) | 41-48 | Python для пентеста |
-| [49-60](education/lessons/49-60/) | 49-60 | Практика на площадках |
-| [61-72](education/lessons/61-72/) | 61-72 | Методология и сертификация |
+Курс содержит 72 основных занятия и 5 дополнительных занятий OWASP: всего 77 Markdown-лекций.
 
-**Итого: 72 урока + 5 дополнительных (17b-17f)**
+| Блок | Уроки | Фокус |
+|---|---:|---|
+| 01-08 | 1-8 | Linux, терминал, файлы, процессы и рабочая дисциплина evidence |
+| 09-16 | 9-16 | Сети, DNS, HTTP/TLS, Wireshark, маршрутизация и firewall |
+| 17-28 | 17-28 + 17b-17f | OWASP Top 10, web-риски, Burp и безопасный test design |
+| 29-40 | 29-40 | Инструменты пентеста как управляемый QA-процесс |
+| 41-48 | 41-48 | Python security helpers с allowlist, dry-run, timeout и sanitized output |
+| 49-60 | 49-60 | Легальные лаборатории, перенос навыков в продуктовый QA |
+| 61-72 | 61-72 | PTES, OWASP WSTG, отчетность, CVSS, сертификационная подготовка и финальный assessment |
 
-## 🎯 Особенности
+## Учебная модель
 
-- **Адаптация под macOS (M2, 8GB)**: каждый урок содержит раздел с заменой `apt install` на `brew install`
-- **Структура каждого урока**:
-  - Теория
-  - Практическое занятие
-  - Примеры вывода
-  - Частые ошибки
-  - Вопросы на понимание
-  - Задачи для самостоятельного выполнения
-  - Адаптация под macOS (M2, 8GB)
+Каждая лекция должна быть достаточной для самостоятельного прохождения. Книги курса использованы как источники автора, но студент не обязан искать базовую теорию в отдельных книжных файлах или внешних материалах.
 
-## 📚 Методология
+В каждом занятии есть:
 
-Курс базируется на:
-- **OWASP Testing Guide v4.2** — стандарт тестирования веб-приложений
-- **PTES (Penetration Testing Execution Standard)** — полный цикл пентеста
-- **NIST SP 800-115** — техническое руководство по тестированию безопасности
+1. входные требования;
+2. результат занятия;
+3. SDET/Security QA-компетенции;
+4. книжная основа лекции;
+5. полноценная теория;
+6. guided practice;
+7. практическое занятие;
+8. эталонный вывод;
+9. критерии сдачи;
+10. практика Slider AI в безопасных границах;
+11. углубление после изучения следующих уроков.
 
-## 🛠 Используемые инструменты
+## Книжные источники автора
 
-- **Recon**: Nmap, Amass, Subfinder, DNSx, httpx
-- **Vulnerability Scanning**: Nuclei, OWASP ZAP, Burp Suite
-- **Exploitation**: SQLmap, Metasploit (в планах автоматизации)
-- **Password Attacks**: Hydra, Patator
-- **Web Testing**: Dirsearch, FFuf, Burp Suite
-- **OSINT**: Shodan, Censys, Amass
-- **Reporting**: CVSS v3.1, стандарты отчетности
+Курс построен на идеях из пяти книг. Они не заменяют лекции, а служат источниками для автора курса:
 
-## 🚀 Быстрый старт
+- «Легкий способ выучить Python 3 еще глубже» — самостоятельная практика, терминал, файлы, текст, SQL-мышление и дисциплина регулярных упражнений.
+- «Объектно-ориентированный Python, 4-е издание» — классы, исключения, коллекции, тестируемый код и границы ответственности.
+- «Паттерны разработки на Python» — архитектура безопасных helpers, service layer, dependency inversion и поддерживаемые интерфейсы.
+- «PyCharm. Профессиональная работа на Python 2024» — IDE workflow, debugger, HTTP Client, Git, DB tools, profiler, удаленная среда и evidence.
+- «Black Hat Python» — lab-only/defensive источник идей для сетевых примитивов, security automation, detection и границ безопасного применения.
 
-1. Клонируйте репозиторий:
-```bash
-git clone https://github.com/igorpugatschev/pen-test.git
-cd pen-test
+## Рабочая среда
+
+Основной путь новичка: macOS native на MacBook Air M2 (8GB RAM), Homebrew/официальные installers, браузер, DevTools, Burp/ZAP, nmap и Python.
+
+Углубление: Kali Linux ARM64 VM в UTM/VMware Fusion/Parallels, если нужна изоляция, Kali-специфичные инструменты, snapshots или сертификационная практика. На MacBook Air M2 8GB VM ограничивается 3-4GB RAM и 2 CPU.
+
+Cloud lab: TryHackMe AttackBox, HackTheBox/Pwnbox, PortSwigger Academy и другие легальные стенды используются для тяжелых сценариев, CTF и экзаменационной практики.
+
+## Slider AI Scope
+
+Практика на Slider AI разрешена только для тестового стенда:
+
+```text
+https://olddev.slider-ai.ru
 ```
 
-2. Начните с первого урока:
-```bash
-cat education/lessons/01-08/lesson_01_intro_linux.md
-```
+Запрещены production, DoS/load, brute force, destructive payloads, изменение чужих данных, извлечение секретов, сохранение cookies/tokens/passwords/PII в evidence и любые действия вне согласованного scope.
 
-3. Для проверки всех уроков используйте скрипт:
-```bash
-cd education/tools
-bash check_lessons.sh
-```
+Если следующий шаг требует перебора, активного сканирования, payload, доступа к чужим данным, изменения состояния, обхода защиты или анализа секретов, студент не выполняет его на Slider AI. Такой шаг оформляется как `requires approval` или переносится в legal lab/cloud lab.
 
-## 📖 Полная программа
+## Юридическая рамка
 
-Подробное описание всех 72 уроков: [education/pentest_learning_program.md](education/pentest_learning_program.md)
+Все материалы предназначены только для легального обучения и тестирования безопасности:
 
-## 🖥 Требования
+- собственные локальные лаборатории;
+- TryHackMe, HackTheBox, PortSwigger Academy и другие платформы с явными правилами;
+- bug bounty только в рамках опубликованного scope;
+- Slider AI olddev только в рамках разрешенного учебного тестового стенда.
 
-- **macOS** (рекомендуется M2/M3) или Linux
-- **8GB RAM** (минимум, для MacBook Air M2)
-- **Homebrew** (для macOS): `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
-- **Виртуализация** (опционально): UTM или Parallels Desktop для запуска Kali Linux
-
-### Рекомендации для MacBook Air M2 (8GB):
-- Используйте **AttackBox** (TryHackMe) или **Tunnelblick** (VPN) вместо локальных VM
-- Kali Linux через UTM выделяйте не более 3-4GB RAM
-- Приоритет облачным площадкам: TryHackMe, HackTheBox, PortSwigger Academy
-
-## 🔧 Вспомогательные инструменты
-
-Скрипты для проверки и исправления уроков находятся в папке `education/tools/`:
-- `check_lessons.sh` — проверка структуры и критических ошибок
-- `final_fix_all.py` — автоисправление всех уроков
-- `academic_review_report.md` — отчет о качестве материалов (90.0%)
-
-## ⚠️ Юридический дисклеймер
-
-Все материалы предназначены **исключительно для обучения** и легального тестирования безопасности:
-- ✓ TryHackMe, HackTheBox, PortSwigger Academy
-- ✓ Bug Bounty программы с явным разрешением
-- ✓ Собственные системы или системы с письменным разрешением
-
-**Несанкционированный доступ к компьютерным системам незаконен** (УК РФ ст. 272, CFAA в США, Computer Misuse Act в UK).
-
-## 📊 Статус проекта
-
-- ✅ Созданы все 72 урока
-- ✅ Добавлены 5 дополнительных уроков OWASP
-- ✅ Исправлены критические ошибки (localhost в payload, дублирование кода)
-- ✅ Все уроки прошли валидацию
-- ✅ Академическое ревью: 90.0% (4160/4620 баллов)
-- ✅ **Адаптация под MacBook Air M2 (8GB) завершена (2026-04-29)**
-  - Заменен `apt` на `brew` в блоке 01-08
-  - VirtualBox → UTM в lesson_16 (M1/M2)
-  - Внедрен TryHackMe AttackBox как облачная альтернатива
-  - Исправлены терминологии OWASP (Sensitive Data → Cryptographic Failures)
-  - Удалены дублирующиеся секции в 29-40
-  - Заполнены заглушки в блоке 49-60
-  - Добавлены дисклеймеры легальности (09-16)
-  - Добавлен CVSS v4.0 и OWASP ZAP
-
-## 📄 Лицензия
-
-Материалы доступны под лицензией MIT. Смотрите файл [LICENSE](LICENSE) (если добавите).
-
-## 🤝 Вклад в проект
-
-Pull Request'ы приветствуются! Особенно:
-- Исправление ошибок в уроках
-- Добавление новых примеров
-- Адаптация под другие платформы (Windows, Linux)
-- Перевод на другие языки
-
-## 📧 Контакты
-
-- GitHub: [@igorpugatschev](https://github.com/igorpugatschev)
-- Репозиторий: https://github.com/igorpugatschev/pen-test
-
----
-
-**Примечание**: Курс постоянно обновляется. Следите за [commits](https://github.com/igorpugatschev/pen-test/commits/main).
+Несанкционированный доступ к компьютерным системам незаконен. Курс учит профессиональному security QA-процессу, а не несанкционированному взлому.
