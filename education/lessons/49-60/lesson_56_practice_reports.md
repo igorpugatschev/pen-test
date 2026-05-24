@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не переносить exploitation, privesc, bypass и aggressive enumeration на Slider AI без расширенного scope.
 
 
-**Процессный артефакт:** `VULNERABILITY_TRIAGE.md`: lab-to-product transfer matrix и ограничения scope.
+**Процессный артефакт:** встроенный шаблон vulnerability triage из пользовательской инструкции: lab-to-product transfer matrix и ограничения scope.
 
 **Безопасная цель:** TryHackMe, Hack The Box, PortSwigger Academy и другие платформы только в рамках их правил и активной учебной машины.
 
@@ -267,28 +267,18 @@ Sanitization: secrets and personal data excluded
 
 ## Частые ошибки
 
-1. **Ошибка 1**: Типичная ошибка новичков в этом уроке.
-2. **Ошибка 2**: Еще одна распространенная проблема.
-3. **Ошибка 3**: Важный момент, который часто упускают.
-
-
+1. **Писать отчет как дневник команд** — отчет должен объяснять риск, влияние, evidence, remediation и retest, а не просто перечислять действия.
+2. **Смешивать observation и finding** — scanner output или единичное наблюдение не становится уязвимостью без triage.
+3. **Оставлять секреты в приложениях** — cookies, tokens, PII, полные request/response и внутренние данные должны быть удалены или замаскированы.
 
 ## Вопросы на понимание
 
-1. Вопрос 1 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 1</details>
-2. Вопрос 2 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 2</details>
-3. Вопрос 3 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 3</details>
-
-
-
-## Форматы флагов
-
-- **TryHackMe**: `THM{...}`
-- **HackTheBox**: `HTB{...}`
-- **PortSwigger**: "Lab solved!" (без флагов)
+1. Чем executive summary отличается от technical details?
+   <details><summary>Ответ</summary>Executive summary помогает принять управленческое решение, а technical details дают инженеру воспроизведение, evidence и remediation.</details>
+2. Почему report должен содержать limitations?
+   <details><summary>Ответ</summary>Limitations показывают, что не проверялось, почему это не проверялось и какие риски остаются.</details>
+3. Что делает finding пригодным для retest?
+   <details><summary>Ответ</summary>Четкие шаги, ожидаемое защищенное поведение, evidence, affected area и критерий закрытия.</details>
 
 
 

@@ -198,6 +198,42 @@ def collect_http_inventory(url: str) -> dict:
     return {"url": url, "status_code": response.status_code, "headers": headers, "secrets_masked": True}
 ```
 
+### API Security mini-lab: REST, OpenAPI, JWT, OAuth/OIDC, CORS, GraphQL
+
+Python `requests` в Security QA нужен не для “автоматически ломать API”, а для воспроизводимых безопасных проверок контракта. Базовые понятия, которые нужны SDET:
+
+| Тема | Что должен понимать студент | Безопасная проверка |
+|---|---|---|
+| REST | ресурс, метод, статус, idempotency, ошибка | один `HEAD`/`GET` к разрешенному endpoint без изменения данных |
+| OpenAPI | список paths, methods, schemas, auth requirements | сравнить фактический ответ с ожидаемым контрактом |
+| JWT | header.payload.signature; claims `iss`, `aud`, `exp`, `sub`, `scope` | декодировать только учебный/redacted токен, не сохранять реальные tokens |
+| OAuth/OIDC | delegated authorization, authorization code, token lifetime | описать flow и stop condition, не перехватывать чужие токены |
+| CORS | какие origins могут читать ответ из браузера | проверить только заголовки в одном безопасном ответе |
+| GraphQL | один endpoint, schema, query/mutation | introspection или fuzzing только lab-only/approval |
+
+Учебный JWT для разбора структуры, не секрет:
+
+```text
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.
+eyJzdWIiOiJkZW1vLXVzZXIiLCJzY29wZSI6InJlYWQ6c2FmZSIsImV4cCI6MTg5MzQ1NjAwMH0.
+<redacted-signature>
+```
+
+Минимальный helper для безопасного API inventory:
+
+```python
+def classify_api_response(method: str, url: str, status: int, headers: dict) -> dict:
+    return {
+        "method": method,
+        "url": url,
+        "status": status,
+        "cors": headers.get("access-control-allow-origin", "not present"),
+        "auth_hint": "bearer" if "www-authenticate" in headers else "not observed",
+        "finding_status": "observation",
+    }
+```
+
+Acceptance для этого mini-lab: helper не принимает произвольный target, не пишет cookies/tokens в отчет, умеет вернуть `observation` и `requires approval`, а не объявляет уязвимость по одному заголовку.
 
 ### Минимальная структура сдачи
 
@@ -274,7 +310,7 @@ Sanitization: secrets and personal data excluded
 1. Добавьте pytest-тест на отказ от target вне allowlist.
 2. Добавьте README-раздел `Scope and stop conditions`.
 3. Сохраните output в Markdown или JSON.
-4. Проведите self-review по `TOOLING_POLICY.md`.
+4. Проведите self-review по встроенной tooling approval card из пользовательской инструкции.
 5. Опишите, как helper попадет в финальный отчет как automation appendix.
 
 ## Практика на Slider AI

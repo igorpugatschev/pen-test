@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не переносить exploitation, privesc, bypass и aggressive enumeration на Slider AI без расширенного scope.
 
 
-**Процессный артефакт:** `VULNERABILITY_TRIAGE.md`: lab-to-product transfer matrix и ограничения scope.
+**Процессный артефакт:** встроенный шаблон vulnerability triage из пользовательской инструкции: lab-to-product transfer matrix и ограничения scope.
 
 **Безопасная цель:** TryHackMe, Hack The Box, PortSwigger Academy и другие платформы только в рамках их правил и активной учебной машины.
 
@@ -177,12 +177,10 @@ Kali ARM64 VM используется как углубление, когда �
 
 ## Практическое занятие
 
-### Подготовка
-1. Зарегистрируйтесь на https://tryhackme.com
-2. Настройте подключение через VPN:
-   - Скачайте конфиг: "Access" → "Download VPN Configuration"
-   - Установите [Tunnelblick](https://tunnelblick.net/) и откройте скачанный .ovpn файл
-3. Или используйте AttackBox (кнопка "Start AttackBox" в комнате)
+### Подготовка без обязательной внешней платформы
+1. Заполните встроенную lab readiness card: environment, VPN/cloud lab availability, scope, stop conditions.
+2. Если внешняя платформа доступна, используйте ее только как углубление. Для сдачи урока достаточно встроенного room transcript ниже.
+3. На MacBook Air M2 основной путь остается macOS native + browser + terminal; тяжелые labs переносите в cloud lab.
 
 ### Прохождение комнат из трека "Complete Beginner"
 

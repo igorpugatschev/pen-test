@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения.
 
 
-**Процессный артефакт:** `TOOLING_POLICY.md` и finding/observation по шаблону.
+**Процессный артефакт:** встроенная tooling approval card и finding/observation по шаблону из пользовательской инструкции.
 
 **Безопасная цель:** Только `192.168.100.20`, `target.local`, Metasploitable/VulnHub/THM/HTB/PortSwigger в рамках их правил. Не использовать домашний роутер как цель атаки.
 
@@ -193,15 +193,15 @@ zap-cli start
 
 ### Настройка браузера
 1. Запустите ZAP
-2. В браузере настройте прокси: `127.0.0.1:8080`
+2. В браузере настройте прокси: `127.0.0.1:8090`
 3. Скачайте и установите CA-сертификат ZAP для HTTPS: `Tools -> Options -> Dynamic SSL Certificates -> Save`
 
 Пример успешной настройки прокси:
 ```
 Browser: Firefox
 Settings -> Network Settings -> Manual proxy configuration:
-HTTP Proxy: 127.0.0.1  Port: 8080
-SSL Proxy: 127.0.0.1  Port: 8080
+HTTP Proxy: 127.0.0.1  Port: 8090
+SSL Proxy: 127.0.0.1  Port: 8090
 ```
 
 ### Автоматическое сканирование
@@ -217,19 +217,19 @@ pip install zapcli
 docker run -t owasp/zap2docker-stable zap-cli status
 
 # Использование zap-cli
-zap-cli open-url http://127.0.0.1:8080
+zap-cli open-url http://127.0.0.1:8081
 # Пример вывода:
-# Opened URL: http://127.0.0.1:8080
+# Opened URL: http://127.0.0.1:8081
 
-zap-cli spider http://127.0.0.1:8080
+zap-cli spider http://127.0.0.1:8081
 # Пример вывода:
-# Spider started at: http://127.0.0.1:8080
+# Spider started at: http://127.0.0.1:8081
 # Spider progress: 100%
 # Spider completed
 
-# lab-only/approval: zap-cli active-scan http://127.0.0.1:8080
+# lab-only/approval: zap-cli active-scan http://127.0.0.1:8081
 # Пример вывода:
-# Active scan started for: http://127.0.0.1:8080
+# Active scan started for: http://127.0.0.1:8081
 # Scan progress: 100%
 # Scan completed
 
@@ -239,7 +239,7 @@ zap-cli alerts -l High
 ```
 
 ### Использование Proxy (ручной/passive режим)
-1. Настройте браузер на прокси ZAP (8080)
+1. Настройте браузер на прокси ZAP (8090)
 2. Откройте целевой сайт
 3. В ZAP вы увидите весь трафик в History
 4. Для обязательного пути используйте только History и Passive Scan.
@@ -248,8 +248,8 @@ zap-cli alerts -l High
 Пример увиденного трафика в ZAP:
 ```
 History tab:
-GET http://127.0.0.1:8080/ 200 OK 1234 bytes
-POST http://127.0.0.1:8080/login 200 OK 456 bytes
+GET http://127.0.0.1:8081/ 200 OK 1234 bytes
+POST http://127.0.0.1:8081/login 200 OK 456 bytes
 ```
 
 ### Fuzzer (lab-only/approval)
@@ -261,7 +261,7 @@ POST http://127.0.0.1:8080/login 200 OK 456 bytes
 
 Пример результатов Fuzzer:
 ```
-URL: http://127.0.0.1:8080/login
+URL: http://127.0.0.1:8081/login
 Parameter: username
 Payload: admin -> Response: 200 OK (Login successful)
 Payload: test -> Response: 401 Unauthorized
@@ -273,11 +273,11 @@ Payload: test -> Response: 401 Unauthorized
 
 ```bash
 # API вызовы
-zap-cli passive-scan -r http://127.0.0.1:8080
+zap-cli passive-scan -r http://127.0.0.1:8081
 # Пример вывода:
-# Passive scan completed for: http://127.0.0.1:8080
+# Passive scan completed for: http://127.0.0.1:8081
 
-# lab-only/approval: zap-cli active-scan -r http://127.0.0.1:8080
+# lab-only/approval: zap-cli active-scan -r http://127.0.0.1:8081
 # Пример вывода:
 # Active scan progress: 100%
 # Scan completed
@@ -332,7 +332,7 @@ Sanitization: secrets and personal data excluded
 
 3. Запустите Active Scan только против DVWA/PortSwigger/local lab. Какие candidate findings обнаружил ZAP? Сравните с результатами ручного тестирования и отметьте false positives.
 
-4. Используйте Fuzzer ZAP для подбора директорий на `локальный DVWA/bWAPP или PortSwigger lab/admin/`. Используйте словарь `/usr/share/wordlists/dirb/common.txt`. Какие пути нашлись?
+4. Используйте Fuzzer ZAP для подбора директорий на `локальный DVWA/bWAPP или PortSwigger lab/admin/`. Используйте словарь `/opt/homebrew/share/seclists/Discovery/Web-Content/common.txt`. Какие пути нашлись?
 
 5. Настройте ZAP в headless режиме (через `zap-cli`). Напишите Python-скрипт, который запускает сканирование через `zap-cli` и сохраняет алерты в JSON.
 
@@ -340,7 +340,7 @@ Sanitization: secrets and personal data excluded
 
 1. **Проблемы с HTTPS (SSL/TLS)** — обязательно установите CA-сертификат ZAP, иначе браузер будет ругаться на "незащищенное соединение".
 
-2. **ZAP не видит трафик** — проверьте, что прокси в браузере настроен правильно (127.0.0.1:8080) и ZAP запущен.
+2. **ZAP не видит трафик** — проверьте, что прокси в браузере настроен правильно (127.0.0.1:8090) и ZAP запущен.
 
 3. **Active Scan на "боевых" серверах** — активное сканирование может нагрузить сервер или вызвать подозрение, используйте только на разрешенных целях.
 

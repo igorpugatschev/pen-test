@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения.
 
 
-**Процессный артефакт:** `TOOLING_POLICY.md` и finding/observation по шаблону.
+**Процессный артефакт:** встроенная tooling approval card и finding/observation по шаблону из пользовательской инструкции.
 
 **Безопасная цель:** Только `192.168.100.20`, `target.local`, Metasploitable/VulnHub/THM/HTB/PortSwigger в рамках их правил. Не использовать домашний роутер как цель атаки.
 
@@ -224,13 +224,13 @@ shodan stats "apache country:RU"
 
 ### Shodan Web (через браузер)
 ```
-# Поисковые фильтры:
-hostname:target.com
+# Учебные фильтры для mock-output:
+hostname:app.training.example
 port:80,443
-org:"Target Organization"
-city:"Moscow"
-country:"RU"
-vuln:CVE-2021-xxxxx
+org:"Training Organization"
+city:"Training City"
+country:"ZZ"
+vuln:CVE-202X-TRAINING
 product:"Apache httpd"
 version:"2.4.49"
 os:"Windows"
@@ -238,31 +238,20 @@ os:"Windows"
 
 ### Censys
 
-```bash
-# Установка CLI
-pip install censys
+Для обязательного пути не устанавливайте Censys CLI и не вводите API credentials. Разбирайте встроенный mock:
 
-# Инициализация
-censys config  # Ввести API ID и Secret
-# Пример вывода:
-# Successfully authenticated
-
-# Поиск хостов
-censys search "services.http.response.status_code: 200"
-# Пример вывода:
-# 8.8.8.8
-# services: 53/dns, 443/https
-
-# Поиск по IP
-censys view 8.8.8.8
-# Пример вывода:
-# ip: 8.8.8.8
-# services:
-#   - port: 443
-#     service_name: HTTPS
-
-# Поиск сертификатов
-censys search --index certificates "parsed.subject_dn: target.com"
+```json
+{
+  "ip": "203.0.113.20",
+  "services": [
+    {"port": 443, "service_name": "HTTPS", "observed_name": "app.training.example"}
+  ],
+  "certificate": {
+    "subject_dn": "CN=app.training.example",
+    "issuer": "Training CA",
+    "names": ["app.training.example", "api.training.example"]
+  }
+}
 ```
 
 ### Полезные запросы Shodan
@@ -330,13 +319,34 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. Зарегистрируйтесь на Shodan (бесплатно). Получите API ключ. Не сохраняйте ключ в тексте отчета и не публикуйте его в репозитории.
+1. Разберите встроенный mock-output Shodan ниже. Регистрация и API-ключ не нужны для сдачи урока и относятся только к углублению.
+
+   ```json
+   {
+     "ip_str": "203.0.113.10",
+     "port": 443,
+     "hostnames": ["app.training.example"],
+     "product": "nginx",
+     "ssl": {"cert": {"subject": {"CN": "app.training.example"}}},
+     "timestamp": "2026-05-24T08:00:00Z"
+   }
+   ```
 
 2. Выполните пассивный учебный поиск по общему запросу `product:"Apache"` и сохраните только количество результатов, без IP-адресов и без попыток подключения к найденным системам.
 
 3. Разберите на уровне теории, почему публично доступные базы данных опасны. Не открывайте найденные сервисы и не выполняйте подключение к ним.
 
-4. Настройте Censys CLI и выполните пассивный поиск сертификатов для домена, который явно разрешен преподавателем или принадлежит вашей учебной лаборатории. Для Slider AI используйте только согласованный olddev scope и не публикуйте найденные значения.
+4. Разберите встроенный mock certificate inventory вместо настройки Censys CLI:
+
+   ```markdown
+   | Field | Value |
+   |---|---|
+   | subject_cn | app.training.example |
+   | issuer | Training CA |
+   | not_before | 2026-01-01 |
+   | not_after | 2026-12-31 |
+   | observed_names | app.training.example, api.training.example |
+   ```
 
 5. Сравните типы данных Shodan и Censys на учебном примере: какие поля показывают сервис, сертификат, timestamp и источник наблюдения. Не используйте результат как finding без подтверждения ownership и разрешения.
 
@@ -344,7 +354,7 @@ Sanitization: secrets and personal data excluded
 
 1. **Попытка сканировать приватные IP** — Shodan работает только с публичными IP-адресами, 192.168.x.x, 10.x.x.x, 172.16.x.x не будут работать.
 
-2. **Отсутствие API ключа** — большинство функций Shodan требуют регистрации и получения API ключа (бесплатно).
+2. **Путать курс с внешним сервисом** — для обязательного пути используется встроенный mock-output; API-ключ нужен только в углублении и не хранится в evidence.
 
 3. **Слишком общие запросы** — используйте фильтры (country:, city:, port:), чтобы сузить поиск.
 

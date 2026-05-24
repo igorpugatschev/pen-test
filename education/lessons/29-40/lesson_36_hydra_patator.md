@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения.
 
 
-**Процессный артефакт:** `TOOLING_POLICY.md` и finding/observation по шаблону.
+**Процессный артефакт:** встроенная tooling approval card и finding/observation по шаблону из пользовательской инструкции.
 
 **Безопасная цель:** Только `192.168.100.20`, `target.local`, Metasploitable/VulnHub/THM/HTB/PortSwigger в рамках их правил. Не использовать домашний роутер как цель атаки.
 
@@ -180,7 +180,7 @@ Kali ARM64 VM используется как углубление, когда �
 ### Hydra
 
 ```bash
-# Установка
+# Kali/Linux lab-only установка
 sudo apt install hydra
 
 # macOS (M2, Homebrew)
@@ -194,7 +194,7 @@ hydra -U
 
 # Брутфорс SSH
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://192.168.100.20
+hydra -t 1 -L users_lab.txt -P passwords_lab.txt -W 3 ssh://192.168.100.20
 # Пример вывода:
 # [DATA] attacking ssh://192.168.100.20:22/
 # [22][ssh] host: 192.168.100.20   login: lab-user   password: <redacted-lab-secret>
@@ -214,9 +214,9 @@ hydra -l admin -P wordlist.txt 192.168.100.20 http-post-form "/login.php:user=^U
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
 hydra -l admin -P wordlist.txt 192.168.100.20 http-get /admin/
 
-# Настройка количества потоков
+# Настройка количества потоков: в курсе оставляем минимальный темп
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-hydra -t 4 -l admin -P wordlist.txt ssh://192.168.100.20
+hydra -t 1 -l admin -P wordlist.txt -W 3 ssh://192.168.100.20
 ```
 
 ### Параметры Hydra
@@ -235,13 +235,11 @@ hydra -t 4 -l admin -P wordlist.txt ssh://192.168.100.20
 ### Patator
 
 ```bash
-# Установка
-git clone https://github.com/lanjelot/patator.git
-cd patator
+# Установка patator не входит в обязательный путь; ниже только lab-only синтаксис для чтения вывода
 
 # Брутфорс SSH
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-python3 patator.py ssh_login host=192.168.100.20 user=lab-user password=FILE0 0=/usr/share/wordlists/rockyou.txt
+python3 patator.py ssh_login host=192.168.100.20 user=lab-user password=FILE0 0=passwords_lab.txt
 # Пример вывода:
 # 192.168.100.20:22 ssh_login: 'lab-user' '<redacted-lab-secret>' 0
 

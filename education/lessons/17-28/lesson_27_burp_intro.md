@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
 
 
-**Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
+**Процессный артефакт:** встроенный шаблон threat model или finding из пользовательской инструкции: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
 
@@ -251,7 +251,7 @@ brew install --cask burp-suite
 
 **Шаг 1: Перехват запроса**
 1. В Burp включите **Intercept on** (Proxy → Intercept)
-2. В браузере откройте http://127.0.0.1:8080 (DVWA)
+2. В браузере откройте http://127.0.0.1:8081 (DVWA)
 3. В Burp появится запрос — нажмите **Forward** чтобы пропустить
 4. Попробуйте войти в DVWA, запрос появится в Proxy
 

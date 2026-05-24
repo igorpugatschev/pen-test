@@ -274,7 +274,7 @@ Sanitization: secrets and personal data excluded
 1. Добавьте pytest-тест на отказ от target вне allowlist.
 2. Добавьте README-раздел `Scope and stop conditions`.
 3. Сохраните output в Markdown или JSON.
-4. Проведите self-review по `TOOLING_POLICY.md`.
+4. Проведите self-review по встроенной tooling approval card из пользовательской инструкции.
 5. Опишите, как helper попадет в финальный отчет как automation appendix.
 
 ## Практика на Slider AI

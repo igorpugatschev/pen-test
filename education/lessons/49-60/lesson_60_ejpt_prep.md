@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не переносить exploitation, privesc, bypass и aggressive enumeration на Slider AI без расширенного scope.
 
 
-**Процессный артефакт:** `VULNERABILITY_TRIAGE.md`: lab-to-product transfer matrix и ограничения scope.
+**Процессный артефакт:** встроенный шаблон vulnerability triage из пользовательской инструкции: lab-to-product transfer matrix и ограничения scope.
 
 **Безопасная цель:** TryHackMe, Hack The Box, PortSwigger Academy и другие платформы только в рамках их правил и активной учебной машины.
 
@@ -177,17 +177,25 @@ Kali ARM64 VM используется как углубление, когда �
 
 ## Практическое занятие
 
-### Подготовка через INE (или альтернативы)
+### Встроенная eJPT skills matrix
 
-**Если есть доступ к INE:**
-1. Зарегистрируйтесь на ine.com
-2. Пройдите курс "Penetration Testing Student" (PTS)
-3. Выполните все лабораторные работы
+В этом уроке внешние курсы и платформы не являются условием сдачи. Обязательный путь — заполнить встроенную матрицу навыков, выполнить безопасную симуляцию и связать результат с ролью Security-aware SDET.
 
-**Альтернатива (бесплатная):**
-- TryHackMe: пройдите треки "Complete Beginner", "Jr Penetration Tester", "Offensive Pentesting"
-- HackTheBox: Starting Point + 10-15 Easy машин
-- YouTube: каналы "The Cyber Mentor", "John Hammond" (eJPT prep)
+```markdown
+# eJPT-ready Skills Matrix
+
+| Area | Что нужно уметь | Evidence в курсе | Статус 0-2 | Следующий шаг |
+|---|---|---|---|---|
+| Networking | читать IP/порт/протокол, объяснять TCP/UDP/DNS/HTTP | уроки 09-16 |  |  |
+| Recon | nmap basics, service/version reasoning | уроки 29-30 |  |  |
+| Web | SQLi/XSS/CSRF/XXE/SSRF на lab-only целях | уроки 17-28 |  |  |
+| Tools | Burp/ZAP/sqlmap/nuclei/ffuf boundaries | уроки 27-39 |  |  |
+| Linux privesc | sudo/SUID/cron/path basics | урок 55 |  |  |
+| Reporting | finding, severity, remediation, retest | уроки 56, 63, 64 |  |  |
+| Security QA transfer | safe olddev checks, evidence, approval | уроки 60-72 |  |  |
+```
+
+Шкала: `0` — не могу объяснить, `1` — могу объяснить и выполнить по инструкции, `2` — могу выполнить безопасно, оформить evidence и объяснить ограничения.
 
 ### Симуляция экзамена eJPT
 
@@ -243,7 +251,7 @@ find / -perm -4000 2>/dev/null
 - [ ] Базовые атаки на AD (Kerberoasting, LLMNR poisoning)
 - [ ] Написание отчета (Executive Summary, Findings, Remediation)
 - [ ] Работа с Burp Suite (Proxy, Repeater)
-- [ ] Брутфорс (Hydra, John the Ripper)
+- [ ] Brute-force awareness: понимать риск и tooling, но выполнять только в lab/cloud lab с лимитами и разрешением
 
 
 ## Примеры вывода
@@ -278,24 +286,37 @@ Sanitization: secrets and personal data excluded
 
 ## Частые ошибки
 
-1. **Ошибка 1**: Типичная ошибка новичков в этом уроке.
-2. **Ошибка 2**: Еще одна распространенная проблема.
-3. **Ошибка 3**: Важный момент, который часто упускают.
+1. **Подменять подготовку внешними списками ссылок** — для сдачи используется встроенная skills matrix и evidence из текущего курса.
+2. **Оценивать готовность только по флагам** — Security-aware SDET должен показать scope, safe execution, report quality и retest thinking.
+3. **Игнорировать слабые зоны** — статус `0` или `1` в матрице должен превращаться в конкретный план практики.
 
 ## Вопросы на понимание
 
-1. Вопрос 1 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 1</details>
-2. Вопрос 2 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 2</details>
-3. Вопрос 3 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 3</details>
+1. Чем eJPT-ready навык отличается от команды, которую студент один раз скопировал?
+   <details><summary>Ответ</summary>Навык включает объяснение, безопасное выполнение, evidence, ограничения и перенос в отчет или retest.</details>
+2. Почему brute force awareness не равен запуску brute force?
+   <details><summary>Ответ</summary>Понимать риск и tooling можно в теории/lab, но запуск перебора по продукту требует отдельного разрешения и лимитов.</details>
+3. Как использовать skills matrix в финальном assessment?
+   <details><summary>Ответ</summary>Она показывает, какие области покрыты evidence, какие требуют lab-only практики и какие проверки нельзя выполнять на olddev без approval.</details>
 
-## Форматы флагов
+## Встроенная exam simulation карточка
 
-- **TryHackMe**: `THM{...}`
-- **HackTheBox**: `HTB{...}`
-- **PortSwigger**: "Lab solved!" (без флагов)
+Вместо внешних флагов используйте карточку прохождения:
+
+```markdown
+# Exam Simulation Card
+
+Scenario:
+Authorized environment:
+Hosts or features in scope:
+Discovery evidence:
+Confirmed observations:
+Findings:
+What was lab-only:
+What was not tested:
+Report completeness:
+Retest idea:
+```
 
 
 
@@ -311,11 +332,11 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **Пройти 3 машины HTB Easy за один день** — тренировка скорости (на экзамене время ограничено)
-2. **Написать полный отчет** по пройденной сети (как для реального заказчика)
-3. **Изучить материалы:** "eJPT Cheat Sheet" (найти на GitHub) — соберите свою шпаргалку
+1. **Заполнить eJPT skills matrix**: для каждой области поставить статус 0-2 и приложить ссылку на свой учебный артефакт из курса.
+2. **Собрать встроенную cheat sheet**: `recon`, `web`, `tools`, `linux privesc`, `reporting`, `safe boundaries`. Используйте только команды и ограничения, уже изученные в уроках.
+3. **Написать exam simulation report** по встроенной карточке: что проверено, что подтверждено, что осталось lab-only или `requires approval`.
 
-> **Финальный совет:** eJPT — отличная первая сертификация. После неё можно двигаться к OSCP (Offensive Security) или PNPT (Practical Network Penetration Tester). Главное — практика, практика, практика!
+> **Финальный совет:** eJPT полезен как первая проверка системности. Для Security-aware SDET важнее не “собрать флаг”, а показать зрелый цикл: scope → safe check → evidence → triage → remediation/retest.
 
 ## Практика на Slider AI
 

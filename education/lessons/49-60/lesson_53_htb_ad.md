@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не переносить exploitation, privesc, bypass и aggressive enumeration на Slider AI без расширенного scope.
 
 
-**Процессный артефакт:** `VULNERABILITY_TRIAGE.md`: lab-to-product transfer matrix и ограничения scope.
+**Процессный артефакт:** встроенный шаблон vulnerability triage из пользовательской инструкции: lab-to-product transfer matrix и ограничения scope.
 
 **Безопасная цель:** TryHackMe, Hack The Box, PortSwigger Academy и другие платформы только в рамках их правил и активной учебной машины.
 
@@ -177,7 +177,36 @@ Kali ARM64 VM используется как углубление, когда �
 
 ## Практическое занятие
 
-### Комната на THM: "Active Directory Basics"
+### Active Directory foundations без обязательной внешней комнаты
+
+Внешние AD-комнаты полезны как углубление, но обязательный путь урока самодостаточен. Перед любыми AD-атаками студент должен понимать базовую модель:
+
+| Понятие | Короткое объяснение | Что проверяет SDET/Security QA |
+|---|---|---|
+| Domain | административная область с учетными записями и политиками | какие системы и пользователи входят в scope |
+| Domain Controller | сервер аутентификации/политик | почему доступ к DC критичен |
+| LDAP | протокол чтения каталога | какие запросы раскрывают структуру и когда они запрещены |
+| Kerberos | ticket-based auth | почему ticket и service account связаны с риском |
+| SPN | имя сервиса в Kerberos | где возникает Kerberoasting risk |
+| Group nesting | вложенные группы | как обычный пользователь может получить лишние права |
+| GPO | групповые политики | какие политики являются controls: password, lockout, logging |
+
+В обязательном пути заполните AD inventory worksheet:
+
+```markdown
+# AD Inventory Worksheet
+
+Domain:
+Domain controller:
+Known user roles:
+Sensitive groups:
+Service accounts:
+SPN risk:
+Logging/detection expectation:
+Actions forbidden without AD lab approval:
+```
+
+### Lab-only AD walkthrough
 
 **Шаг 1. Изучение структуры AD**
 - Разберите иерархию: Forest → Domain → OU
@@ -212,8 +241,8 @@ sudo responder -I tun0 -wrf
 
 **Брутфорс хеша:**
 ```bash
-# THM/HTB/cloud-lab only
-john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt
+# AD lab/cloud-lab only; используйте локальный учебный словарь, не системный путь macOS
+john --wordlist=passwords_lab.txt hash.txt
 ```
 
 ### Практика: Kerberoasting

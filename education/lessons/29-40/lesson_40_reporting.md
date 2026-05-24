@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения.
 
 
-**Процессный артефакт:** `TOOLING_POLICY.md` и finding/observation по шаблону.
+**Процессный артефакт:** встроенная tooling approval card и finding/observation по шаблону из пользовательской инструкции.
 
 **Безопасная цель:** Только `192.168.100.20`, `target.local`, Metasploitable/VulnHub/THM/HTB/PortSwigger в рамках их правил. Не использовать домашний роутер как цель атаки.
 
@@ -205,7 +205,7 @@ Kali ARM64 VM используется как углубление, когда �
 - **Proof of Concept**:
   ```http
   POST /login.php HTTP/1.1
-  Host: target.com
+  Host: app.training.example
   
   user=admin' OR '1'='1&pass=test
   ```

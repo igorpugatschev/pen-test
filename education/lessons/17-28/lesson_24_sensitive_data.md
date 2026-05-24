@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
 
 
-**Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
+**Процессный артефакт:** встроенный шаблон threat model или finding из пользовательской инструкции: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
 
@@ -187,7 +187,7 @@ DVWA по умолчанию работает по HTTP (порт 80) — тра
 3. В фильтре введите: `http and contains "password"`
 
 **Шаг 2: Выполнение входа в DVWA**
-1. Откройте http://127.0.0.1:8080
+1. Откройте http://127.0.0.1:8081
 2. Введите демонстрационные учетные данные локальной лаборатории, например `admin` / `<demo-password>`.
 3. Посмотрите в Wireshark — найдите POST-запрос `/login.php`
 
@@ -205,10 +205,10 @@ username=admin&password=<redacted-demo>&Login=Login
 
 **Шаг 4: Поиск секретов в файлах (bWAPP)**
 Откройте bWAPP. Иногда конфиг лежит в `/config.php` или `/admin/config.php`.
-Попробуйте открыть: http://127.0.0.1:8080/config.inc.php — если доступно, увидите настройки БД.
+Попробуйте открыть: http://127.0.0.1:8081/config.inc.php — если доступно, увидите настройки БД.
 
 **Шаг 5: Анализ через Burp Suite**
-1. Настройте браузер на прокси `127.0.0.1:8081`, если DVWA уже занимает `127.0.0.1:8080`.
+1. Настройте браузер на прокси `127.0.0.1:8081`, если Burp занимает `127.0.0.1:8080`.
 2. Установите CA-сертификат Burp (для HTTPS)
 3. Войдите в DVWA — запрос появится в Proxy → HTTP history
 4. Посмотрите вкладку **Headers** и **Request** — видны ли пароли?

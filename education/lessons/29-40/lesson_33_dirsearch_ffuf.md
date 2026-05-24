@@ -24,7 +24,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения.
 
 
-**Процессный артефакт:** `TOOLING_POLICY.md` и finding/observation по шаблону.
+**Процессный артефакт:** встроенная tooling approval card и finding/observation по шаблону из пользовательской инструкции.
 
 **Безопасная цель:** Только `192.168.100.20`, `target.local`, Metasploitable/VulnHub/THM/HTB/PortSwigger в рамках их правил. Не использовать домашний роутер как цель атаки.
 
@@ -191,26 +191,26 @@ pip install -r requirements.txt
 pip3 install dirsearch
 
 # Базовый запуск
-python3 dirsearch.py -u http://127.0.0.1:8080
+python3 dirsearch.py -u http://127.0.0.1:8081
 # Пример вывода:
-# Target: http://127.0.0.1:8080
+# Target: http://127.0.0.1:8081
 # [20:30:15] Starting: 
 # [20:30:16] 200 -    12KB - /index.html
 # [20:30:17] 403 -    1KB - /admin/
 
 # Указание словаря
-python3 dirsearch.py -u http://127.0.0.1:8080 -w /usr/share/wordlists/dirb/common.txt
+python3 dirsearch.py -u http://127.0.0.1:8081 -w /opt/homebrew/share/seclists/Discovery/Web-Content/common.txt
 # macOS (M2, Homebrew)
-python3 dirsearch.py -u http://127.0.0.1:8080 -w /opt/homebrew/share/seclists/Discovery/Web-Content/common.txt
+python3 dirsearch.py -u http://127.0.0.1:8081 -w /opt/homebrew/share/seclists/Discovery/Web-Content/common.txt
 
 # Расширения файлов
-python3 dirsearch.py -u http://127.0.0.1:8080 -e php,html,txt,bak
+python3 dirsearch.py -u http://127.0.0.1:8081 -e php,html,txt,bak
 
 # Рекурсивный поиск
-python3 dirsearch.py -u http://127.0.0.1:8080 -r
+python3 dirsearch.py -u http://127.0.0.1:8081 -r
 
 # Сохранение результатов
-python3 dirsearch.py -u http://127.0.0.1:8080 -o results.txt
+python3 dirsearch.py -u http://127.0.0.1:8081 -o results.txt
 ```
 
 ### ffuf
@@ -227,25 +227,25 @@ go install github.com/ffuf/ffuf@latest
 
 # Базовый запуск
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-ffuf -u http://127.0.0.1:8080/FUZZ -w /usr/share/wordlists/dirb/common.txt
+ffuf -u http://127.0.0.1:8081/FUZZ -w /opt/homebrew/share/seclists/Discovery/Web-Content/common.txt
 # Пример вывода:
 # :: Method       : GET
-# :: URL          : http://127.0.0.1:8080/FUZZ
-# :: Wordlist     : FUZZ: /usr/share/wordlists/dirb/common.txt
+# :: URL          : http://127.0.0.1:8081/FUZZ
+# :: Wordlist     : FUZZ: /opt/homebrew/share/seclists/Discovery/Web-Content/common.txt
 # :: Status codes : 200,204,301,302,307,403,404,500
 # [Status: 200] [Size: 1234] [Words: 100] [Lines: 50] /index.html
 
 # Поиск файлов с расширениями
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-ffuf -u http://127.0.0.1:8080/FUZZ -w wordlist.txt -e .php,.html,.txt
+ffuf -u http://127.0.0.1:8081/FUZZ -w wordlist.txt -e .php,.html,.txt
 
 # Фильтрация результатов (игнорировать 404)
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-ffuf -u http://127.0.0.1:8080/FUZZ -w wordlist.txt -fc 404
+ffuf -u http://127.0.0.1:8081/FUZZ -w wordlist.txt -fc 404
 
 # Поиск по конкретным статус-кодам
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-ffuf -u http://127.0.0.1:8080/FUZZ -w wordlist.txt -mc 200,204,301,302,403
+ffuf -u http://127.0.0.1:8081/FUZZ -w wordlist.txt -mc 200,204,301,302,403
 # Пример вывода:
 # [Status: 301] [Size: 234] [Words: 14] [Lines: 8] /admin
 
@@ -255,21 +255,21 @@ ffuf -u http://127.0.0.1:8080/FUZZ -w wordlist.txt -mc 200,204,301,302,403
 ### Полезные словари
 ```bash
 # В Kali Linux уже есть словари
-ls /usr/share/wordlists/
+ls /opt/homebrew/share/seclists/Discovery/Web-Content/
 
 # Dirb (базовый)
-/usr/share/wordlists/dirb/common.txt
-/usr/share/wordlists/dirb/big.txt
+/opt/homebrew/share/seclists/Discovery/Web-Content/common.txt
+/opt/homebrew/share/seclists/Discovery/Web-Content/big.txt
 
 # SecLists (огромная коллекция)
-/usr/share/wordlists/seclists/Discovery/Web-Content/
+/opt/homebrew/share/seclists/Discovery/Web-Content/
 
 # macOS (M2, Homebrew)
 brew install seclists
 ls /opt/homebrew/share/seclists/Discovery/Web-Content/
 
 # Скачать SecLists
-git clone https://github.com/danielmiessler/SecLists.git /usr/share/wordlists/seclists
+brew install seclists
 ```
 
 
@@ -331,7 +331,7 @@ Sanitization: secrets and personal data excluded
 
 ## Частые ошибки
 
-1. **Неправильный путь к словарям в macOS** — в macOS с Homebrew словари SecLists находятся в `/opt/homebrew/share/seclists/`, а не в `/usr/share/wordlists/`.
+1. **Неправильный путь к словарям в macOS** — в macOS с Homebrew словари SecLists находятся в `/opt/homebrew/share/seclists/`, а не в Kali/Linux system wordlist paths.
 
 2. **Отсутствие расширений файлов** — при поиске директорий часто забывают указать `-e` для поиска файлов с расширениями.
 

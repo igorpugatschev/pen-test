@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не выполнять перебор портов и широкое сканирование Slider AI до согласованного scope.
 
 
-**Процессный артефакт:** `SECURITY_TEST_PLAN.md`: безопасная диагностическая проверка и stop conditions.
+**Процессный артефакт:** встроенный шаблон security test plan из пользовательской инструкции: безопасная диагностическая проверка и stop conditions.
 
 **Безопасная цель:** Изолированная лаборатория, localhost, учебные адреса `192.168.100.0/24` или платформы TryHackMe/PortSwigger. Не сканировать домашний роутер и публичные IP.
 
@@ -335,12 +335,7 @@ Sanitization: secrets and personal data excluded
   brew install mitmproxy
   ```
 
-- **testssl.sh на macOS**: Не устанавливается через brew. Скачайте с GitHub:
-  ```bash
-  git clone https://github.com/drwetter/testssl.sh.git
-  cd testssl.sh
-  ./testssl.sh <lab-target>
-  ```
+- **TLS-проверка в обязательном пути**: используйте `openssl s_client` или `sslyze` по lab/approved target. `testssl.sh` можно изучать только как углубление; скачивание внешнего репозитория не требуется для сдачи урока.
 
 - **sslyze на macOS**: Установка через pip:
   ```bash

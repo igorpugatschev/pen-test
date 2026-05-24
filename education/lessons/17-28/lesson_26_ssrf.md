@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
 
 
-**Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
+**Процессный артефакт:** встроенный шаблон threat model или finding из пользовательской инструкции: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
 
@@ -177,13 +177,9 @@ Kali ARM64 VM используется как углубление, когда �
 
 ## Практическое занятие
 
-### Лаборатории PortSwigger
+### Локальная модель SSRF
 
-PortSwigger (создатели Burp Suite) предоставляют бесплатные лабы по SSRF.
-
-1. Зарегистрируйтесь на https://portswigger.net/web-security/ssrf
-2. Перейдите в **Server-side request forgery (SSRF)**
-3. Выполните лабу **SSRF with filter bypass via open redirection**
+В обязательном пути используйте встроенную модель и локальный mock. Внешние лабы можно использовать как углубление, но они не нужны для сдачи урока.
 
 ### Практика: Базовый SSRF
 
@@ -200,7 +196,7 @@ POST /check-url HTTP/1.1
 Host: vulnerable.com
 Content-Type: application/x-www-form-urlencoded
 
-url=http://127.0.0.1:8080/admin
+url=http://127.0.0.1:8888/admin
 ```
 
 Если сервер вернул содержимое `/admin` — SSRF сработал.
@@ -208,9 +204,9 @@ url=http://127.0.0.1:8080/admin
 **Шаг 3: Сканирование портов**
 Используйте Burp Intruder для перебора портов:
 ```
-url=http://127.0.0.1:8080:§PORT§
+url=http://127.0.0.1:§PORT§/admin
 ```
-Payloads: 22, 80, 443, 6379 (Redis), 9200 (Elasticsearch), 8080
+Payloads только в локальной lab-сети: 22, 80, 443, 6379 (Redis), 9200 (Elasticsearch), 8888
 
 Смотрите на время ответа и содержимое.
 
@@ -231,9 +227,9 @@ url=http://127.1/admin        # сокращенный формат
 
 ### Скриншоты для отчета
 
-1. **Скриншот 1**: PortSwigger лаба решена (зеленая галочка)
-2. **Скриншот 2**: Burp Collaborator — получен HTTP/DNS запрос
-3. **Скриншот 3**: Сканирование портов — ответы от разных портов
+1. **Скриншот 1**: локальный mock internal service запущен на `127.0.0.1:8888`
+2. **Скриншот 2**: запрос SSRF-модели показывает обращение к mock service
+3. **Скриншот 3**: таблица stop conditions для cloud metadata и port scanning
 
 ### Примеры вывода
 
@@ -245,10 +241,10 @@ HTTP GET http://abc123.oastify.com/ from 1.2.3.4
 
 **SSRF — сканирование портов через Intruder:**
 ```
-Payload: http://127.0.0.1:8080:22   → Timeout/Error (SSH)
-Payload: http://127.0.0.1:8080   → 200 OK (HTTP)
-Payload: http://127.0.0.1:8080:443  → 200 OK (HTTPS)
-Payload: http://127.0.0.1:8080:6379 → Response (Redis)
+Payload: http://127.0.0.1:22/admin   → Timeout/Error (SSH)
+Payload: http://127.0.0.1:8888/admin → 200 OK (mock HTTP)
+Payload: http://127.0.0.1:443/admin  → Timeout/Error (HTTPS)
+Payload: http://127.0.0.1:6379/admin → lab-only Redis signal
 ```
 
 **Обход фильтров — использование разных форматов IP:**
@@ -258,7 +254,7 @@ http://127.0.0.1/admin
 http://0x7f000001/admin        # Hex
 http://2130706433/admin        # Decimal
 http://0177.0.0.1/admin       # Octal
-http://127.0.0.1:8080/admin
+http://127.0.0.1:8888/admin
 ```
 
 ### Частые ошибки
@@ -272,17 +268,14 @@ http://127.0.0.1:8080/admin
 
 1. Почему SSRF позволяет атаковать внутренние сервисы?
 2. В чем разница между обычным и Blind SSRF?
-3. Как облачные метаданные (169.254.169.254) связаны с SSRF?
+3. Как облачные metadata endpoints связаны с SSRF и почему в курсе используется только mock `127.0.0.1:9000`?
 4. Почему `gopher://` опасен при SSRF?
 
 ### Адаптация под macOS (M2)
 
 ```bash
-# Установка PortSwigger лаб на macOS (через Docker, работает на M2)
-docker run -d -p 8080:80 -p 8443:443 webscantest/owasp-webgoat-php
-
 # Использование curl для тестирования SSRF локально
-curl -s "http://127.0.0.1:8080/check-url?url=http://169.254.169.254/latest/meta-data/"
+curl -s "http://127.0.0.1:8081/check-url?url=http://127.0.0.1:9000/latest/meta-data/"
 
 # Python сервер для имитации внутреннего сервиса
 cat > /tmp/internal_service.py << 'EOF'
@@ -315,7 +308,7 @@ python3 /tmp/internal_service.py &
 
 ## Задачи для самостоятельного выполнения
 
-1. **Лабы PortSwigger**: Решите минимум 2 лабы по SSRF на https://portswigger.net/web-security/ssrf. Сделайте скриншот каждой решенной лабы (с зеленой галочкой).
+1. **SSRF mock lab**: поднимите локальный internal service на `127.0.0.1:8888` и покажите, как SSRF-модель должна была бы обращаться к нему в deliberately vulnerable lab.
 
 2. **SSRF через URL-схемы**: Попробуйте использовать схемы, отличные от http://:
    - `file:///etc/passwd`
@@ -326,17 +319,13 @@ python3 /tmp/internal_service.py &
 
 3. **Обход через redirect**: Научитесь обходить фильтры через redirect. Создайте простой скрипт `redirect.php`:
    ```php
-   <?php header("Location: http://127.0.0.1:8080/admin"); ?>
+   <?php header("Location: http://127.0.0.1:8888/admin"); ?>
    ```
    Используйте: `url=http://yourserver.com/redirect.php`. Сработал ли обход?
 
 4. **Blind SSRF с Collaborator**: В Burp Suite откройте Collaborator, получите уникальный domain. Используйте его в SSRF-пейлоаде. Покажите в отчете: пришел ли DNS-запрос в Collaborator, пришел ли HTTP-запрос.
 
-5. **Cloud SSRF**: Изучите уязвимость SSRF к метаданным облаков. Попробуйте (на лабах) запросить:
-   - AWS: `http://169.254.169.254/latest/meta-data/`
-   - GCP: `http://metadata.google.internal/computeMetadata/v1/`
-   
-   Опишите, какая информация может утечь через эти эндпоинты.
+5. **Cloud SSRF mock**: используйте только mock endpoint `http://127.0.0.1:9000/latest/meta-data/`. Реальные cloud metadata endpoints не вызываются в этом курсе без отдельной cloud lab и written approval.
 
 ## Практика на Slider AI
 

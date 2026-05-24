@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не переносить exploitation, privesc, bypass и aggressive enumeration на Slider AI без расширенного scope.
 
 
-**Процессный артефакт:** `VULNERABILITY_TRIAGE.md`: lab-to-product transfer matrix и ограничения scope.
+**Процессный артефакт:** встроенный шаблон vulnerability triage из пользовательской инструкции: lab-to-product transfer matrix и ограничения scope.
 
 **Безопасная цель:** TryHackMe, Hack The Box, PortSwigger Academy и другие платформы только в рамках их правил и активной учебной машины.
 
@@ -279,28 +279,18 @@ Sanitization: secrets and personal data excluded
 
 ## Частые ошибки
 
-1. **Ошибка 1**: Типичная ошибка новичков в этом уроке.
-2. **Ошибка 2**: Еще одна распространенная проблема.
-3. **Ошибка 3**: Важный момент, который часто упускают.
-
-
+1. **Запуск privesc-команд на продуктовой машине** — `sudo -l`, поиск SUID и чтение системных путей выполняются только в lab/cloud lab или на своем локальном контейнере.
+2. **Публикация секретов в evidence** — вывод `/etc/passwd`, ключей, токенов и переменных окружения должен быть сокращен и отредактирован.
+3. **Путать misconfiguration и exploit** — найденный SUID или sudo rule сначала оформляется как риск конфигурации и требует triage.
 
 ## Вопросы на понимание
 
-1. Вопрос 1 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 1</details>
-2. Вопрос 2 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 2</details>
-3. Вопрос 3 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 3</details>
-
-
-
-## Форматы флагов
-
-- **TryHackMe**: `THM{...}`
-- **HackTheBox**: `HTB{...}`
-- **PortSwigger**: "Lab solved!" (без флагов)
+1. Почему `sudo -l` является безопасным учебным шагом только в lab или на своей машине?
+   <details><summary>Ответ</summary>Потому что команда раскрывает локальные права пользователя. На чужой или продуктовой системе это может нарушить scope и evidence policy.</details>
+2. Чем SUID-risk отличается от подтвержденной privilege escalation?
+   <details><summary>Ответ</summary>SUID-файл сам по себе является candidate observation. Finding появляется только после проверки владельца, прав, exploitability, business impact и разрешенной среды.</details>
+3. Как перенести Linux privesc в Security QA без эксплуатации?
+   <details><summary>Ответ</summary>Составить baseline checklist для hardening, указать запрещенные команды, expected controls и retest criteria.</details>
 
 
 

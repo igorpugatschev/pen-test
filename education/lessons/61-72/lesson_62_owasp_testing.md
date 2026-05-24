@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** финальный проект остается в рамках правилами Slider AI olddev из пользовательской инструкции курса; любые intrusive checks требуют отдельного approval.
 
 
-**Процессный артефакт:** `REMEDIATION_BACKLOG.md` или `RETEST_PLAN.md`: приоритизация, владелец, retest evidence.
+**Процессный артефакт:** встроенный remediation backlog или retest plan из пользовательской инструкции: приоритизация, владелец, retest evidence.
 
 **Безопасная цель:** Учебный scope, подписанный RoE, собственная лаборатория или платформа с явным разрешением. Реальные организации только с письменным согласием.
 
@@ -181,7 +181,7 @@ Kali ARM64 VM используется как углубление, когда �
 
 В этом уроке не нужно тестировать вымышленный внешний магазин и не нужно запускать intrusive-проверки. Задача — научиться превращать OWASP WSTG в безопасный план проверки для разрешенного стенда `https://olddev.slider-ai.ru`.
 
-Создайте файл `owasp_slider_ai_safe_checklist.md`:
+Создайте в своих рабочих заметках раздел `OWASP WSTG Safe Checklist`:
 
 ```markdown
 # OWASP WSTG Safe Checklist: Slider AI olddev
@@ -229,6 +229,26 @@ Kali ARM64 VM используется как углубление, когда �
 | AUTH | manual login behavior | sanitized screenshot | observation | no brute force |
 | INPV | harmless validation string | UI message | observation | payloads lab-only |
 ```
+
+### Product Security QA coverage matrix
+
+OWASP WSTG нужно перевести в покрытие продукта. Для Slider AI olddev обязательная работа в этом уроке — матрица, а не атака.
+
+| Тема | Что покрывает | Минимальный учебный результат | Где выполнять |
+|---|---|---|---|
+| Access Control / IDOR | владелец объекта, роль, tenant boundary | role/object matrix и список approval-required проверок | olddev passive + test data request |
+| Authorization testing | действия по ролям и состояниям | 5 test cases: allowed/forbidden/edge/expired/anonymous | olddev только безопасные роли |
+| API Security | REST/OpenAPI/JWT/CORS/GraphQL | API checklist с безопасными headers/status observations | macOS native, один low-impact запрос |
+| File upload | тип, размер, хранение, исполнение | upload risk model без загрузки опасных файлов | lab-only или approved test file |
+| Path traversal / LFI / RFI | доступ к файлам вне разрешенного пути | payload mechanics только lab-only; на olddev limitation | PortSwigger/local lab |
+| Command injection | выполнение команд через input | только threat model и lab-only demonstration | lab-only |
+| Deserialization / SSTI | выполнение логики из данных | explain-and-classify worksheet | lab-only |
+| SSRF / cloud metadata | сервер делает запросы внутрь сети | mock metadata `127.0.0.1:9000`, not real metadata | local mock/cloud lab |
+| Race conditions | конкурирующие действия | sequence diagram и stop condition | не выполнять на olddev |
+| Business logic flaws | обход порядка/лимитов/состояний | abuse case + expected control | olddev safe walkthrough |
+| SAST/DAST/SCA/secrets/SBOM | security gates в SDLC | CI gate proposal с false-positive handling | локальные учебные артефакты |
+
+Матрица считается заполненной, если по каждой строке есть `safe action`, `lab-only or approval boundary`, `evidence type` и `owner action`. Это делает урок самодостаточным: студенту не нужно искать WSTG mapping снаружи, чтобы понять, что именно покрывать.
 
 ### Практика: заполнение чек-листа
 

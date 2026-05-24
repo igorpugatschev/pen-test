@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
 
 
-**Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
+**Процессный артефакт:** встроенный шаблон threat model или finding из пользовательской инструкции: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
 
@@ -197,30 +197,35 @@ Set-Cookie: PHPSESSID=abc123; path=/
 - PHP 5.6.30 (EOL — поддержка прекращена)
 
 **Шаг 2: Поиск JS-библиотек**
-1. Откройте http://127.0.0.1:8080, нажмите Ctrl+U (View Source)
+1. Откройте http://127.0.0.1:8081, нажмите Ctrl+U (View Source)
 2. Найдите подключенные скрипты:
 
 ```html
-<script src="http://127.0.0.1:8080/vulnerabilities/xss_r/source/jquery.js"></script>
-<script src="http://127.0.0.1:8080/vulnerabilities/xss_r/source/jquery-1.10.2.min.js"></script>
+<script src="http://127.0.0.1:8081/vulnerabilities/xss_r/source/jquery.js"></script>
+<script src="http://127.0.0.1:8081/vulnerabilities/xss_r/source/jquery-1.10.2.min.js"></script>
 ```
 
 jQuery 1.10.2 — устаревшая версия с известными уязвимостями.
 
-**Шаг 3: Поиск CVE через поиск**
-Откройте https://cve.mitre.org или https://nvd.nist.gov
+**Шаг 3: Учебная CVE-карточка внутри урока**
 
-Поиск: "Apache 2.4.25 CVE"
-Результат:
+Для обязательного пути не нужно открывать внешние базы CVE. Используйте встроенный sanitized фрагмент карточек и учитесь связывать версию компонента с риском и triage:
+
 ```
+Component: Apache HTTP Server
+Observed version: 2.4.25
+Support status: old Debian package, requires owner confirmation
+Candidate CVEs:
 CVE-2017-3167 - Apache HTTP Server: Authentication bypass
 CVE-2017-3169 - Apache HTTP Server: Use-after-free
 CVE-2017-7668 - Apache HTTP Server: Buffer overflow
 ```
 
+Вывод: это candidate observation. Чтобы превратить ее в finding, нужны подтверждение реальной версии, affected configuration, reachable attack surface, compensating controls и owner review.
+
 **Шаг 4: Использование Wappalyzer (браузерное расширение)**
-1. Установите Wappalyzer в браузер
-2. Откройте http://127.0.0.1:8080
+1. Установите Wappalyzer в браузер как углубление или используйте DevTools/headers в обязательном пути
+2. Откройте http://127.0.0.1:8081
 3. Нажмите на иконку Wappalyzer
 
 Результат:
@@ -258,15 +263,35 @@ jQuery 1.10.2
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
   aquasec/trivy image vulnerables/web-dvwa
 
-# Поиск CVE через список версий
-curl -s "https://cve.circl.lu/api/search/apache" | jq '.[:5]'
-
 # Установка Wappalyzer CLI (через npm, работает на M2)
 npm install -g wappalyzer-cli
-wappalyzer http://127.0.0.1:8080
+wappalyzer http://127.0.0.1:8081
 ```
 
 ---
+
+### Security gates: SCA, SAST, DAST, secrets и SBOM
+
+SDET ownership означает, что vulnerable components должны попадать в pipeline как управляемые gate, а не как разовая ручная находка.
+
+| Gate | Что проверяет | Минимальный результат урока | Ошибка новичка |
+|---|---|---|---|
+| SCA | зависимости и известные CVE | список компонентов, severity, false-positive note | считать CVE finding без проверки контекста |
+| SBOM | inventory пакетов/образов | таблица component/version/source/owner | не знать, что входит в продукт |
+| Secrets scanning | случайные ключи в коде/артефактах | policy: что сканируем и как редактируем evidence | публиковать найденный секрет |
+| SAST | risky code patterns | candidate observation + reviewer | считать static warning эксплуатацией |
+| DAST | runtime behavior | только lab/passive/approved режим | запускать active scan без approval |
+| CI security gate | правило принятия решения | fail/warn/manual review criteria | ломать delivery без triage-процесса |
+
+Встроенный SBOM-фрагмент для упражнения:
+
+```markdown
+| Component | Version | Source | Owner | Risk note | Action |
+|---|---|---|---|---|---|
+| Apache HTTP Server | 2.4.25 | lab header | platform | old component candidate | confirm package source |
+| PHP | 5.6.30 | lab header | backend | EOL candidate | replace in lab; product check via owner |
+| jQuery | 1.10.2 | page source | frontend | old JS library candidate | verify usage and upgrade path |
+```
 
 
 ## Примеры вывода
@@ -311,13 +336,13 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **Определение версий в DVWA**: Используя Burp Suite, определите версии всех компонентов DVWA (Apache, PHP, MySQL, jQuery). Укажите в отчете: какие версии, есть ли у них известные CVE (поищите на nvd.nist.gov).
+1. **Определение версий в DVWA**: Используя Burp Suite или DevTools, определите версии компонентов DVWA (Apache, PHP, MySQL, jQuery). Сопоставьте их со встроенной учебной CVE-карточкой и оформите candidate observation.
 
 2. **Сканирование через Trivy**: Установите Trivy и просканируйте Docker-образ `vulnerables/web-dvwa`. Сделайте скриншот результатов. Сколько критических уязвимостей найдено?
 
 3. **Поиск JS-библиотек**: В bWAPP откройте исходный код страницы. Найдите все подключенные JS и CSS библиотеки, укажите их версии. Есть ли среди них устаревшие?
 
-4. **CVE Research**: Выберите один компонент из DVWA (например, PHP 5.6.30). Найдите минимум 2 CVE, связанных с этой версией. Опишите: что за уязвимость, какой CVSS рейтинг, есть ли публичный эксплойт.
+4. **CVE triage без внешнего поиска**: выберите один компонент из встроенной SBOM-таблицы и заполните triage: confidence, affected surface, owner action, false-positive checks, retest method.
 
 5. **Обновление компонентов**: Напишите, до каких версий нужно обновить компоненты DVWA (Apache, PHP, jQuery), чтобы устранить известные уязвимости. Укажите конкретные версии.
 

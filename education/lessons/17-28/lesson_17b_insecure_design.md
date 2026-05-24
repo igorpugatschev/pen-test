@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
 
 
-**Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
+**Процессный артефакт:** встроенный шаблон threat model или finding из пользовательской инструкции: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
 
@@ -225,6 +225,36 @@ username=admin&password=wrong2&Login=Login
 2. Попробуйте открыть `/admin/` напрямую
 3. Если доступно без проверки прав — это проблема дизайна (Missing Function Level Access Control)
 
+### Security QA: role matrix, tenant boundary и IDOR
+
+Для SDET/Security QA Insecure Design начинается не с payload, а с вопроса: “какие действия вообще должны быть возможны для этой роли, этого владельца данных и этого состояния объекта?”. Минимальная модель:
+
+| Проверка | Что фиксируем | Безопасное действие | Когда остановиться |
+|---|---|---|---|
+| Role matrix | роли, разрешенные действия, запрещенные действия | заполнить таблицу ожиданий по UI/спецификации | если нужна чужая роль или чужой аккаунт |
+| Tenant boundary | какие данные принадлежат текущему workspace/tenant | проверить, что UI не показывает чужие идентификаторы | если нужно перебирать ID или открывать чужие данные |
+| IDOR hypothesis | объект доступен по ID без проверки владельца | оформить гипотезу и запросить тестовые пары объектов | если нет выделенного тестового набора |
+| Business logic | можно ли нарушить порядок шагов | пройти happy path и записать допустимые переходы | если шаг меняет чужие данные или оплату |
+| Race condition | два запроса могут изменить один ресурс одновременно | описать сценарий как risk, не запускать гонку на olddev | если нужен параллельный/нагрузочный тест |
+
+Встроенный шаблон role matrix:
+
+```markdown
+# Role Matrix
+
+Feature:
+Object:
+Roles: Owner | Editor | Viewer | Anonymous
+Allowed actions:
+Forbidden actions:
+Tenant boundary:
+State boundary:
+Safe evidence:
+Approval needed for:
+```
+
+Пример IDOR без эксплуатации: “Если URL содержит `/documents/123`, то безопасность зависит не от скрытости числа `123`, а от серверной проверки `current_user` и владельца документа. Без пары тестовых аккаунтов и разрешенного набора объектов это не finding, а `requires approval`”.
+
 ---
 
 ## Частые ошибки
@@ -252,7 +282,7 @@ brew install --cask drawio  # для создания диаграмм архи�
 
 # Тестирование rate limiting через curl
 for i in {1..10}; do
-  curl -X POST http://127.0.0.1:8080/login.php \
+  curl -X POST http://127.0.0.1:8081/login.php \
     -d "username=admin&password=wrong$i&Login=Login" \
     -c cookies.txt -b cookies.txt -s -o /dev/null -w "%{http_code}\n"
 done
@@ -305,11 +335,11 @@ Sanitization: secrets and personal data excluded
 
 1. **Анализ дизайна DVWA**: Изучите функцию смены пароля в DVWA (CSRF). Опишите в отчете: какие проверки отсутствуют, почему это проблема дизайна, как должно быть правильно.
 
-2. **Поиск IDOR**: В DVWA перейдите в **SQL Injection (Blind)**. Попробуйте изменить параметр `id` в URL на другие значения. Если без проверки прав вы видите чужие данные — опишите это как проблему дизайна.
+2. **IDOR без выхода за scope**: заполните role matrix для учебного объекта. В DVWA можно посмотреть, как меняется параметр `id`, но не переносите перебор ID на Slider AI. Для продукта оформите `requires approval` и перечислите, какие тестовые пары пользователей/объектов нужны.
 
 3. **Threat Modeling**: Выберите простую функцию (например, логин в bWAPP). Составьте список угроз (минимум 3): что может пойти не так, если не заложить защиту на этапе дизайна.
 
-4. **Rate Limiting тест**: Используя Burp Intruder, отправьте 20 запросов логина в DVWA (Low). Посмотрите, появляется ли задержка или блокировка. Сделайте скриншот результатов в Intruder.
+4. **Rate limiting как дизайн-контроль**: на DVWA можно выполнить ограниченную lab-only серию из 5-10 запросов. Для Slider AI не выполняйте brute force; составьте expected control: lockout, throttling, alerting, generic error, audit log.
 
 5. **Сравнение уровней**: Сравните уровни Low и Medium в DVWA с точки зрения дизайна. Появляется ли на Medium защита от CSRF (токены)? Изменилась ли архитектура или просто добавилась проверка в коде?
 

@@ -105,6 +105,22 @@ Kali Linux ARM64 VM используйте только как углублен�
 
 VirtualBox и x86/x64 VM не являются базовым путем для Apple Silicon.
 
+## 6.1. Единая карта локальных портов
+
+Чтобы лаборатории не конфликтовали с proxy-инструментами, в курсе используется фиксированная карта портов:
+
+| Назначение | URL или endpoint | Комментарий |
+|---|---|---|
+| Burp Proxy | `127.0.0.1:8080` | Только proxy в браузере, не учебное приложение |
+| DVWA | `http://127.0.0.1:8081` | Docker mapping `8081:80` |
+| bWAPP | `http://127.0.0.1:8082` | Docker mapping `8082:80` |
+| WebGoat | `http://127.0.0.1:8083/WebGoat` | Docker mapping `8083:8080` |
+| OWASP ZAP Proxy | `127.0.0.1:8090` | Чтобы не конфликтовать с Burp |
+| Mock internal SSRF service | `http://127.0.0.1:8888` | Только локальная имитация внутреннего сервиса |
+| Mock cloud metadata | `http://127.0.0.1:9000/latest/meta-data/` | Без обращения к реальному cloud metadata endpoint |
+
+Если в выводе Docker появился другой порт, студент фиксирует это в evidence и явно объясняет отличие. На Slider AI olddev не переносятся lab-only payloads, перебор портов, brute force, destructive payloads и active scan без отдельного approval.
+
 ## 7. Критерии зачета урока
 
 Зачет:
@@ -142,3 +158,280 @@ VirtualBox и x86/x64 VM не являются базовым путем для 
 - retest plan;
 - automation appendix на Python;
 - итоговый отчет для команды.
+
+## 10. Встроенные шаблоны курса
+
+Все шаблоны ниже являются частью курса. Их не нужно искать в отдельных файлах или внешних источниках. В каждом уроке студент копирует нужный шаблон в свои рабочие заметки и заполняет только безопасные поля без cookies, tokens, passwords, PII и чужих данных.
+
+### Rules of Engagement
+
+```markdown
+# Rules of Engagement
+
+Target:
+Environment:
+Authorized owner:
+In scope:
+Out of scope:
+Allowed actions:
+Forbidden actions:
+Stop conditions:
+Evidence rules:
+Approval needed for:
+Communication channel:
+Retest window:
+```
+
+Минимальная сдача: явно указаны `Target`, `In scope`, `Out of scope`, `Forbidden actions` и `Stop conditions`. Для Slider AI target всегда только `https://olddev.slider-ai.ru`.
+
+### Security Test Strategy
+
+```markdown
+# Security Test Strategy
+
+Product area:
+Business risk:
+Security objective:
+Relevant OWASP/WSTG areas:
+Assumptions:
+Constraints:
+Safe baseline checks:
+Lab-only checks:
+Approval-required checks:
+Evidence format:
+Definition of done:
+```
+
+Стратегия отвечает на вопрос “зачем проверяем”. Она не должна начинаться с инструмента. Сначала фиксируется риск продукта, затем безопасный способ проверки.
+
+### Security Test Plan
+
+```markdown
+# Security Test Plan
+
+Check ID:
+Feature:
+Preconditions:
+Environment:
+Target:
+Steps:
+Expected result:
+Actual result:
+Evidence:
+Status: observation | finding | not applicable | not reproducible | requires approval
+Limitations:
+Next safe step:
+```
+
+План отвечает на вопрос “как проверяем”. Если шаг требует payload, перебора, активного сканирования, изменения данных или доступа к чужим данным, статус шага должен быть `requires approval` или `lab-only`.
+
+### Threat Model
+
+```markdown
+# Threat Model
+
+Feature:
+Assets:
+Actors:
+Trust boundaries:
+Entry points:
+Data flows:
+Abuse case:
+Expected control:
+Missing or weak control:
+Safe verification:
+Residual risk:
+```
+
+Для базовой версии используйте STRIDE как словарь вопросов: spoofing, tampering, repudiation, information disclosure, denial of service, elevation of privilege. В курсе DoS не выполняется как практика на Slider AI, а только фиксируется как риск и stop condition.
+
+### Evidence Policy
+
+```markdown
+# Evidence Policy
+
+Allowed evidence:
+Forbidden evidence:
+Sanitization rule:
+Storage location:
+Retention:
+Sharing rule:
+Example safe snippet:
+Example redaction:
+```
+
+Evidence должен подтверждать наблюдение, но не должен становиться утечкой. Достаточно 3-10 строк вывода или короткого описания UI-наблюдения.
+
+### Tooling Policy / Tooling Approval Card
+
+```markdown
+# Tooling Policy / Tooling Approval Card
+
+Tool:
+Mode:
+Target:
+Why this tool is needed:
+Expected requests or actions:
+Rate limit:
+Data collected:
+Data explicitly not collected:
+Safety guard:
+Stop condition:
+Approval status: allowed | lab-only | requires approval | forbidden
+```
+
+Эта карточка заполняется до запуска любого scanner, wordlist-инструмента, brute-force-инструмента, exploit helper или active scan. Для Slider AI default status для активных инструментов: `requires approval`.
+
+Минимальная сдача: указан инструмент, режим, target, collected data, rate limit, stop condition и approval status. Если студент не может заполнить карточку до запуска, инструмент не запускается.
+
+### Finding Template
+
+```markdown
+# Security Finding
+
+Title:
+Status: finding | observation | not reproducible | not applicable | requires approval
+Severity:
+Affected area:
+Business impact:
+Technical description:
+Steps to reproduce:
+Evidence:
+Why this is in scope:
+What was not tested:
+Recommendation:
+Owner:
+Retest criteria:
+```
+
+Finding появляется только после проверки контекста, влияния, воспроизводимости и scope. Вывод инструмента сам по себе является observation.
+
+### Vulnerability Triage
+
+```markdown
+# Vulnerability Triage
+
+Candidate:
+Source:
+Confidence:
+Scope status:
+Exploitability:
+Business impact:
+False-positive checks:
+Decision:
+Owner action:
+Retest need:
+```
+
+Triage нужен, чтобы не превращать каждый scanner output в дефект. Студент обязан указать confidence и false-positive checks.
+
+### Remediation Backlog
+
+```markdown
+# Remediation Backlog
+
+Item:
+Risk:
+Recommended fix:
+Owner:
+Priority:
+Dependency:
+Due date:
+Acceptance criteria:
+Retest method:
+Status:
+```
+
+Backlog связывает security finding с инженерным действием команды. Хорошая рекомендация проверяема: после исправления понятно, каким шагом делать retest.
+
+### Retest Plan
+
+```markdown
+# Retest Plan
+
+Original finding:
+Fix summary:
+Environment:
+Preconditions:
+Retest steps:
+Expected secure behavior:
+Evidence to collect:
+Regression check:
+Result:
+Remaining risk:
+```
+
+Retest подтверждает, что риск снижен, а не просто “дефект закрыт”. Если исходный тест был lab-only, retest тоже остается lab-only или выполняется только после approval.
+
+### Security Automation Architecture / Security Automation Appendix
+
+```markdown
+# Security Automation Architecture / Security Automation Appendix
+
+Helper name:
+Purpose:
+Allowed targets:
+Forbidden targets:
+Safety controls:
+Timeout/rate limit:
+Input contract:
+Output contract:
+Tests:
+Sanitization:
+Example output:
+How to use in retest:
+```
+
+Automation appendix показывает, что Python helper является частью SDET ownership: его можно ревьюить, тестировать, повторять и безопасно использовать для regression.
+
+## 11. Индекс финального assessment package
+
+Финальный проект не требует отдельных шаблонных файлов в репозитории курса. Студент собирает рабочий Markdown-пакет в своей учебной папке, копируя встроенные шаблоны из этой инструкции.
+
+Минимальный состав пакета:
+
+```markdown
+# Slider AI olddev Security QA Assessment Package
+
+## 1. Rules of Engagement
+Copy: Rules of Engagement
+
+## 2. Security Test Strategy
+Copy: Security Test Strategy
+
+## 3. Evidence Policy
+Copy: Evidence Policy
+
+## 4. Tooling Policy
+Copy: Tooling Policy / Tooling Approval Card
+
+## 5. Security Test Plan
+Copy: Security Test Plan
+
+## 6. Threat Model
+Copy: Threat Model
+
+## 7. Evidence Index
+| ID | Area | Action | Evidence | Status | Sanitized |
+|---|---|---|---|---|---|
+
+## 8. Findings And Observations
+Copy: Finding Template for each confirmed item or observation
+
+## 9. Vulnerability Triage
+Copy: Vulnerability Triage
+
+## 10. Remediation Backlog
+Copy: Remediation Backlog
+
+## 11. Retest Plan
+Copy: Retest Plan
+
+## 12. Security Automation Architecture / Appendix
+Copy: Security Automation Architecture / Security Automation Appendix
+
+## 13. Executive Summary
+5-7 sentences for team decision making
+```
+
+Пакет считается готовым, если каждый раздел содержит конкретные данные по `https://olddev.slider-ai.ru`, явно указывает ограничения и не содержит секретов. Пустой шаблон не считается выполненной работой.

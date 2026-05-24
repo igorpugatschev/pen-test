@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
 
 
-**Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
+**Процессный артефакт:** встроенный шаблон threat model или finding из пользовательской инструкции: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
 
@@ -179,8 +179,8 @@ Kali ARM64 VM используется как углубление, когда �
 
 ### Настройка WebGoat
 
-1. Убедитесь, что WebGoat запущен: `docker run -d -p 8080:8080 webgoat/goatandwolf`
-2. Откройте http://127.0.0.1:8080/WebGoat
+1. Убедитесь, что WebGoat запущен: `docker run -d -p 8083:8080 webgoat/goatandwolf`
+2. Откройте http://127.0.0.1:8083/WebGoat
 3. Перейдите в **XXE** → **XXE Injection**
 
 ### Практика: Чтение файла через XXE
@@ -296,7 +296,7 @@ python3 -m http.server 4444
 1. Почему XXE работает только если XML-парсер обрабатывает DTD?
 2. В чем разница между обычным XXE и Blind XXE?
 3. Как защититься от XXE на стороне сервера?
-4. Почему `file:///etc/passwd` работает, а `http://127.0.0.1:8080` может быть заблокирован?
+4. Почему `file:///etc/passwd` работает, а `http://127.0.0.1:8083` может быть заблокирован?
 
 ### Адаптация под macOS (M2)
 

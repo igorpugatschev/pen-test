@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** финальный проект остается в рамках правилами Slider AI olddev из пользовательской инструкции курса; любые intrusive checks требуют отдельного approval.
 
 
-**Процессный артефакт:** `REMEDIATION_BACKLOG.md` или `RETEST_PLAN.md`: приоритизация, владелец, retest evidence.
+**Процессный артефакт:** встроенный remediation backlog или retest plan из пользовательской инструкции: приоритизация, владелец, retest evidence.
 
 **Безопасная цель:** Учебный scope, подписанный RoE, собственная лаборатория или платформа с явным разрешением. Реальные организации только с письменным согласием.
 
@@ -266,7 +266,7 @@ Kali ARM64 VM используется как углубление, когда �
 ## 8. Password Attacks
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
 - [ ] Brute-force: hydra (FTP, SSH, HTTP, SMB) — только THM/HTB/INE lab с лимитами
-- [ ] Wordlists: crunch, cewl, rockyou.txt; на Kali путь обычно `/usr/share/wordlists`, на macOS используйте локальный файл или `/opt/homebrew/share`
+- [ ] Wordlists: crunch, cewl, rockyou.txt; на macOS используйте локальный файл или `/opt/homebrew/share`; Kali/Linux system paths допустимы только в явно помеченной lab VM
 - [ ] Password spraying — знать как риск и анти-паттерн; не выполнять без отдельного письменного разрешения
 - [ ] John the Ripper: cracking hashes
 
@@ -276,17 +276,15 @@ Kali ARM64 VM используется как углубление, когда �
 - [ ] Remediation recommendations
 ```
 
-### Рекомендуемые ресурсы
+### Встроенный план подготовки
 
-**Бесплатные:**
-- TryHackMe (базовые комнаты)
-- Hack The Box (Starting Point)
-- VulnHub (скачать VM)
-- YouTube: каналы "The Cyber Mentor", "John Hammond", "IPPSEC"
+Внешние платформы можно использовать как углубление, если есть доступ и разрешенные labs, но обязательная сдача строится на материалах этого курса:
 
-**Платные (рекомендуется):**
-- INE PTP Course (включает eJPT exam voucher)
-- TryHackMe Subscription (для продвинутых комнат)
+- 3 timed-сессии по 90 минут: recon, web, reporting;
+- 1 simulated subnet worksheet без подключения к реальным чужим системам;
+- 1 report drill: executive summary, findings, remediation, retest;
+- 1 gap analysis по eJPT skills matrix из урока 60;
+- 1 safety review: какие техники остаются lab-only или `requires approval`.
 
 
 
@@ -331,15 +329,15 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **Cloud-first Challenge**: пройдите одну комнату TryHackMe/HTB из разрешенного learning path и напишите отчет по PTES: Information Gathering → Exploitation → Privilege Escalation → Post-Exploitation.
+1. **Cloud-first Challenge без внешней зависимости**: разберите встроенный simulated subnet worksheet и напишите отчет по PTES: Information Gathering → Exploitation hypothesis → Privilege Escalation hypothesis → Reporting. Если есть отдельный доступ к cloud lab, он остается углублением.
 
 2. **Nmap Mastery**: Напишите скрипт на Bash/Python, который автоматизирует сканирование только allowlist-целей: 1) пинг-сканирование лабораторной сети, 2) ограниченное сканирование живых хостов, 3) сохранение результатов. Добавьте rate limit и отказ от запуска вне lab/cloud.
 
-3. **Metasploit Lab**: используйте TryHackMe AttackBox/HTB/Pwnbox или Kali ARM64 VM с разрешенной целью. Найдите и подтвердите 1-2 учебные уязвимости, не требуя локального Metasploitable2 на MacBook.
+3. **Metasploit Lab awareness**: опишите workflow `search → use → set → run → evidence` по встроенному transcript. Hands-on выполняйте только в разрешенной lab/cloud lab, не требуя локального Metasploitable2 на MacBook.
 
 4. **Privilege Escalation**: выполните privesc только в cloud lab или легкой локальной ARM64 VM. Используйте linpeas.sh для перечисления и опишите найденный вектор.
 
-5. **TryHackMe Path**: Зарегистрируйтесь на TryHackMe и пройдите минимум 10 комнат из раздела "Learning Paths" → "Complete Beginner" или "Offensive Pentesting". Скриншоты результатов приложите к отчету.
+5. **Skills path**: заполните 10-строчную матрицу практики внутри курса: lesson, skill, evidence, limitation, next lab-only step. Внешние rooms можно добавить как optional evidence, но они не требуются для сдачи.
 
 ## Частые ошибки
 

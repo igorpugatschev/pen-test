@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
 
 
-**Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
+**Процессный артефакт:** встроенный шаблон threat model или finding из пользовательской инструкции: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
 
@@ -180,7 +180,7 @@ Kali ARM64 VM используется как углубление, когда �
 ### Поиск проблем целостности в WebGoat
 
 **Шаг 1: Insecure Deserialization в WebGoat**
-1. Откройте WebGoat: http://127.0.0.1:8080/WebGoat
+1. Откройте WebGoat: http://127.0.0.1:8083/WebGoat
 2. Перейдите в **Insecure Deserialization**
 3. Изучите задание
 
@@ -218,10 +218,28 @@ Cookie: PHPSESSID=../../etc/passwd
 Откройте DVWA и посмотрите, откуда подгружаются ресурсы:
 
 ```html
-<script src="http://127.0.0.1:8080/vulnerabilities/xss_r/source/jquery.js"></script>
+<script src="http://127.0.0.1:8081/vulnerabilities/xss_r/source/jquery.js"></script>
 ```
 
 Если src ведет на внешний CDN (например, cdnjs.cloudflare.com), и CDN взломан — код заменен.
+
+### Dependency confusion: встроенная модель
+
+Dependency confusion возникает, когда сборка выбирает публичный пакет с тем же именем, что и внутренний пакет компании. Пример: команда использует внутренний пакет `company-lib`, но registry resolution настроен так, что публичный `company-lib` с большей версией может быть скачан раньше внутреннего. Риск не в “магии npm/pip”, а в отсутствии policy: какие registry разрешены, как pin-ятся версии, кто владеет namespace и где проверяется provenance.
+
+Безопасная учебная проверка:
+
+```markdown
+Internal package name: company-lib
+Expected registry: internal package registry
+Allowed public registry: no, unless package owner approves
+Version pinning: required
+Lockfile: required
+CI check: fail if package source is unexpected
+Evidence: package name/source/version only, without tokens
+```
+
+Минимальный результат: студент объясняет, почему одинаковое имя пакета создает риск, и добавляет CI gate “dependency source must match approved registry”.
 
 ---
 
@@ -315,7 +333,7 @@ Sanitization: secrets and personal data excluded
 
 3. **Проверка cookie на целостность**: В DVWA посмотрите значение PHPSESSID в DevTools. Попробуйте изменить один символ в cookie и отправить запрос. Что произойдет? Проверяет ли сервер целостность сессии?
 
-4. **Dependency Confusion лаба**: Изучите концепцию Dependency Confusion. Напишите пример: как атакующий может подменить внутренний пакет `company-lib` на публичный в npm/pip, если названия совпадают.
+4. **Dependency Confusion lab без внешних источников**: используйте встроенную модель `company-lib` выше. Заполните policy: approved registry, version pinning, lockfile, CI check, owner action.
 
 5. **Анализ целостности**: Выберите любой загружаемый файл в DVWA/bWAPP (например, аватар). Если бы этот файл загружался с сервера обновлений, какие проверки должны быть выполнены перед использованием?
 

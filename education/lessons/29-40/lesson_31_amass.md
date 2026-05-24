@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения.
 
 
-**Процессный артефакт:** `TOOLING_POLICY.md` и finding/observation по шаблону.
+**Процессный артефакт:** встроенная tooling approval card и finding/observation по шаблону из пользовательской инструкции.
 
 **Безопасная цель:** Только `192.168.100.20`, `target.local`, Metasploitable/VulnHub/THM/HTB/PortSwigger в рамках их правил. Не использовать домашний роутер как цель атаки.
 
@@ -223,7 +223,7 @@ amass enum -passive -d example.test -o results.txt
 
 # Использование словаря
 # Kali Linux, lab-only/approval
-# amass enum -brute -w /usr/share/wordlists/dirb/common.txt -d example.test
+# amass enum -brute -w /opt/homebrew/share/seclists/Discovery/Web-Content/common.txt -d example.test
 # macOS (M2, Homebrew), lab-only/approval
 # amass enum -brute -w /opt/homebrew/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -d example.test
 ```

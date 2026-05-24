@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
 
 
-**Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
+**Процессный артефакт:** встроенный шаблон threat model или finding из пользовательской инструкции: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
 
@@ -179,7 +179,7 @@ Kali ARM64 VM используется как углубление, когда �
 
 ### Настройка DVWA
 
-1. Откройте http://127.0.0.1:8080 (DVWA)
+1. Откройте http://127.0.0.1:8081 (DVWA)
 2. Войдите: admin / password
 3. Перейдите в **DVWA Security** — установите **Low**
 4. В меню слева выберите **SQL Injection**
@@ -309,7 +309,7 @@ Surname: e99a18c428cb38d5f260853678922e03
 docker pull vulnerables/web-dvwa
 
 # Запуск DVWA
-docker run --rm -it -p 80:80 vulnerables/web-dvwa
+docker run --rm -it -p 8081:80 vulnerables/web-dvwa
 
 # rockyou.txt нужно скачать вручную на macOS
 curl -L https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt -o rockyou.txt

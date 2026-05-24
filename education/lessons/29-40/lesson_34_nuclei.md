@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения.
 
 
-**Процессный артефакт:** `TOOLING_POLICY.md` и finding/observation по шаблону.
+**Процессный артефакт:** встроенная tooling approval card и finding/observation по шаблону из пользовательской инструкции.
 
 **Безопасная цель:** Только `192.168.100.20`, `target.local`, Metasploitable/VulnHub/THM/HTB/PortSwigger в рамках их правил. Не использовать домашний роутер как цель атаки.
 
@@ -209,7 +209,7 @@ ls ~/.nuclei/templates/
 ### Базовое сканирование только в local lab
 ```bash
 # Сканирование одного локального учебного хоста
-nuclei -u http://127.0.0.1:8080
+nuclei -u http://127.0.0.1:8081
 # Пример вывода:
 # [nuclei] Using Nuclei Engine 3.1.5
 # [nuclei] Using Nuclei Templates 9.5.4
@@ -219,16 +219,16 @@ nuclei -u http://127.0.0.1:8080
 nuclei -l urls.txt
 
 # Использовать конкретные безопасные шаблоны в lab
-nuclei -u http://127.0.0.1:8080 -t http/technologies/
-nuclei -u http://127.0.0.1:8080 -t http/misconfiguration/
+nuclei -u http://127.0.0.1:8081 -t http/technologies/
+nuclei -u http://127.0.0.1:8081 -t http/misconfiguration/
 
 # Сканирование конкретного локального порта
-nuclei -u http://127.0.0.1:8080
+nuclei -u http://127.0.0.1:8081
 
 # Вывод в JSON
-nuclei -u http://127.0.0.1:8080 -json -o results.json
+nuclei -u http://127.0.0.1:8081 -json -o results.json
 # Пример вывода (JSON):
-# {"template-id":"http/missing-security-headers","info":{"name":"...","severity":"info"},"host":"http://127.0.0.1:8080","matched-at":"http://127.0.0.1:8080/"}
+# {"template-id":"http/missing-security-headers","info":{"name":"...","severity":"info"},"host":"http://127.0.0.1:8081","matched-at":"http://127.0.0.1:8081/"}
 ```
 
 ### Полезные флаги
@@ -237,19 +237,19 @@ nuclei -u http://127.0.0.1:8080 -json -o results.json
 # nuclei -u https://any-real-target.example -rl 100
 
 # Исключить определенные шаблоны в lab
-nuclei -u http://127.0.0.1:8080 -exclude-severity info,low
+nuclei -u http://127.0.0.1:8081 -exclude-severity info,low
 
 # Только высокие и критические
-nuclei -u http://127.0.0.1:8080 -severity critical,high
+nuclei -u http://127.0.0.1:8081 -severity critical,high
 # Пример вывода:
 # [nuclei] Using Nuclei Engine 3.1.5
 # [INF] No results found. Treat scanner output as candidate evidence, not as a finding.
 
 # Использовать теги
-nuclei -u http://127.0.0.1:8080 -tags tech
+nuclei -u http://127.0.0.1:8081 -tags tech
 
 # Проверка конкретной CVE выполняется только в lab, где эта CVE намеренно воспроизводится
-nuclei -u http://127.0.0.1:8080 -t cves/2021/CVE-2021-41773.yaml
+nuclei -u http://127.0.0.1:8081 -t cves/2021/CVE-2021-41773.yaml
 ```
 
 ### Написание своего шаблона
@@ -319,7 +319,7 @@ Sanitization: secrets and personal data excluded
 
 1. Обновите шаблоны Nuclei. Посчитайте общее количество шаблонов командой `find ~/.nuclei/templates -name "*.yaml" | wc -l`.
 
-2. Запустите Nuclei против локального учебного приложения `http://127.0.0.1:8080` или THM/HTB lab, где сканирование явно разрешено. Сохраните output как candidate observation, а не как подтвержденный finding.
+2. Запустите Nuclei против локального учебного приложения `http://127.0.0.1:8081` или THM/HTB lab, где сканирование явно разрешено. Сохраните output как candidate observation, а не как подтвержденный finding.
 
 3. Используя безопасные `technologies`/`misconfiguration` шаблоны, проверьте local lab. Если нужны XSS/CVE templates, оформите это как lab-only extension и объясните, почему такие шаблоны не запускаются по Slider AI без approval.
 

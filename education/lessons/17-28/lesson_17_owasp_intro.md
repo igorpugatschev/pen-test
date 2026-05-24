@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
 
 
-**Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
+**Процессный артефакт:** встроенный шаблон threat model или finding из пользовательской инструкции: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
 
@@ -183,7 +183,7 @@ DVWA — это специально уязвимое веб-приложени�
 
 **Через Docker (рекомендуется):**
 ```bash
-docker run --rm -it -p 80:80 vulnerables/web-dvwa
+docker run --rm -it -p 8081:80 vulnerables/web-dvwa
 ```
 
 **Через Docker Compose:**
@@ -193,12 +193,12 @@ services:
   dvwa:
     image: vulnerables/web-dvwa
     ports:
-      - "80:80"
+      - "8081:80"
     environment:
       - MYSQL_PASS=password
 ```
 
-После запуска откройте http://127.0.0.1:8080/setup.php и нажмите **Create / Reset Database**.
+После запуска откройте http://127.0.0.1:8081/setup.php и нажмите **Create / Reset Database**.
 
 **Данные для входа по умолчанию:**
 - Login: `admin`
@@ -209,10 +209,10 @@ services:
 bWAPP (Buggy Web Application) — еще одно уязвимое приложение.
 
 ```bash
-docker run -d -p 80:80 raesene/bwapp
+docker run -d -p 8082:80 raesene/bwapp
 ```
 
-Откройте http://127.0.0.1:8080/install.php и нажмите **here to install bWAPP**.
+Откройте http://127.0.0.1:8082/install.php и нажмите **here to install bWAPP**.
 
 **Данные для входа:**
 - Login: `bee`
@@ -223,10 +223,10 @@ docker run -d -p 80:80 raesene/bwapp
 WebGoat — обучающая платформа от OWASP с пошаговыми уроками.
 
 ```bash
-docker run -d -p 8080:8080 webgoat/goatandwolf
+docker run -d -p 8083:8080 webgoat/goatandwolf
 ```
 
-Откройте http://127.0.0.1:8080/WebGoat — регистрация не требуется, просто введите имя пользователя.
+Откройте http://127.0.0.1:8083/WebGoat — регистрация не требуется, просто введите имя пользователя.
 
 ### Навигация по DVWA
 
@@ -252,12 +252,12 @@ docker run -d -p 8080:8080 webgoat/goatandwolf
 
 ### Пример вывода после установки DVWA
 
-При открытии http://127.0.0.1:8080 после запуска Docker:
+При открытии http://127.0.0.1:8081 после запуска DVWA Docker:
 ```
 DVWA - Damn Vulnerable Web Application
 Login: admin
 Password: password
-Setup: http://127.0.0.1:8080/setup.php
+Setup: http://127.0.0.1:8081/setup.php
 ```
 
 ---
@@ -307,9 +307,9 @@ Sanitization: secrets and personal data excluded
 
 1. **Установка лаборатории**: Разверните DVWA, bWAPP и WebGoat через Docker. Убедитесь, что все три приложения доступны в браузере. Сделайте скриншот главной страницы каждого приложения.
 
-2. **Изучение OWASP Top 10**: Прочитайте официальный документ OWASP Top 10 2021 на сайте owasp.org. Составьте таблицу из 10 строк: номер, название уязвимости, краткое описание (1 предложение), пример (1 пример из жизни).
+2. **Карта OWASP Top 10**: Используя таблицу OWASP-категорий в этой лекции, составьте 10 строк: категория, что ломается, безопасный пример проверки, что нельзя делать на Slider AI без approval.
 
-3. **Разведка DVWA**: Изучите исходный код DVWA (доступен на GitHub: github.com/digininja/DVWA). Найдите файл, отвечающий за SQL Injection на уровне Low. Какой файл содержит уязвимый код? Сколько строк кода в этом файле?
+3. **Разведка DVWA через UI и HTTP**: не открывая внешний репозиторий, найдите в DVWA страницу SQL Injection, перехватите безопасный lab-запрос и опишите, какой параметр попадает в серверную обработку.
 
 4. **Настройка уровней безопасности**: В DVWA переключите уровень безопасности с Low на Medium и снова откройте SQL Injection. Попробуйте ввести `1' OR '1'='1`. Что изменилось? Почему запрос больше не работает?
 

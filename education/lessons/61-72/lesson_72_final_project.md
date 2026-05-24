@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** финальный проект остается в рамках правилами Slider AI olddev из пользовательской инструкции курса; любые intrusive checks требуют отдельного approval.
 
 
-**Процессный артефакт:** `RULES_OF_ENGAGEMENT.md`, `SECURITY_TEST_STRATEGY.md`, `SECURITY_TEST_PLAN.md`, `SECURITY_FINDING_TEMPLATE.md`, `REMEDIATION_BACKLOG.md`, `RETEST_PLAN.md` и `SECURITY_AUTOMATION_ARCHITECTURE.md`.
+**Процессный артефакт:** комплект встроенных шаблонов из пользовательской инструкции: RoE, strategy, test plan, finding, remediation backlog, retest plan и automation appendix.
 
 **Безопасная цель:** Только `https://olddev.slider-ai.ru` в рамках правилами Slider AI olddev из пользовательской инструкции курса, либо учебные lab/CTF цели с явным разрешением. Production и любые другие домены исключены.
 
@@ -190,7 +190,7 @@ Stop conditions: 5xx spike, account lockout, unexpected data modification, secre
 
 ### Шаг 2. Strategy и test plan
 
-Заполните `SECURITY_TEST_STRATEGY.md` и `SECURITY_TEST_PLAN.md`:
+Заполните в рабочих заметках встроенные шаблоны Security Test Strategy и Security Test Plan:
 
 - какие функции Slider AI проверяются;
 - какие OWASP/WSTG категории применимы;
@@ -236,11 +236,11 @@ pytest tests/
 
 ### Шаг 5. Findings, triage, remediation
 
-Для каждого результата заполните `SECURITY_FINDING_TEMPLATE.md`. Затем перенесите итог в:
+Для каждого результата заполните встроенный Finding Template. Затем перенесите итог в рабочие разделы triage, remediation и retest:
 
-- `VULNERABILITY_TRIAGE.md`;
-- `REMEDIATION_BACKLOG.md`;
-- `RETEST_PLAN.md`.
+- Vulnerability Triage;
+- Remediation Backlog;
+- Retest Plan.
 
 ### Шаг 6. Executive summary
 
@@ -252,6 +252,62 @@ pytest tests/
 - какие top risks;
 - что нужно исправить первым;
 - когда и как делать retest.
+
+### План выполнения в 4 рабочие сессии
+
+| Сессия | Цель | Артефакт | Stop condition |
+|---|---|---|---|
+| 1 | Scope, RoE, Evidence Policy, Tooling Policy | заполненные правила и approval boundaries | нет разрешенной цели или тестовых учеток |
+| 2 | Threat Model и WSTG checklist | 3-5 entry points, role matrix, safe checklist | требуется чужой аккаунт/данные |
+| 3 | Safe execution | evidence index, observations, candidate findings | нужен payload, active scan, brute force или изменение данных |
+| 4 | Triage/report/retest | final package, backlog, retest plan, executive summary | evidence содержит секреты или не воспроизводится |
+
+### Итоговый assessment package
+
+Финальный пакет собирается в рабочих заметках студента по встроенным шаблонам из пользовательской инструкции. Минимальный индекс:
+
+```markdown
+# Slider AI olddev Security QA Assessment Package
+
+## 1. Rules of Engagement
+## 2. Security Test Strategy
+## 3. Evidence Policy
+## 4. Tooling Policy / Tooling Approval Card
+## 5. Security Test Plan
+## 6. Threat Model
+## 7. WSTG / OWASP Safe Checklist
+## 8. Role Matrix And Tenant Boundary Notes
+## 9. Evidence Index
+## 10. Findings And Observations
+## 11. Vulnerability Triage
+## 12. Remediation Backlog
+## 13. Retest Plan
+## 14. Security Automation Architecture / Appendix
+## 15. Executive Summary
+```
+
+### Acceptance checklist
+
+- [ ] Target указан только как `https://olddev.slider-ai.ru`.
+- [ ] Production и любые другие домены явно out of scope.
+- [ ] Есть Rules of Engagement и stop conditions.
+- [ ] Есть Evidence Policy и примеры redaction.
+- [ ] Есть Tooling Policy для Burp/ZAP/Python helpers.
+- [ ] Threat Model содержит assets, actors, trust boundaries, entry points и abuse cases.
+- [ ] Role matrix отделяет owner/editor/viewer/anonymous или доступные QA-роли.
+- [ ] WSTG checklist покрывает information gathering, config, auth/session, authorization, input validation, error handling.
+- [ ] Access Control/IDOR отмечен как safe matrix или `requires approval`, а не как перебор ID.
+- [ ] API Security отражает REST/OpenAPI/JWT/CORS/GraphQL как безопасные observations или lab-only.
+- [ ] File upload, path traversal, command injection, SSTI, deserialization, SSRF и race conditions имеют boundaries.
+- [ ] Burp/ZAP использованы в passive/manual режиме либо отмечены как approval-required.
+- [ ] Python helper имеет allowlist, timeout, output contract и pytest evidence.
+- [ ] Evidence не содержит cookies, tokens, passwords, PII, чужих данных и полных sensitive responses.
+- [ ] Каждый результат имеет статус `finding`, `observation`, `not reproducible`, `not applicable` или `requires approval`.
+- [ ] Findings содержат business impact, steps, evidence, recommendation и retest criteria.
+- [ ] Remediation backlog содержит owner/action/priority/acceptance criteria.
+- [ ] Retest plan показывает, как подтвердить исправление без unsafe действий.
+- [ ] Executive summary понятен продуктовой команде, а не только security-специалисту.
+- [ ] Все ограничения и непроверенные области записаны как limitations.
 
 ## Примеры вывода
 

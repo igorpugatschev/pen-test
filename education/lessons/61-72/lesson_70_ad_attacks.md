@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** финальный проект остается в рамках правилами Slider AI olddev из пользовательской инструкции курса; любые intrusive checks требуют отдельного approval.
 
 
-**Процессный артефакт:** `REMEDIATION_BACKLOG.md` или `RETEST_PLAN.md`: приоритизация, владелец, retest evidence.
+**Процессный артефакт:** встроенный remediation backlog или retest plan из пользовательской инструкции: приоритизация, владелец, retest evidence.
 
 **Безопасная цель:** Учебный scope, подписанный RoE, собственная лаборатория или платформа с явным разрешением. Реальные организации только с письменным согласием.
 
@@ -177,30 +177,39 @@ Kali ARM64 VM используется как углубление, когда �
 
 ## Практическое занятие
 
-### Настройка лаборатории AD
+### Встроенная модель AD перед атаками
 
-**Варианты:**
-1. **GOAD (Game of Active Directory)** — готовая лаборатория с уязвимостями
-   - GitHub: https://github.com/Orange-Cyberdefense/GOAD
-   - Требует VirtualBox/Vagrant или Proxmox и не подходит как локальный базовый путь для MacBook Air M2 8GB
-   - 5+ машин, реалистичная структура
+На MacBook Air M2 (8GB) основной путь этого урока — не локальная ферма Windows VM, а defensive walkthrough: понять объекты AD, риски и evidence, не выполняя post-exploitation. Cloud/HTB/THM/INE и полноценные AD labs остаются углублением, если есть отдельный доступ и разрешение.
 
-2. **DetectionLab** — лаборатория для тестирования защиты
-   - GitHub: https://github.com/clong/DetectionLab
-   - Требует значительных ресурсов; для M2 8GB предпочтительнее cloud lab
+| Объект AD | Что означает | Почему важно для Security QA |
+|---|---|---|
+| Domain Controller | сервер, который обслуживает домен, Kerberos/LDAP и политики | компрометация DC почти равна компрометации домена |
+| User | учетная запись человека или сервиса | слабые пароли, лишние группы, отсутствие pre-auth создают риск |
+| Group | набор прав | nested groups могут неожиданно давать high privilege |
+| SPN | service principal name для Kerberos service account | слабый пароль service account создает Kerberoasting risk |
+| Kerberos ticket | доказательство аутентификации для сервиса | ticket handling связан с offline guessing risk |
+| GPO | групповая политика | неправильная GPO может раздать права или ослабить hardening |
+| Trust boundary | граница домена/лесов/tenant | lateral movement часто проходит через слабые boundary |
 
-3. **Простая лаба (ручная настройка):**
-   - 1x Windows Server 2019 (Domain Controller)
-   - 1x Windows 10 (клиент домена)
-   - Kali Linux (атакующий)
-   
-   Настройте DC, создайте несколько пользователей, настройте SPN для одного пользователя, установите слабый пароль.
+Минимальный артефакт урока:
 
-Для MacBook Air M2 (8GB) основной путь этого урока — HackTheBox Academy AD Path или TryHackMe AD Rooms. Локальные AD-лаборатории из нескольких Windows VM считать углублением вне базовой конфигурации.
+```markdown
+# AD Defensive Risk Card
+
+Risk:
+AD object involved:
+Required attacker position:
+Evidence safe to collect:
+Evidence forbidden:
+Detection signal:
+Remediation:
+Retest:
+Why this is not tested on Slider AI:
+```
 
 ### Lab-only awareness: как читать write-up, не превращая его в действие по продукту
 
-Этот раздел не является обязательным hands-on путем для MacBook Air M2 8GB и не применяется к Slider AI. Используйте его только для разбора write-up в HTB/THM/INE AD lab, где такие техники явно разрешены.
+Этот раздел не является обязательным hands-on путем для MacBook Air M2 8GB и не применяется к Slider AI. Используйте его для разбора встроенных risk flows ниже; hands-on выполняется только в отдельной AD lab/cloud lab, где такие техники явно разрешены.
 
 #### Kerberoasting risk flow
 
@@ -297,11 +306,11 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **Kerberoasting defensive lab**: В HTB/THM/INE AD lab разберите готовый write-up или выполните разрешенную lab-задачу. В отчете не публикуйте хеши/пароли; опишите риск, признаки detection и remediation.
+1. **Kerberoasting defensive card**: по встроенной модели заполните AD Defensive Risk Card. В отчете не публикуйте хеши/пароли; опишите риск, признаки detection и remediation.
 
 2. **ASREPRoasting defensive lab**: Опишите, почему `DONT_REQ_PREAUTH` опасен, какие политики должны быть включены и какие события мониторить. Hands-on только в cloud lab с явным разрешением.
 
-3. **BloodHound Analysis**: Установите BloodHound, соберите данные из тестового домена (или GOAD). Найдите 3 пути к Domain Admin. Сделайте скриншоты графов.
+3. **BloodHound awareness**: опишите, как граф прав помогает увидеть путь к Domain Admin. Сбор данных SharpHound/BloodHound выполняется только в AD lab/cloud lab с разрешением; для обязательного пути нарисуйте synthetic граф из 5 узлов: User → Group → Server → Local Admin → Domain Admin risk.
 
 4. **Mitigation Research**: Напишите рекомендации по защите от Kerberoasting, ASREPRoasting и DCSync. Что должны делать администраторы? Какие политики настроить? Какие инструменты мониторинга использовать?
 

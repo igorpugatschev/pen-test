@@ -203,6 +203,42 @@ Acceptance criteria:
 - покрыт pytest-тестами;
 - README объясняет scope и stop conditions.
 
+### Python block progression matrix
+
+Итоговый helper должен собрать навыки всех уроков 41-47, а не быть одним скриптом “на удачу”.
+
+| Урок | Компонент helper | Минимальный результат | Тест |
+|---|---|---|---|
+| 41 sockets | `safeguards/network.py` | TCP helper работает только для localhost/lab | refuses external target |
+| 42 requests | `clients/http_inventory.py` | безопасный `HEAD`/`GET`, allowlist, sanitized headers | no cookies/tokens in output |
+| 43 PoC boundaries | `models/status.py` | различает observation/finding/requires approval | unsafe action becomes blocked |
+| 44 nmap wrapper | `clients/nmap_safe.py` | только lab/approved target, rate limit | rejects olddev active scan |
+| 45 subdomain inventory | `clients/passive_inventory.py` | passive-only model, no brute force | no wordlist mode by default |
+| 46 directory checks | `clients/content_discovery.py` | lab-only ffuf/dirsearch boundary | requires approval flag |
+| 47 CVE parser | `models/triage.py` | CVE becomes candidate observation | no finding without context |
+
+Минимальный expected output итогового helper:
+
+```json
+{
+  "target": "https://olddev.slider-ai.ru",
+  "mode": "safe_headers",
+  "status": "observation",
+  "secrets_masked": true,
+  "approval_required": false,
+  "evidence": {
+    "status_code": 200,
+    "headers": ["strict-transport-security", "x-frame-options"]
+  },
+  "limitations": ["no active scan", "no brute force", "no payload execution"]
+}
+```
+
+Если helper не может безопасно выполнить проверку, правильный результат — не exception без объяснения, а controlled output:
+
+```json
+{"status": "requires approval", "reason": "active scan requested for product target"}
+```
 
 ### Минимальная структура сдачи
 
@@ -279,7 +315,7 @@ Sanitization: secrets and personal data excluded
 1. Добавьте pytest-тест на отказ от target вне allowlist.
 2. Добавьте README-раздел `Scope and stop conditions`.
 3. Сохраните output в Markdown или JSON.
-4. Проведите self-review по `TOOLING_POLICY.md`.
+4. Проведите self-review по встроенной tooling approval card из пользовательской инструкции.
 5. Опишите, как helper попадет в финальный отчет как automation appendix.
 
 ## Практика на Slider AI

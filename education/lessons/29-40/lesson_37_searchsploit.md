@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не запускать aggressive scan, brute force, wordlists или intrusive templates по Slider AI без отдельного письменного разрешения.
 
 
-**Процессный артефакт:** `TOOLING_POLICY.md` и finding/observation по шаблону.
+**Процессный артефакт:** встроенная tooling approval card и finding/observation по шаблону из пользовательской инструкции.
 
 **Безопасная цель:** Только `192.168.100.20`, `target.local`, Metasploitable/VulnHub/THM/HTB/PortSwigger в рамках их правил. Не использовать домашний роутер как цель атаки.
 
@@ -265,10 +265,11 @@ searchsploit -m 12345
 # Прочитать эксплойт
 searchsploit -x 12345
 
-# Открыть URL к эксплойту на exploit-db.com
-searchsploit -w 12345
+# Показать локальную карточку и путь в базе, не открывая внешний сайт
+searchsploit -p 12345
 # Пример вывода:
-#  URL: https://www.exploit-db.com/exploits/12345
+#  Exploit: Training exploit title
+#  Path: /opt/homebrew/share/exploitdb/exploits/example/12345.rb
 ```
 
 ### Поиск по конкретной уязвимости (CVE)
@@ -334,11 +335,18 @@ Sanitization: secrets and personal data excluded
 
 2. Используя SearchSploit, найдите эксплойты для Samba (любой версии). Какие типы атак доступны (remote, local)?
 
-3. Найдите эксплойт для уязвимости EternalBlue (CVE-2017-0144). Какой EDB-ID у этого эксплойта? Почитайте описание на exploit-db.com.
+3. Найдите эксплойт для уязвимости EternalBlue (CVE-2017-0144) в локальной базе SearchSploit. Для сдачи используйте встроенную sanitized карточку ниже, а не внешний сайт:
+
+   ```markdown
+   EDB-ID: 42315
+   Title: Microsoft Windows - SMB Remote Code Execution Scanner
+   Affected family: Windows SMBv1
+   Safe lesson takeaway: наличие exploit entry не означает разрешение на запуск; сначала подтверждаются scope, версия, lab-only target и owner approval.
+   ```
 
 4. Настройте Metasploitable2. Определите версию Samba. Найдите подходящий эксплойт через SearchSploit. Попробуйте применить его (если уверены).
 
-5. Сравните результаты SearchSploit и поиска на сайте exploit-db.com для "Apache 2.4.49". Есть ли разница?
+5. Сравните локальный вывод `searchsploit Apache 2.4.49` со встроенной карточкой: какие поля помогают triage, какие поля не доказывают уязвимость без проверки версии и конфигурации.
 
 ## Частые ошибки
 

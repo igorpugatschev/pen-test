@@ -1,4 +1,4 @@
-# Занятие 69. OSCP база: чтение PWK syllabus
+# Занятие 69. OSCP база: карта навыков и экзаменационная готовность
 
 ## Учебная рамка
 
@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** финальный проект остается в рамках правилами Slider AI olddev из пользовательской инструкции курса; любые intrusive checks требуют отдельного approval.
 
 
-**Процессный артефакт:** `REMEDIATION_BACKLOG.md` или `RETEST_PLAN.md`: приоритизация, владелец, retest evidence.
+**Процессный артефакт:** встроенный remediation backlog или retest plan из пользовательской инструкции: приоритизация, владелец, retest evidence.
 
 **Безопасная цель:** Учебный scope, подписанный RoE, собственная лаборатория или платформа с явным разрешением. Реальные организации только с письменным согласием.
 
@@ -41,16 +41,16 @@
 
 ## Reading pack из книг курса
 
-Книги курса использованы автором как источники для построения этой лекции, но не как обязательное домашнее чтение. Студенту не нужно искать недостающую теорию в отдельных файлах или внешних материалах: все понятия, команды, ограничения, безопасные примеры, ожидаемые результаты и критерии сдачи для темы `Занятие 69. OSCP база: чтение PWK syllabus` должны быть понятны из текущего урока.
+Книги курса использованы автором как источники для построения этой лекции, но не как обязательное домашнее чтение. Студенту не нужно искать недостающую теорию в отдельных файлах или внешних материалах: все понятия, команды, ограничения, безопасные примеры, ожидаемые результаты и критерии сдачи для темы `Занятие 69. OSCP база: карта навыков и экзаменационная готовность` должны быть понятны из текущего урока.
 
 В этом уроке книжные идеи переведены в учебную форму: сначала объясняется модель темы, затем показывается безопасная демонстрация, затем студент выполняет практику и оформляет evidence. Если книга описывает потенциально опасную технику, в курсе она используется только как lab-only или defensive interpretation и не переносится на Slider AI olddev без отдельного approval.
 
 
 ## Source-driven theory
 
-Этот раздел не является заданием найти теорию в книгах. Книги использованы автором курса как системные источники для лекции `Занятие 69. OSCP база: чтение PWK syllabus`, а студент получает полное объяснение ниже.
+Этот раздел не является заданием найти теорию в книгах. Книги использованы автором курса как системные источники для лекции `Занятие 69. OSCP база: карта навыков и экзаменационная готовность`, а студент получает полное объяснение ниже.
 
-Для этой темы опорная идея взята из источников: «PyCharm. Профессиональная работа на Python 2024», «Паттерны разработки на Python», «Объектно-ориентированный Python». Из них в урок перенесены не страницы как домашнее чтение, а инженерные принципы: пентест как процесс: strategy, RoE, scope, test plan, evidence, severity, report, remediation, retest и security regression. Поэтому лекция строится вокруг вопроса: как SDET, уже умеющий работать с тестами, артефактами и воспроизводимостью, превращает тему `Занятие 69. OSCP база: чтение PWK syllabus` в безопасную Security QA-практику.
+Для этой темы опорная идея взята из источников: «PyCharm. Профессиональная работа на Python 2024», «Паттерны разработки на Python», «Объектно-ориентированный Python». Из них в урок перенесены не страницы как домашнее чтение, а инженерные принципы: пентест как процесс: strategy, RoE, scope, test plan, evidence, severity, report, remediation, retest и security regression. Поэтому лекция строится вокруг вопроса: как SDET, уже умеющий работать с тестами, артефактами и воспроизводимостью, превращает тему `Занятие 69. OSCP база: карта навыков и экзаменационная готовность` в безопасную Security QA-практику.
 
 Книжный материал адаптирован в три слоя. Первый слой — модель: какие сущности участвуют, как они связаны и где появляется риск. Второй слой — рабочий навык: ownership безопасности продукта: планирование, коммуникация риска, автоматизация регрессии, контроль исправлений. Третий слой — границы применения: документы процесса, безопасные проверки olddev, запрос approval для неоднозначных действий. Если техника может повредить данным, создать нагрузку, извлечь секреты, перебрать учетные записи или выйти за scope, она не переносится на Slider AI и остается только в lab-only/cloud-lab формате.
 
@@ -58,19 +58,19 @@
 
 ## Теория
 
-### 1. Предмет урока: Занятие 69. OSCP база: чтение PWK syllabus
+### 1. Предмет урока: Занятие 69. OSCP база: карта навыков и экзаменационная готовность
 
 Этот блок формирует ownership: security strategy, RoE, evidence, severity, remediation, retest и regression становятся частью ответственности SDET. В этом уроке центральная модель: exam lab workflow, enumeration discipline, exploitation boundary, report evidence и time management. Студент должен понять ее внутри самого Markdown-файла, без необходимости искать базовую теорию в книгах или внешних статьях.
 
 Книги курса используются как источники автора: они дают системность, терминологию и инженерный взгляд. Но учебное действие здесь выполняется в лекции: понятие объясняется, затем показывается безопасный пример, затем студент делает минимальную практику и оформляет результат как evidence.
 
-### 2. Модель и границы: чтение PWK syllabus
+### 2. Модель и границы: карта навыков и экзаменационная готовность
 
 Модель `exam lab workflow, enumeration discipline, exploitation boundary, report evidence и time management` нужно читать как набор связанных элементов, а не как список слов. В каждом упражнении есть субъект действия, разрешенная цель, технический механизм, наблюдаемый результат и решение: это `observation`, `finding`, `not applicable`, `not reproducible` или `requires approval`.
 
 Граница безопасности для этого урока: запрещено действия вне scope или без approval. Если такое действие технически нужно для обучения, оно переносится в lab-only/cloud lab или формулируется как запрос approval. Для Slider AI используется только `https://olddev.slider-ai.ru` и только действия, совместимые с правилами Slider AI olddev из пользовательской инструкции курса.
 
-### 3. Ключевые понятия: чтение PWK syllabus
+### 3. Ключевые понятия: карта навыков и экзаменационная готовность
 
 `Target` — конкретная разрешенная цель: локальная папка, localhost, учебная лаборатория, cloud lab или olddev-стенд.
 
@@ -82,7 +82,7 @@
 
 `Stop condition` — условие остановки. Оно срабатывает при ошибке scope, появлении секретов/PII, признаках нагрузки, необходимости перебора или неоднозначности разрешения.
 
-### 4. SDET-практика: чтение PWK syllabus
+### 4. SDET-практика: карта навыков и экзаменационная готовность
 
 SDET подходит к теме как к тестируемому процессу. Сначала формулируется гипотеза: что именно проверяется и почему это влияет на безопасность продукта. Затем выбирается минимальное действие: локальная команда, ручной шаг, DevTools-наблюдение, lab-only payload или safe helper. После этого результат оформляется так, чтобы разработчик, тимлид или security owner мог его повторить.
 
@@ -100,7 +100,7 @@ Kali ARM64 VM используется как углубление, когда �
 
 Вывод инструмента или команды не является автоматическим finding. Сначала это observation. Finding появляется только после проверки контекста, влияния, воспроизводимости и границ разрешения.
 
-### 7. Типичные ошибки: чтение PWK syllabus
+### 7. Типичные ошибки: карта навыков и экзаменационная готовность
 
 Первая ошибка — выполнять практику до понимания модели `exam lab workflow, enumeration discipline, exploitation boundary, report evidence и time management`. Это превращает обучение в копирование команд.
 
@@ -130,7 +130,7 @@ Kali ARM64 VM используется как углубление, когда �
 
 ### 10. Минимальная планка по уроку
 
-Лекция считается освоенной, если студент может объяснить `exam lab workflow, enumeration discipline, exploitation boundary, report evidence и time management` своими словами, выполнить безопасный путь новичка, получить ожидаемый вывод, интерпретировать его и оформить evidence. Для темы `Занятие 69. OSCP база: чтение PWK syllabus` минимальная сдача — оформить воспроизводимый артефакт по модели: exam lab workflow, enumeration discipline, exploitation boundary, report evidence и time management, без нарушения ограничения: действия вне scope или без approval.
+Лекция считается освоенной, если студент может объяснить `exam lab workflow, enumeration discipline, exploitation boundary, report evidence и time management` своими словами, выполнить безопасный путь новичка, получить ожидаемый вывод, интерпретировать его и оформить evidence. Для темы `Занятие 69. OSCP база: карта навыков и экзаменационная готовность` минимальная сдача — оформить воспроизводимый артефакт по модели: exam lab workflow, enumeration discipline, exploitation boundary, report evidence и time management, без нарушения ограничения: действия вне scope или без approval.
 
 
 ### 11. Разбор учебного артефакта
@@ -179,7 +179,7 @@ Kali ARM64 VM используется как углубление, когда �
 
 ### Анализ PWK Syllabus
 
-Скачайте официальный syllabus с сайта offensive-security.com и заполните таблицу самооценки:
+Используйте встроенную карту OSCP-ready навыков ниже и заполните таблицу самооценки. Внешний syllabus можно открыть только как углубление, но он не нужен для сдачи этого урока:
 
 ```markdown
 # PWK/OSCP Self-Assessment
@@ -241,33 +241,33 @@ Kali ARM64 VM используется как углубление, когда �
 Месяц 3: Active Directory
 - Неделя 1: Теория AD, настройка лабы
 - Неделя 2: Kerberoasting, ASREPRoasting
-- Неделя 3: BloodHound, Pass the Hash
-- Неделя 4: Практика (GOAD, Pro Lab)
+- Неделя 3: BloodHound как концепция графа прав, Pass the Hash как defensive awareness
+- Неделя 4: Cloud/lab practice только в разрешенной среде
 
 Месяц 4: Подготовка к экзамену
-- Неделя 1: Hack The Box (10 machines)
-- Неделя 2: PWK Exercises (если купили курс)
-- Неделя 3: Proctored practice exams
+- Неделя 1: 5 встроенных OSCP-like кейсов ниже
+- Неделя 2: пробный отчет по каждому кейсу
+- Неделя 3: timed simulation по встроенной assessment card
 - Неделя 4: Написание отчетов, финальная подготовка
 ```
 
-### Полезные ресуры для подготовки
+### Встроенные OSCP-like кейсы для анализа
 
-**Бесплатные:**
-- [TJ Null's OSCP List](https://docs.google.com/spreadsheets/u/0/d/1dwSMIAPIam0PuRBkCiDI88pU3yzrqqHkDtBmcUjvM7rU/htmlview) — список Hack The Box машин для подготовки
-- TryHackMe: "Offensive Pentesting" path
-- YouTube: "The Cyber Mentor", "ippsec"
+Эти кейсы заменяют обязательную зависимость от внешних списков машин. Их цель — не дать готовый exploit, а научить планировать recon → exploit hypothesis → privesc hypothesis → report.
 
-**Платные:**
-- PWK Course (Offensive Security)
-- Hack The Box: VIP подписка (для доступа к retired машинам)
-- PG Practice (Proving Grounds) — от Offensive Security
+| Case | Recon signal | Exploit hypothesis | PrivEsc hypothesis | Учебный результат |
+|---|---|---|---|---|
+| Legacy SMB | TCP 445, old SMB banner | known SMB RCE only in lab | local admin proof in lab | explain scope and report risk |
+| Web Upload | HTTP upload form | unsafe extension/content handling | web user to local misconfig | file upload test plan |
+| CMS Admin | `/admin`, version hint | auth weakness or known CVE | config secrets exposure | triage, not blind exploit |
+| Linux SUID | SSH user in lab | no remote exploit | SUID binary review | privesc checklist |
+| AD Mini-set | LDAP/Kerberos visible | weak service account policy | excessive rights path | defensive AD finding |
 
 
 
 ## Примеры вывода
 
-Минимальный эталонный артефакт для сдачи по теме `Занятие 69. OSCP база: чтение PWK syllabus`:
+Минимальный эталонный артефакт для сдачи по теме `Занятие 69. OSCP база: карта навыков и экзаменационная готовность`:
 
 ```markdown
 Environment: macOS native, Apple Silicon
@@ -306,15 +306,15 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **PWK Syllabus Deep Dive**: Прочитайте детальный outline курса PWK на offensive-security.com. Напишите краткое резюме каждого модуля (по 3-5 предложений).
+1. **OSCP-ready skill map**: по встроенной таблице урока напишите, какие 5 тем требуют практики в первую очередь и какой безопасный lab-only формат подходит для каждой.
 
-2. **HTB Machines (OSCP-like)**: Пройдите 5 машин с TJ Null's списка (например: Lame, Blue, Devel, Legacy, Optimum). Напишите краткий отчет для каждой (Recon → Exploit → PrivEsc).
+2. **OSCP-like case analysis**: разберите 5 встроенных кейсов выше. Для каждого напишите краткий отчет: Recon signal → exploit hypothesis → privesc hypothesis → report risk → что остается lab-only.
 
-3. **Buffer Overflow Practice**: Пройдите курс "Practical Buffer Overflow" (бесплатно на YouTube или TryHackMe "Buffer Overflow Prep"). Напишите свой Python-скрипт для эксплуатации BO (используя pattern_create, pattern_offset).
+3. **Buffer Overflow awareness**: заполните встроенный BO workflow без эксплуатации реальной цели: crash proof in lab, offset discovery, badchars, control of EIP/RIP, payload constraints, report boundary. Python-скрипт оформляйте как pseudocode/lab-only.
 
-4. **Active Directory Lab**: Настройте лабораторию Active Directory (можно использовать GOAD - Game of Active Directory). Попробуйте выполнить Kerberoasting атаку (GetUserSPNs.py, crack hashes с помощью hashcat).
+4. **Active Directory readiness**: по встроенной AD foundation модели из уроков 53/70 опишите, что такое domain, DC, user, group, SPN, Kerberos ticket и почему Kerberoasting относится только к lab/approved AD.
 
-5. **OSCP Report Template**: Найдите в интернете примеры OSCP-отчетов (GitHub, Reddit). Создайте свой шаблон в Markdown, который будет включать: Cover Page, Executive Summary, Methodology, Targets (IP, hostname), Vulnerabilities (с CVSS, PoC, remediation), Appendices.
+5. **OSCP-style report template**: на основе встроенного reporting-шаблона курса создайте свой Markdown-шаблон с разделами Cover Page, Executive Summary, Methodology, Targets, Vulnerabilities, Remediation и Appendices.
 
 ## Частые ошибки
 
@@ -327,11 +327,11 @@ Sanitization: secrets and personal data excluded
 
 ## Вопросы на понимание
 
-1. Сколько баллов нужно набрать для прохождения OSCP?
-2. Какую часть экзамена составляет Active Directory?
-3. Сколько времени дается на написание отчета?
-4. Можно ли использовать Metasploit на всех машинах экзамена?
-5. Что такое OffSec Proving Grounds и чем они отличаются от обычных лаб PWK?
+1. Почему OSCP-like подготовка должна начинаться со scope и отчета, а не с exploit?
+2. Какую роль играет Active Directory в практической подготовке?
+3. Почему BO workflow в этом курсе описывается как lab-only?
+4. Почему Metasploit/auto-exploitation не является базовым путем для Security-aware SDET?
+5. Как встроенный кейс превращается в finding или observation?
 6. Почему при подготовке на Mac с 8GB RAM не рекомендуется запускать локальные AD лабы?
 
 ## Практика на Slider AI

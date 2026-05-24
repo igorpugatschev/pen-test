@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** не переносить exploitation, privesc, bypass и aggressive enumeration на Slider AI без расширенного scope.
 
 
-**Процессный артефакт:** `VULNERABILITY_TRIAGE.md`: lab-to-product transfer matrix и ограничения scope.
+**Процессный артефакт:** встроенный шаблон vulnerability triage из пользовательской инструкции: lab-to-product transfer matrix и ограничения scope.
 
 **Безопасная цель:** TryHackMe, Hack The Box, PortSwigger Academy и другие платформы только в рамках их правил и активной учебной машины.
 
@@ -223,7 +223,7 @@ site:olddev.slider-ai.ru filetype:pdf
 
 **Шаг 5. Что остается lab-only**
 
-Subdomain brute force, email harvesting, phishing preparation, GitHub secret hunting, aggressive dorks и подключение к найденным сервисам не выполняются на Slider AI в этом уроке. Эти техники изучаются только как defensive awareness в lab/cloud lab или оформляются как request for approval.
+Subdomain brute force, email harvesting, phishing preparation, public repository secret exposure review, aggressive dorks и подключение к найденным сервисам не выполняются на Slider AI в этом уроке. Эти техники изучаются только как defensive awareness в lab/cloud lab или оформляются как request for approval.
 
 
 ## Примеры вывода
@@ -258,26 +258,18 @@ Sanitization: secrets and personal data excluded
 
 ## Частые ошибки
 
-1. **Ошибка 1**: Типичная ошибка новичков в этом уроке.
-2. **Ошибка 2**: Еще одна распространенная проблема.
-3. **Ошибка 3**: Важный момент, который часто упускают.
+1. **Переход от passive OSINT к активному воздействию** — subdomain brute force, login attempts и подключение к найденным сервисам требуют отдельного approval.
+2. **OSINT по реальным людям без необходимости** — курс не требует сбора PII; используйте только разрешенные активы и synthetic evidence.
+3. **Считать утечку подтвержденной без источника и scope** — mock breach record является учебным сигналом, а не основанием публиковать чужие данные.
 
 ## Вопросы на понимание
 
-1. Вопрос 1 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 1</details>
-2. Вопрос 2 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 2</details>
-3. Вопрос 3 на понимание материала?
-   <details><summary>Ответ</summary>Ответ на вопрос 3</details>
-
-## Форматы флагов
-
-- **TryHackMe**: `THM{...}`
-- **HackTheBox**: `HTB{...}`
-- **PortSwigger**: "Lab solved!" (без флагов)
-
-
+1. Чем passive OSINT отличается от активного сканирования?
+   <details><summary>Ответ</summary>Passive OSINT анализирует уже доступные сведения и не взаимодействует с целевой инфраструктурой как scanner или brute-force инструмент.</details>
+2. Почему найденный email или домен не всегда входит в scope?
+   <details><summary>Ответ</summary>Scope определяется разрешением владельца, а не тем, что удалось найти публично.</details>
+3. Как оформить OSINT evidence безопасно?
+   <details><summary>Ответ</summary>Указать источник/тип сигнала, замаскировать персональные данные, не публиковать секреты и добавить limitation.</details>
 
 ## Адаптация под macOS (M2, 8GB)
 
@@ -291,9 +283,19 @@ Sanitization: secrets and personal data excluded
 
 ## Задачи для самостоятельного выполнения
 
-1. **OSINT на реальную компанию** (по выбору) — соберите: домены, поддомены, IP-диапазоны, сотрудников, технологии
-2. **Комната "OSINT"** на THM — пройдите все задания, изучите инструменты (Sherlock, Maltego)
-3. **Поиск утечек:** Используйте haveibeenpwned.com для проверки email на утечки паролей
+1. **OSINT на synthetic company**: используйте встроенный набор ниже и соберите: домены, поддомены, IP-диапазоны, технологии, risk notes.
+
+   ```markdown
+   Company: Example Training Studio
+   Domains: training.example, app.training.example, api.training.example
+   IP ranges: 203.0.113.0/29
+   Technologies: nginx, PostgreSQL, object storage
+   Public contacts: security@example.invalid, support@example.invalid
+   Mock breach record: one historical test email exposed in a training dump; no password value provided
+   ```
+
+2. **OSINT tool awareness**: опишите, какие данные могли бы собрать Sherlock/Maltego в lab/cloud lab, но не запускайте их по реальным людям или Slider AI без approval.
+3. **Breach triage без внешнего сервиса**: по mock breach record выше заполните `source`, `confidence`, `business impact`, `owner action`, `evidence sanitization`.
 
 > **Важно:** OSINT — легальный этап пентеста, включенный в scope. Но не используйте найденные пароли без разрешения заказчика.
 

