@@ -54,3 +54,151 @@
 - Что берем из источника:
 - Как это превращается в SDET/Security QA навык:
 - Что нельзя переносить на Slider AI без отдельного разрешения:
+
+## Операционная карта переписывания блоков
+
+Эта карта используется автором курса перед правкой каждого блока. Она не является списком обязательного чтения для студента. Студент получает самодостаточную лекцию в Markdown-файле урока, а книги остаются источниками автора и академическим следом.
+
+### Block 01-08: Linux/workstation
+
+Primary source ideas:
+
+- рабочая среда как воспроизводимый инструмент инженера;
+- terminal discipline: команда, аргументы, вывод, файл, рабочая директория;
+- Markdown evidence и локальная организация проекта;
+- различие macOS native и Linux/Kali без подмены одного другим.
+
+Books used:
+
+- `PyCharm. Профессиональная работа на Python 2024` — IDE, Git, Markdown, Python tooling, различия сред;
+- `Легкий способ выучить Python 3 еще глубже` — маленькие упражнения, CLI, файлы, текстовый вывод;
+- `Объектно-ориентированный Python` — аккуратная структура проекта и ответственность компонентов.
+
+Course transformation:
+
+- студент не ищет основы терминала в книгах;
+- лекция объясняет shell, filesystem, stdout/stderr, права и evidence напрямую;
+- Slider AI используется только для подготовки scope/evidence, без активных проверок.
+
+### Block 09-16: Networks For Security QA
+
+Primary source ideas:
+
+- network model, addressing, ports, DNS, HTTP/TLS and observable behavior;
+- how a symptom becomes reproducible QA evidence;
+- safe distinction between diagnostics and active probing.
+
+Books used:
+
+- `PyCharm. Профессиональная работа на Python 2024` — рабочая станция, HTTP Client, воспроизводимые настройки;
+- `Black Hat Python` — сетевое мышление только как defensive/lab-only источник;
+- `Легкий способ выучить Python 3 еще глубже` — CLI-практика и текстовая обработка результатов.
+
+Course transformation:
+
+- лекция объясняет TCP/IP, DNS, HTTP and TLS без внешнего поиска;
+- macOS native используется для базовой диагностики;
+- Kali ARM64 VM и cloud lab используются только для углубления.
+
+### Block 17-28: OWASP Web Security
+
+Primary source ideas:
+
+- уязвимость как ошибка модели доверия;
+- request/response evidence;
+- безопасное разделение lab payload и product-safe observation.
+
+Books used:
+
+- `PyCharm. Профессиональная работа на Python 2024` — HTTP Client, debugging, Git/Markdown reports;
+- `Black Hat Python` — lab-only понимание offensive mechanics;
+- `Паттерны разработки на Python` — границы системы, service boundaries, testability.
+
+Course transformation:
+
+- каждая уязвимость объясняется через модель, причину, безопасный пример и критерии evidence;
+- payload-практика уходит в PortSwigger/THM/local lab;
+- Slider AI получает только scope-safe checks and observations.
+
+### Block 29-40: Tools And Reporting
+
+Primary source ideas:
+
+- tool governance;
+- false-positive review;
+- structured output;
+- approval and stop conditions.
+
+Books used:
+
+- `PyCharm. Профессиональная работа на Python 2024` — Git, Markdown, IDE workflow, reports;
+- `Паттерны разработки на Python` — управляемые boundaries and interfaces;
+- `Black Hat Python` — lab-only предупреждение о рисках автоматизации.
+
+Course transformation:
+
+- инструмент объясняется перед запуском;
+- aggressive modes are lab-only;
+- output is converted into observation/finding only after triage.
+
+### Block 41-48: Python Security Automation
+
+Primary source ideas:
+
+- CLI helper as maintainable code;
+- exceptions, classes, service layer, dependency boundaries;
+- allowlist, dry-run, timeout, tests and structured reports.
+
+Books used:
+
+- `Легкий способ выучить Python 3 еще глубже` — CLI scripts and file processing;
+- `Объектно-ориентированный Python` — classes, exceptions, testable design;
+- `Паттерны разработки на Python` — service layer and dependency inversion;
+- `Black Hat Python` — lab-only ideas rewritten into defensive helpers.
+
+Course transformation:
+
+- scripts are safe tools, not exploit shortcuts;
+- every helper has allowlist/dry-run/sanitized output;
+- product checks use conservative SDET ownership rules.
+
+### Block 49-60: Lab Transfer And Certification Bridge
+
+Primary source ideas:
+
+- legal lab practice;
+- write-up discipline;
+- transfer matrix from CTF to product QA;
+- separation of exploitation skill and product responsibility.
+
+Books used:
+
+- `Black Hat Python` — lab-only mechanics;
+- `PyCharm. Профессиональная работа на Python 2024` — reports, artifacts, Git;
+- `Паттерны разработки на Python` — process boundaries and automation architecture.
+
+Course transformation:
+
+- TryHackMe, HackTheBox and PortSwigger never replace the lecture;
+- lab work is converted into safe product test cases;
+- Slider AI practice remains professional QA, not CTF behavior.
+
+### Block 61-72: Security Ownership
+
+Primary source ideas:
+
+- strategy, RoE, evidence policy, triage, remediation, retest;
+- security regression as SDET responsibility;
+- final report as engineering artifact.
+
+Books used:
+
+- `PyCharm. Профессиональная работа на Python 2024` — project workflow, VCS, documentation;
+- `Паттерны разработки на Python` — architecture and maintainable process;
+- `Объектно-ориентированный Python` — maintainable automation structures.
+
+Course transformation:
+
+- standards are taught as process, not lists;
+- final project requires scope, plan, evidence, findings, retest and regression checklist;
+- uncertain actions are marked `requires approval`.
